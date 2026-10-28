@@ -6,7 +6,21 @@ import { categoriesWithTools, TOOLS } from '../tools/registry';
 import { searchItems } from '../lib/search-items';
 import { SITE } from '../site.config';
 
-const featured = TOOLS.filter((t) => t.featured);
+// Ana sayfadaki "En çok kullanılanlar": önce bu sıradakiler, sonra diğer öne çıkanlar (en fazla 8).
+const FEATURED_ORDER = [
+  'brut-net-maas-hesaplama',
+  'kidem-tazminati-hesaplama',
+  'kredi-hesaplama',
+  'kira-artis-hesaplama',
+  'kdv-hesaplama',
+  'enflasyon-hesaplama',
+  'halka-arz-lot-hesaplama',
+  'dugun-altini-hesaplama',
+];
+const featured = [
+  ...FEATURED_ORDER.map((slug) => TOOLS.find((t) => t.slug === slug)).filter((t) => t !== undefined),
+  ...TOOLS.filter((t) => t.featured && !FEATURED_ORDER.includes(t.slug)),
+].slice(0, 8);
 const cats = categoriesWithTools();
 
 const jsonLd = [

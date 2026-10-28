@@ -1,0 +1,15 @@
+{
+  "name": "Hesap Robotu",
+  "short_name": "Hesap Robotu",
+  "description": "Türkiye’nin güncel kurallarıyla çalışan ücretsiz hesaplama robotları.",
+  "lang": "tr",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fa",
+  "theme_color": "#0d7a64",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

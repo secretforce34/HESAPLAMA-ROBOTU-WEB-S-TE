@@ -1,43 +1,38 @@
-# Astro Starter Kit: Minimal
+# Hesap Robotu
 
-```sh
-npm create astro@latest -- --template minimal
+Türkiye'nin güncel kurallarıyla çalışan, açıklamalı ve ücretsiz finans hesaplama robotları.
+
+- **Statik site:** Astro 7 + Preact adacıkları. Sunucu yok, tüm hesaplar ziyaretçinin tarayıcısında.
+- **Kaynaklı oranlar:** Yasal oranlar `src/data/params/` altında, kaynak ve geçerlilik tarihiyle. Süresi dolan oranlar için sitede otomatik uyarı.
+- **Testli:** Her robotun hesap mantığı Vitest ile test edilir.
+
+## Komutlar
+
+```bash
+npm install                    # bağımlılıkları kur
+npm run dev                    # geliştirme: http://localhost:4321
+npm test                       # birim testleri
+npm run check                  # tip kontrolü
+npm run build                  # dist/ klasörüne statik site
+node scripts/link-kontrol.mjs  # kaynak bağlantılarını kontrol et
+node scripts/gorseller.mjs     # paylaşım görseli ve simgeleri üret
 ```
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Belgeler
 
-## 🚀 Project Structure
+- [docs/ARAC-REHBERI.md](docs/ARAC-REHBERI.md) — yeni hesaplama robotu ekleme kuralları
+- [docs/YAYINLAMA.md](docs/YAYINLAMA.md) — ücretsiz yayına alma (GitHub + Cloudflare Pages)
+- [docs/VERI.md](docs/VERI.md) — TÜFE, kur ve altın verilerinin kaynağı ve güncellenmesi
 
-Inside of your Astro project, you'll see the following folders and files:
+## Klasör yapısı
 
-```text
-/
-├── public/
-├── src/
-│   └── pages/
-│       └── index.astro
-└── package.json
 ```
-
-Astro looks for `.astro` or `.md` files in the `src/pages/` directory. Each page is exposed as a route based on its file name.
-
-There's nothing special about `src/components/`, but that's where we like to put any Astro/React/Vue/Svelte/Preact components.
-
-Any static assets, like images, can be placed in the `public/` directory.
-
-## 🧞 Commands
-
-All commands are run from the root of the project, from a terminal:
-
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
-
-## 👀 Want to learn more?
-
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+src/
+  tools/<slug>/        her robotun meta, hesap, test ve arayüz dosyaları
+  pages/<slug>.astro   robot sayfaları (açıklama + SSS)
+  data/params/         yasal oranlar (kaynaklı, tarihli)
+  data/series/         aylık veri serileri (TÜFE, kur, altın)
+  ui/                  ortak form ve sonuç bileşenleri
+  layouts/, components/, styles/
+scripts/               veri güncelleme, link kontrolü, görsel üretimi
+```
