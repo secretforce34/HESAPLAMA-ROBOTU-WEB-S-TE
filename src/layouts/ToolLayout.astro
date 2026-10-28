@@ -81,6 +81,11 @@ if (faq.length > 0) {
     <section class="calc" aria-label={`${meta.title} hesaplayıcısı`}>
       <slot name="calculator" />
     </section>
+    <p class="embed-credit">
+      <a href={pageUrl} target="_blank" rel="noopener">
+        {SITE.name} · {meta.title} — açıklamalı tam sürüm ↗
+      </a>
+    </p>
 
     <div class="tool-body">
       <article class="prose">

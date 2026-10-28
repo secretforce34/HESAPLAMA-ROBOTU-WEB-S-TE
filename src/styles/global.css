@@ -1383,6 +1383,62 @@ table.data tfoot td {
   font-size: 0.84rem;
 }
 
+.embed-code {
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  resize: vertical;
+}
+
+/* Başka sitede gömülü (iframe, ?gomulu=1) görünüm: yalnızca hesaplayıcı + kaynak bağlantısı */
+.embed-credit {
+  display: none;
+}
+
+.is-embed body {
+  background: var(--surface);
+}
+
+.is-embed .site-header,
+.is-embed .cat-bar,
+.is-embed .site-footer,
+.is-embed .skip-link,
+.is-embed .breadcrumbs,
+.is-embed .badges,
+.is-embed .tool-head__question,
+.is-embed .tool-body {
+  display: none;
+}
+
+.is-embed .container {
+  padding: 0 8px;
+}
+
+.is-embed .tool-head {
+  margin: 12px 0;
+}
+
+.is-embed .tool-head h1 {
+  font-size: 1.3rem;
+}
+
+.is-embed .calc {
+  box-shadow: none;
+}
+
+.is-embed .embed-credit {
+  display: block;
+  margin: 10px 0 16px;
+  font-size: 0.85rem;
+  text-align: right;
+}
+
 .related {
   display: grid;
   gap: 8px;

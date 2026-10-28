@@ -46,6 +46,8 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
         var t = localStorage.getItem('theme');
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
       } catch (e) {}
+      // Başka bir siteye gömülü (iframe) açıldıysa yalnızca hesaplayıcı gösterilir.
+      if (/[?&]gomulu=1(&|$)/.test(location.search)) document.documentElement.classList.add('is-embed');
     </script>
     {jsonLd.map((d) => <script type="application/ld+json" set:html={JSON.stringify(d)} />)}
   </head>

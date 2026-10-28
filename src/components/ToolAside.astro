@@ -1,5 +1,6 @@
 ---
 import { formatDateTR } from '../lib/format';
+import { SITE } from '../site.config';
 import { relatedTools } from '../tools/registry';
 import type { ToolMeta } from '../tools/types';
 import type { Source } from '../data/params/types';
@@ -15,6 +16,8 @@ for (const s of meta.sources) allSources.set(s.url, s);
 for (const set of meta.paramSets) for (const s of set.sources) allSources.set(s.url, s);
 
 const related = relatedTools(meta);
+const site = Astro.site ?? new URL(SITE.url);
+const embedCode = `<iframe src="${new URL(`/${meta.slug}/?gomulu=1`, site).href}" title="${meta.title} – ${SITE.name}" width="100%" height="760" style="border:0;max-width:100%" loading="lazy"></iframe>`;
 ---
 
 <aside class="tool-aside" aria-label="Kaynaklar ve ilgili araçlar">
@@ -63,6 +66,12 @@ const related = relatedTools(meta);
       edildi.
     </p>
   </section>
+  <section class="side-box">
+    <h2>Sitenize ekleyin</h2>
+    <p class="disclaimer">Bu hesaplayıcıyı aşağıdaki kodla kendi sitenizde ücretsiz kullanabilirsiniz.</p>
+    <textarea class="embed-code" readonly rows="4" aria-label="Gömme kodu">{embedCode}</textarea>
+    <button type="button" class="btn btn--small" data-copy-embed>Kodu kopyala</button>
+  </section>
   {
     related.length > 0 && (
       <section class="side-box">
@@ -81,3 +90,21 @@ const related = relatedTools(meta);
     )
   }
 </aside>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-copy-embed]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const ta = btn.parentElement?.querySelector<HTMLTextAreaElement>('.embed-code');
+      if (!ta) return;
+      try {
+        await navigator.clipboard.writeText(ta.value);
+      } catch {
+        ta.select();
+        document.execCommand('copy');
+      }
+      const old = btn.textContent;
+      btn.textContent = 'Kopyalandı ✓';
+      window.setTimeout(() => (btn.textContent = old), 2000);
+    });
+  });
+</script>

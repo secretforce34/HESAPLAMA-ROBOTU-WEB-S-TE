@@ -49,7 +49,8 @@ export function ShareBar({ params, summary }: { params: Record<string, ShareValu
   };
 
   const onCopy = async () => {
-    flash((await copyText(summary)) ? 'Sonuç kopyalandı' : 'Kopyalanamadı');
+    const credit = `Hesap Robotu ile hesaplandı: ${window.location.origin}${window.location.pathname}`;
+    flash((await copyText(`${summary}\n\n${credit}`)) ? 'Sonuç kopyalandı' : 'Kopyalanamadı');
   };
 
   return (
