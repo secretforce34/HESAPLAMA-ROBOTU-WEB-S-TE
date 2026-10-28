@@ -3,6 +3,20 @@
 Bu belge, siteye yeni bir hesaplama robotu (araç) eklerken uyulacak kuralları anlatır.
 **Örnek araç:** `src/tools/kdv-hesaplama/` + `src/pages/kdv-hesaplama.astro` — yeni araca başlamadan önce bu dosyaları baştan sona oku ve aynı kalıbı izle.
 
+## 0. Tasarım ilkesi: çok fonksiyonlu robotlar (site sahibinin açık talebi)
+
+Her robot, kullanıcının söylemesine gerek kalmadan **gerçek hayattaki tüm yaygın varyasyonları** kapsamalı. Başlamadan önce "bu hesabı kim, hangi durumlarda yapar?" listesini çıkar ve şunları baştan düşün:
+
+- **Çoklu satır / çoklu kalem:** Gerçekte birden fazla kalem varsa (fatura satırları, birden çok alım, birden çok çek, farklı varlıklar, birden fazla teklif) satır ekle/sil arayüzü kur. Örnek: KDV robotu (`line-items` / `line-item` sınıfları, `+ Satır ekle` düğmesi, satır başına `id` ile state).
+- **İki yön:** brüt ↔ net, dahil ↔ hariç, tutar ↔ oran gibi ters hesaplar.
+- **Tüm seçenekler görünür:** "Yok" seçeneği de dahil (ör. "Tevkifat: Yok / 2/10 / … / 10/10" sekmeleri). Gizli varsayım bırakma.
+- **Yasal eşik ve sınırlar otomatik:** tavanlar, tabanlar, tutar sınırları, istisnalar, süre şartları hesaba kendiliğinden uygulanır ve sonuçta "neden" açıklanır (ör. "12.000 TL sınırı aşılmadığı için tevkifat uygulanmaz"). Sınırın aranmadığı özel durum varsa kullanıcı kapatabilsin.
+- **Tarih/dönem duyarlılığı:** oranlar tarihe göre değişiyorsa kullanıcı dönemi seçebilsin (varsayılan: bugün).
+- **Karşılaştırma ve senaryo:** mantıklıysa "A mı B mi" ya da farklı varsayımlar için senaryo tablosu.
+- **Dökümler:** sonucun nasıl oluştuğunu kalem kalem göster (Breakdown/DataTable); aylık/dönemsel tablolar.
+
+Ama: arayüz sade kalsın. Gelişmiş seçenekler mantıklı varsayılanlarla gelsin; nadir kullanılanları `Details` (açılır bölüm) içine koy.
+
 ## 1. Projenin değişmez kuralları
 
 - **Sadece Türkiye, sadece Türkçe.** Arayüz metinleri, açıklamalar, SSS: sade Türkçe, "siz" hitabı.

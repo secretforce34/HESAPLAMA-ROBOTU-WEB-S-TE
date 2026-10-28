@@ -1,5 +1,119 @@
 import { describe, expect, it } from 'vitest';
-import { hesaplaKdv, validateKdv } from './calc';
+import { hesaplaFatura, hesaplaKdv, validateKdv, validateSatir } from './calc';
+
+describe('çok satırlı fatura', () => {
+  it('%1, %10 ve %20 satırları aynı faturada', () => {
+    const r = hesaplaFatura({
+      satirlar: [
+        { tutar: 1000, oran: 20 },
+        { tutar: 500, oran: 10 },
+        { tutar: 200, oran: 1 },
+        { tutar: 300, oran: 20 },
+      ],
+      mode: 'haric',
+      tevkifat: 0,
+      tevkifatSiniri: 12000,
+    });
+    expect(r.matrah).toBe(2000);
+    // 200 + 50 + 2 + 60
+    expect(r.kdv).toBe(312);
+    expect(r.toplam).toBe(2312);
+    expect(r.oranlar).toEqual([
+      { oran: 1, matrah: 200, kdv: 2, toplam: 202 },
+      { oran: 10, matrah: 500, kdv: 50, toplam: 550 },
+      { oran: 20, matrah: 1300, kdv: 260, toplam: 1560 },
+    ]);
+  });
+
+  it('KDV dahil satırlardan geriye: her satır kendi içinde tutarlı', () => {
+    const r = hesaplaFatura({
+      satirlar: [
+        { tutar: 120, oran: 20 },
+        { tutar: 110, oran: 10 },
+        { tutar: 101, oran: 1 },
+      ],
+      mode: 'dahil',
+      tevkifat: 0,
+      tevkifatSiniri: null,
+    });
+    expect(r.matrah).toBe(300);
+    expect(r.kdv).toBe(31);
+    expect(r.toplam).toBe(331);
+  });
+
+  it('kısmi tevkifat: KDV dahil toplam 12.000 TL’yi aşarsa uygulanır', () => {
+    // 10.000 + %20 = 12.000 → sınırı AŞMIYOR (eşit) → tevkifat yok
+    const esit = hesaplaFatura({ satirlar: [{ tutar: 10000, oran: 20 }], mode: 'haric', tevkifat: 9, tevkifatSiniri: 12000 });
+    expect(esit.sinirAltinda).toBe(true);
+    expect(esit.uygulananTevkifat).toBe(0);
+    expect(esit.tevkifEdilen).toBe(0);
+    expect(esit.odenecekToplam).toBe(12000);
+
+    // 10.000,01 + %20 = 12.000,01 → aşıyor → 9/10 uygulanır
+    const asan = hesaplaFatura({ satirlar: [{ tutar: 10000.01, oran: 20 }], mode: 'haric', tevkifat: 9, tevkifatSiniri: 12000 });
+    expect(asan.sinirAltinda).toBe(false);
+    expect(asan.uygulananTevkifat).toBe(9);
+    expect(asan.kdv).toBe(2000);
+    expect(asan.tevkifEdilen).toBe(1800);
+    expect(asan.odenecekToplam).toBe(10200.01);
+  });
+
+  it('tam tevkifatta (10/10) tutar sınırı aranmaz', () => {
+    const r = hesaplaFatura({ satirlar: [{ tutar: 1000, oran: 20 }], mode: 'haric', tevkifat: 10, tevkifatSiniri: 12000 });
+    expect(r.sinirAltinda).toBe(false);
+    expect(r.tevkifEdilen).toBe(200);
+    expect(r.tahsilEdilecekKdv).toBe(0);
+  });
+
+  it('sınır kapatılınca küçük tutarda da kısmi tevkifat uygulanır', () => {
+    const r = hesaplaFatura({ satirlar: [{ tutar: 1000, oran: 20 }], mode: 'haric', tevkifat: 5, tevkifatSiniri: null });
+    expect(r.tevkifEdilen).toBe(100);
+    expect(r.odenecekToplam).toBe(1100);
+  });
+
+  it('yalnızca tevkifatlı işaretli satırlara tevkifat uygulanır, sınır da onlara bakar', () => {
+    const r = hesaplaFatura({
+      satirlar: [
+        { tutar: 20000, oran: 20, tevkifatli: true }, // hizmet: KDV 4.000
+        { tutar: 5000, oran: 20, tevkifatli: false }, // malzeme: KDV 1.000
+      ],
+      mode: 'haric',
+      tevkifat: 4,
+      tevkifatSiniri: 12000,
+    });
+    expect(r.tevkifataTabiToplam).toBe(24000);
+    expect(r.kdv).toBe(5000);
+    expect(r.tevkifEdilen).toBe(1600);
+    expect(r.tahsilEdilecekKdv).toBe(3400);
+    expect(r.odenecekToplam).toBe(28400);
+  });
+
+  it('tevkifatlı satırlar sınırın altında kalırsa, fatura toplamı aşsa bile uygulanmaz', () => {
+    const r = hesaplaFatura({
+      satirlar: [
+        { tutar: 5000, oran: 20, tevkifatli: true }, // 6.000 KDV dahil
+        { tutar: 50000, oran: 20, tevkifatli: false },
+      ],
+      mode: 'haric',
+      tevkifat: 9,
+      tevkifatSiniri: 12000,
+    });
+    expect(r.sinirAltinda).toBe(true);
+    expect(r.tevkifEdilen).toBe(0);
+  });
+
+  it('2025 sınırı (9.900 TL) ile', () => {
+    const r = hesaplaFatura({ satirlar: [{ tutar: 9000, oran: 20 }], mode: 'haric', tevkifat: 7, tevkifatSiniri: 9900 });
+    // 10.800 > 9.900 → uygulanır: 1.800 × 7/10 = 1.260
+    expect(r.tevkifEdilen).toBe(1260);
+  });
+
+  it('satır doğrulaması', () => {
+    expect(validateSatir(null, 20)).toHaveProperty('tutar');
+    expect(validateSatir(10, -1)).toHaveProperty('oran');
+    expect(validateSatir(10, 20)).toEqual({});
+  });
+});
 
 describe('KDV hariç → dahil', () => {
   it('1.000 TL + %20', () => {

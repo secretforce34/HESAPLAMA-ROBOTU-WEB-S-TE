@@ -2,7 +2,7 @@
 import ToolLayout from '../layouts/ToolLayout.astro';
 import Calculator from '../tools/kdv-hesaplama/Calculator';
 import { meta } from '../tools/kdv-hesaplama/meta';
-import { hesaplaKdv } from '../tools/kdv-hesaplama/calc';
+import { hesaplaFatura, hesaplaKdv } from '../tools/kdv-hesaplama/calc';
 import { formatTL } from '../lib/format';
 import type { FaqItem } from '../tools/types';
 
@@ -28,6 +28,14 @@ const faq: FaqItem[] = [
     a: 'Tevkifat uygulanacak işler ve oranları KDV Genel Uygulama Tebliği’nin (I/C-2.1.3) bölümünde sayılır; yapım işleri, temizlik, özel güvenlik, işgücü temin ve yemek servisi hizmetleri bunlara örnektir. Oranlar zaman zaman değiştiği için faturanızdaki veya tebliğdeki güncel oranı kullanın.',
   },
   {
+    q: 'Tevkifat sınırı nedir, 2026’da kaç TL?',
+    a: 'Kısmi tevkifat (2/10–9/10), tevkifata tabi işlemin <strong>KDV dahil</strong> bedeli fatura düzenleme sınırını <strong>aşarsa</strong> uygulanır. Bu sınır 2025’te 9.900 TL, 2026’da 12.000 TL’dir. KDV dahil 12.000 TL ve altındaki işlemlerde tevkifat yapılmaz; tam tevkifatta (10/10) tutar sınırı aranmaz. Sınır fatura başına değil, aynı işleme ait bedellerin toplamına göre değerlendirilir.',
+  },
+  {
+    q: 'Aynı faturada farklı KDV oranları olabilir mi?',
+    a: 'Evet. Örneğin bir markette ekmek %1, bazı gıdalar %10, temizlik ürünleri %20 orana tabi olabilir. Her satırın KDV’si kendi oranıyla ayrı hesaplanır ve faturada oran bazında toplanır. Hesaplayıcıya “Satır ekle” ile istediğiniz kadar farklı oranlı satır ekleyebilirsiniz.',
+  },
+  {
     q: 'KDV hesabında kuruşlar nasıl yuvarlanır?',
     a: 'KDV kuruşa yuvarlanır. KDV dahil bir tutardan geriye hesaplarken bu robot önce matrahı kuruşa yuvarlar, KDV’yi de aradaki fark olarak bulur; böylece matrah ile KDV’nin toplamı her zaman girdiğiniz tutara tam eşit olur.',
   },
@@ -36,6 +44,22 @@ const faq: FaqItem[] = [
 const ornek = hesaplaKdv({ amount: 15000, rate: 20, mode: 'haric', tevkifat: 0 });
 const ornekDahil = hesaplaKdv({ amount: 2750, rate: 10, mode: 'dahil', tevkifat: 0 });
 const ornekTevkifat = hesaplaKdv({ amount: 50000, rate: 20, mode: 'haric', tevkifat: 9 });
+const ornekKarisik = hesaplaFatura({
+  satirlar: [
+    { tutar: 400, oran: 1 },
+    { tutar: 1500, oran: 10 },
+    { tutar: 2500, oran: 20 },
+  ],
+  mode: 'haric',
+  tevkifat: 0,
+  tevkifatSiniri: null,
+});
+const ornekSinirAlti = hesaplaFatura({
+  satirlar: [{ tutar: 8000, oran: 20 }],
+  mode: 'haric',
+  tevkifat: 9,
+  tevkifatSiniri: 12000,
+});
 ---
 
 <ToolLayout meta={meta} faq={faq}>
@@ -68,6 +92,20 @@ KDV tutarı        = KDV hariç × oran</div>
       <strong>9/10 tevkifatlı 50.000 TL’lik fatura (%20):</strong> KDV {formatTL(ornekTevkifat.kdv)}. Alıcı bunun
       {formatTL(ornekTevkifat.tevkifEdilen)} kısmını keser ve kendisi öder; satıcıya {formatTL(ornekTevkifat.odenecekToplam)}
       öder ({formatTL(ornekTevkifat.matrah)} bedel + {formatTL(ornekTevkifat.tahsilEdilecekKdv)} KDV).
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Farklı oranlı satırlar:</strong> 400 TL (%1) + 1.500 TL (%10) + 2.500 TL (%20) KDV hariç tutarlı bir faturada
+      KDV sırasıyla {ornekKarisik.oranlar.map((g) => formatTL(g.kdv)).join(', ')}; toplam KDV {formatTL(ornekKarisik.kdv)},
+      fatura toplamı {formatTL(ornekKarisik.toplam)} olur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Sınırın altında kalan tevkifatlı iş:</strong> KDV hariç 8.000 TL’lik bir hizmetin KDV dahil bedeli
+      {formatTL(ornekSinirAlti.toplam)}’dir. 2026 sınırı olan 12.000 TL aşılmadığı için 9/10 tevkifat uygulanmaz; alıcı
+      satıcıya KDV’nin tamamıyla birlikte {formatTL(ornekSinirAlti.odenecekToplam)} öder.
     </p>
   </div>
 

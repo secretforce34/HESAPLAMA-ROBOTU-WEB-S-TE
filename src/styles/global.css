@@ -837,6 +837,76 @@ select.input option {
   color: var(--text-3);
 }
 
+/* ---------- Çok satırlı girişler (fatura satırları, alım listesi, varlıklar…) ---------- */
+
+.line-items {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.line-item {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+
+.line-item__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-3);
+}
+
+.line-item__fields {
+  display: grid;
+  gap: 10px;
+}
+
+@media (min-width: 520px) {
+  .line-item__fields {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+  }
+}
+
+.line-item .input-wrap {
+  background: var(--surface);
+}
+
+.line-item__remove {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-3);
+  cursor: pointer;
+}
+
+.line-item__remove:hover {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.line-item__remove svg {
+  width: 14px;
+  height: 14px;
+}
+
+.add-row {
+  justify-self: start;
+}
+
 /* ---------- Sonuçlar ---------- */
 
 .result-hero {
