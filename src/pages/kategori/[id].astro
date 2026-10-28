@@ -1,0 +1,40 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import Breadcrumbs from '../../components/Breadcrumbs.astro';
+import ToolCard from '../../components/ToolCard.astro';
+import { CATEGORIES, type Category } from '../../tools/categories';
+import { toolsInCategory } from '../../tools/registry';
+
+export function getStaticPaths() {
+  return CATEGORIES.map((c) => ({ params: { id: c.id }, props: { cat: c } }));
+}
+
+interface Props {
+  cat: Category;
+}
+const { cat } = Astro.props;
+const tools = toolsInCategory(cat.id);
+---
+
+<BaseLayout title={`${cat.name} Hesaplamaları`} description={`${cat.description} Ücretsiz, açıklamalı ve güncel.`} activeCategory={cat.id}>
+  <div class="container">
+    <Breadcrumbs items={[{ name: 'Ana sayfa', href: '/' }, { name: cat.name }]} />
+    <header class="page-head" style="padding-top:0">
+      <h1><span aria-hidden="true">{cat.icon}</span> {cat.name}</h1>
+      <p>{cat.description}</p>
+    </header>
+    {
+      tools.length > 0 ? (
+        <ul class="tool-grid">
+          {tools.map((t) => (
+            <li>
+              <ToolCard tool={t} />
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <div class="result-empty">Bu kategorideki hesaplama robotları hazırlanıyor. Çok yakında burada olacaklar.</div>
+      )
+    }
+  </div>
+</BaseLayout>

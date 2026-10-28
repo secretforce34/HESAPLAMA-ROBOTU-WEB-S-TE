@@ -1,0 +1,34 @@
+---
+// Oran setinin validTo tarihi geçmişse (ziyaretçinin bugünkü tarihine göre) uyarı gösterir.
+// Kontrol tarayıcıda yapılır; böylece site yeniden derlenmese bile uyarı kendiliğinden çıkar.
+import type { ParamSet } from '../data/params/types';
+import { formatDateTR } from '../lib/format';
+
+interface Props {
+  sets: ParamSet<unknown>[];
+}
+const { sets } = Astro.props;
+const expiring = sets.filter((s) => s.validTo !== null);
+---
+
+{
+  expiring.map((s) => (
+    <div class="callout callout--warning stale-warning" data-valid-to={s.validTo} hidden>
+      <strong>Oranlar güncellenmeyi bekliyor.</strong> “{s.title}” {formatDateTR(s.validTo as string)} tarihine kadar
+      geçerliydi. Yeni dönemin oranları henüz eklenmedi; sonuçlar son bilinen oranlarla hesaplanıyor.
+    </div>
+  ))
+}
+
+<script>
+  const today = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Istanbul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+  document.querySelectorAll<HTMLElement>('.stale-warning').forEach((el) => {
+    const validTo = el.dataset.validTo;
+    if (validTo && today > validTo) el.hidden = false;
+  });
+</script>

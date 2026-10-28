@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import ToolCard from '../components/ToolCard.astro';
+import ToolSearch from '../ui/ToolSearch';
+import { categoriesWithTools, TOOLS } from '../tools/registry';
+import { searchItems } from '../lib/search-items';
+
+const cats = categoriesWithTools();
+---
+
+<BaseLayout title="Tüm Hesaplama Robotları" description={`Maaş, kredi, vergi, kira, altın ve borsa için ${TOOLS.length} ücretsiz hesaplama robotunun tam listesi.`}>
+  <div class="container">
+    <Breadcrumbs items={[{ name: 'Ana sayfa', href: '/' }, { name: 'Tüm araçlar' }]} />
+    <header class="page-head" style="padding-top:0">
+      <h1>Tüm hesaplama robotları</h1>
+      <p>{TOOLS.length} hesaplama robotu, kategorilere göre. Aradığınızı hızlıca bulmak için yazmaya başlayın.</p>
+    </header>
+    <ToolSearch items={searchItems()} client:load />
+    {
+      cats.map((c) => (
+        <section class="section" aria-labelledby={`kat-${c.id}`}>
+          <div class="section__head">
+            <h2 id={`kat-${c.id}`}>
+              <span aria-hidden="true">{c.icon}</span> {c.name}
+            </h2>
+          </div>
+          <ul class="tool-grid">
+            {c.tools.map((t) => (
+              <li>
+                <ToolCard tool={t} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</BaseLayout>

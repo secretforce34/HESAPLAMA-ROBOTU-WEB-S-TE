@@ -1,0 +1,41 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { SITE } from '../site.config';
+---
+
+<BaseLayout title="Gizlilik" description={`${SITE.name} hangi verileri işler? Kısaca: hesaplamalarınızı hiçbir sunucuya göndermez.`}>
+  <div class="container">
+    <Breadcrumbs items={[{ name: 'Ana sayfa', href: '/' }, { name: 'Gizlilik' }]} />
+    <article class="prose" style="padding-bottom:16px">
+      <h1>Gizlilik</h1>
+      <p class="tool-head__question">Kısaca: hesaplamak için girdiğiniz bilgiler cihazınızdan çıkmaz.</p>
+
+      <h2>Hesaplama verileri</h2>
+      <p>
+        Tüm hesaplamalar tarayıcınızda çalışan kodla yapılır. Girdiğiniz tutarlar, tarihler ve diğer bilgiler sunucuya
+        gönderilmez, kaydedilmez ve üçüncü taraflarla paylaşılmaz. Sayfayı kapattığınızda bu bilgiler de kaybolur.
+      </p>
+
+      <h2>Paylaşım bağlantıları</h2>
+      <p>
+        “Bağlantıyı paylaş” düğmesine bastığınızda, girdiğiniz değerler bağlantının sonuna eklenir (ör. <code>?tutar=1000</code>).
+        Bu bağlantıyı kiminle paylaşacağınıza siz karar verirsiniz; düğmeye basmadığınız sürece değerler adres çubuğuna
+        yazılmaz.
+      </p>
+
+      <h2>Tarayıcıda saklanan tercihler</h2>
+      <p>Yalnızca açık/koyu tema tercihiniz tarayıcınızın yerel depolamasında tutulur. Çerez kullanılmaz.</p>
+
+      <h2>Sunucu kayıtları</h2>
+      <p>
+        Site statik dosyalar olarak barındırılır. Barındırma hizmeti, her web sitesinde olduğu gibi güvenlik ve işletim
+        amacıyla teknik erişim kayıtları (IP adresi, tarayıcı türü, ziyaret zamanı) tutabilir. Bu kayıtlar hesaplama
+        verilerinizi içermez.
+      </p>
+
+      <h2>İletişim</h2>
+      <p>Sorularınız için: <a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+    </article>
+  </div>
+</BaseLayout>

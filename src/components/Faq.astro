@@ -1,0 +1,21 @@
+---
+import type { FaqItem } from '../tools/types';
+
+interface Props {
+  items: FaqItem[];
+}
+const { items } = Astro.props;
+---
+
+<div class="faq">
+  {
+    items.map((item) => (
+      <details>
+        <summary>{item.q}</summary>
+        <div class="faq__a">
+          <p set:html={item.a} />
+        </div>
+      </details>
+    ))
+  }
+</div>

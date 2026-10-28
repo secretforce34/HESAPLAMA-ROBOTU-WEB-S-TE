@@ -1,0 +1,89 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kdv-hesaplama/Calculator';
+import { meta } from '../tools/kdv-hesaplama/meta';
+import { hesaplaKdv } from '../tools/kdv-hesaplama/calc';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'KDV dahil fiyattan KDV nasıl çıkarılır?',
+    a: 'KDV dahil tutarı (1 + KDV oranı) değerine bölün. %20 KDV dahil 1.200 TL için 1.200 ÷ 1,20 = 1.000 TL KDV hariç tutardır; aradaki 200 TL KDV’dir. 1.200 TL’nin %20’sini (240 TL) KDV sanmak en sık yapılan hatadır.',
+  },
+  {
+    q: 'Güncel KDV oranları nelerdir?',
+    a: 'Türkiye’de üç KDV oranı uygulanır: <strong>%1</strong>, <strong>%10</strong> ve genel oran <strong>%20</strong>. Genel oran 10 Temmuz 2023’ten beri %20, indirimli oran %10’dur. Hangi mal ve hizmetin %1 veya %10 orana tabi olduğu, 2007/13033 sayılı Kararın eki listelerde belirlenir; listelerde olmayanlar %20 orana tabidir.',
+  },
+  {
+    q: 'Tevkifatlı fatura nedir?',
+    a: 'Tevkifat, hesaplanan KDV’nin bir kısmının ya da tamamının satıcı yerine alıcı tarafından vergi dairesine ödenmesidir. Alıcı bu kısmı satıcıya ödemez, KDV-2 beyannamesiyle kendisi beyan eder. Satıcı faturada KDV’nin tamamını gösterir, ancak yalnızca tevkif edilmeyen kısmı tahsil eder.',
+  },
+  {
+    q: '2/10, 5/10, 9/10 tevkifat oranı ne demek?',
+    a: 'KDV’nin onda kaçının alıcı tarafından kesileceğini gösterir. Örneğin 2.000 TL KDV’li bir faturada 9/10 tevkifatta alıcı 1.800 TL’yi keser, satıcıya yalnızca 200 TL KDV öder. 10/10 tam tevkifatta satıcı hiç KDV tahsil etmez.',
+  },
+  {
+    q: 'Hangi işlerde tevkifat uygulanır?',
+    a: 'Tevkifat uygulanacak işler ve oranları KDV Genel Uygulama Tebliği’nin (I/C-2.1.3) bölümünde sayılır; yapım işleri, temizlik, özel güvenlik, işgücü temin ve yemek servisi hizmetleri bunlara örnektir. Oranlar zaman zaman değiştiği için faturanızdaki veya tebliğdeki güncel oranı kullanın.',
+  },
+  {
+    q: 'KDV hesabında kuruşlar nasıl yuvarlanır?',
+    a: 'KDV kuruşa yuvarlanır. KDV dahil bir tutardan geriye hesaplarken bu robot önce matrahı kuruşa yuvarlar, KDV’yi de aradaki fark olarak bulur; böylece matrah ile KDV’nin toplamı her zaman girdiğiniz tutara tam eşit olur.',
+  },
+];
+
+const ornek = hesaplaKdv({ amount: 15000, rate: 20, mode: 'haric', tevkifat: 0 });
+const ornekDahil = hesaplaKdv({ amount: 2750, rate: 10, mode: 'dahil', tevkifat: 0 });
+const ornekTevkifat = hesaplaKdv({ amount: 50000, rate: 20, mode: 'haric', tevkifat: 9 });
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>KDV nasıl hesaplanır?</h2>
+  <p>
+    KDV (katma değer vergisi), mal ve hizmet bedelinin üzerine eklenen bir vergidir. Hesap iki yönlü yapılır: KDV hariç
+    tutardan toplam fiyatı bulmak ya da KDV dahil bir fiyatın içindeki vergiyi ayırmak.
+  </p>
+  <div class="formula">KDV hariç → dahil:  KDV dahil = KDV hariç × (1 + oran)
+KDV dahil → hariç:  KDV hariç = KDV dahil ÷ (1 + oran)
+KDV tutarı        = KDV hariç × oran</div>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>KDV hariç 15.000 TL’lik bir hizmet (%20):</strong> 15.000 × 0,20 = {formatTL(ornek.kdv)} KDV. Faturanın
+      toplamı {formatTL(ornek.toplam)} olur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>KDV dahil 2.750 TL’lik bir ürün (%10):</strong> 2.750 ÷ 1,10 = {formatTL(ornekDahil.matrah)} KDV hariç
+      tutar; içindeki KDV {formatTL(ornekDahil.kdv)}.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>9/10 tevkifatlı 50.000 TL’lik fatura (%20):</strong> KDV {formatTL(ornekTevkifat.kdv)}. Alıcı bunun
+      {formatTL(ornekTevkifat.tevkifEdilen)} kısmını keser ve kendisi öder; satıcıya {formatTL(ornekTevkifat.odenecekToplam)}
+      öder ({formatTL(ornekTevkifat.matrah)} bedel + {formatTL(ornekTevkifat.tahsilEdilecekKdv)} KDV).
+    </p>
+  </div>
+
+  <h2>KDV oranları</h2>
+  <table>
+    <thead>
+      <tr><th>Oran</th><th>Nerede uygulanır?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>%1</td><td>(I) sayılı listedeki mal ve hizmetler (bazı temel gıda ürünleri gibi)</td></tr>
+      <tr><td>%10</td><td>(II) sayılı listedeki mal ve hizmetler</td></tr>
+      <tr><td>%20</td><td>Listelerde yer almayan tüm teslim ve hizmetler (genel oran)</td></tr>
+    </tbody>
+  </table>
+  <p>
+    10 Temmuz 2023’ten önce genel oran %18, indirimli oran %8 idi. Eski tarihli bir faturayı kontrol ediyorsanız
+    hesaplayıcıda “Diğer” seçeneğiyle bu oranları yazabilirsiniz.
+  </p>
+</ToolLayout>

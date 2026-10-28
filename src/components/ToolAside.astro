@@ -1,0 +1,83 @@
+---
+import { formatDateTR } from '../lib/format';
+import { relatedTools } from '../tools/registry';
+import type { ToolMeta } from '../tools/types';
+import type { Source } from '../data/params/types';
+
+interface Props {
+  meta: ToolMeta;
+}
+const { meta } = Astro.props;
+
+// Oran setlerinin ve aracın kendi kaynaklarını tekrarsız birleştir.
+const allSources = new Map<string, Source>();
+for (const s of meta.sources) allSources.set(s.url, s);
+for (const set of meta.paramSets) for (const s of set.sources) allSources.set(s.url, s);
+
+const related = relatedTools(meta);
+---
+
+<aside class="tool-aside" aria-label="Kaynaklar ve ilgili araçlar">
+  {
+    meta.paramSets.length > 0 && (
+      <section class="side-box">
+        <h2>Kullanılan oranlar</h2>
+        <ul class="param-list">
+          {meta.paramSets.map((s) => (
+            <li>
+              <span class="param-list__title">{s.title}</span>
+              <span class="param-list__meta">
+                {s.validTo
+                  ? `Geçerlilik: ${formatDateTR(s.validFrom)} – ${formatDateTR(s.validTo)}`
+                  : `${formatDateTR(s.validFrom)} tarihinden beri yürürlükte`}
+              </span>
+              <span class="param-list__meta">Son kontrol: {formatDateTR(s.lastReviewed)}</span>
+              {s.note && <span class="param-list__meta">{s.note}</span>}
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+  {
+    allSources.size > 0 && (
+      <section class="side-box">
+        <h2>Kaynaklar</h2>
+        <ul class="sources">
+          {[...allSources.values()].map((s) => (
+            <li>
+              <a href={s.url} target="_blank" rel="noopener noreferrer">
+                {s.label}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+  <section class="side-box">
+    <h2>Önemli not</h2>
+    <p class="disclaimer">
+      Bu hesaplama bilgilendirme amaçlıdır; hukuki, mali veya yatırım tavsiyesi değildir. Kesin tutarlar için ilgili kurum,
+      işvereniniz ya da bir mali müşavirle teyit edin. İçerik en son {formatDateTR(meta.lastReviewed)} tarihinde kontrol
+      edildi.
+    </p>
+  </section>
+  {
+    related.length > 0 && (
+      <section class="side-box">
+        <h2>İlgili hesaplamalar</h2>
+        <ul class="related">
+          {related.map((t) => (
+            <li>
+              <a href={`/${t.slug}/`}>
+                <span aria-hidden="true">{t.icon}</span>
+                {t.title}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</aside>

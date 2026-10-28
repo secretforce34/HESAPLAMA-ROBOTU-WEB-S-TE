@@ -1,0 +1,112 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import ToolCard from '../components/ToolCard.astro';
+import ToolSearch from '../ui/ToolSearch';
+import { categoriesWithTools, TOOLS } from '../tools/registry';
+import { searchItems } from '../lib/search-items';
+import { SITE } from '../site.config';
+
+const featured = TOOLS.filter((t) => t.featured);
+const cats = categoriesWithTools();
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE.name,
+    url: SITE.url,
+    inLanguage: 'tr-TR',
+    description: SITE.description,
+  },
+];
+---
+
+<BaseLayout title={`${SITE.name} – Türkiye’nin açıklamalı hesaplama robotları`} description={SITE.description} jsonLd={jsonLd}>
+  <div class="container">
+    <section class="hero">
+      <h1>Paranla ilgili her hesap, <em>kuruşu kuruşuna.</em></h1>
+      <p class="hero__lead">
+        Maaş, kredi, vergi, altın, borsa… Türkiye’nin güncel kurallarıyla çalışan, nasıl hesapladığını açıklayan ve
+        kaynağını gösteren ücretsiz hesaplama robotları.
+      </p>
+      <ToolSearch items={searchItems()} client:load />
+      <ul class="trust">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+          Bilgileriniz cihazınızdan çıkmaz
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 5h11l5 5v9a1 1 0 0 1-1 1H4z"></path><path d="M8 13h8M8 17h5"></path></svg>
+          Her sonuçta resmî kaynak
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m5 12 4 4L19 6"></path></svg>
+          Ücretsiz, üyelik yok
+        </li>
+      </ul>
+    </section>
+
+    {
+      featured.length > 0 && (
+        <section class="section" aria-labelledby="one-cikanlar">
+          <div class="section__head">
+            <h2 id="one-cikanlar">En çok kullanılanlar</h2>
+          </div>
+          <ul class="tool-grid">
+            {featured.map((t) => (
+              <li>
+                <ToolCard tool={t} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )
+    }
+
+    {
+      cats.map((c) => (
+        <section class="section" aria-labelledby={`kat-${c.id}`}>
+          <div class="section__head">
+            <h2 id={`kat-${c.id}`}>
+              <span aria-hidden="true">{c.icon}</span> {c.name}
+            </h2>
+            <a class="section__more" href={`/kategori/${c.id}/`}>
+              Tümü ({c.tools.length}) →
+            </a>
+          </div>
+          <ul class="tool-grid">
+            {c.tools.map((t) => (
+              <li>
+                <ToolCard tool={t} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))
+    }
+
+    <section class="section" aria-labelledby="neden">
+      <div class="section__head">
+        <h2 id="neden">Neden Hesap Robotu?</h2>
+      </div>
+      <ul class="feature-strip">
+        <li class="feature">
+          <h3>Sadece sonuç değil, açıklama</h3>
+          <p>Her hesabın hangi formülle, hangi oranla yapıldığını adım adım gösteririz.</p>
+        </li>
+        <li class="feature">
+          <h3>Resmî kaynak ve tarih</h3>
+          <p>Kullanılan oranların kaynağını ve en son ne zaman kontrol edildiğini her sayfada görürsünüz.</p>
+        </li>
+        <li class="feature">
+          <h3>Gizlilik</h3>
+          <p>Hesaplar tamamen tarayıcınızda yapılır. Maaşınız, borcunuz ya da birikiminiz hiçbir sunucuya gitmez.</p>
+        </li>
+        <li class="feature">
+          <h3>Eskiyen oran uyarısı</h3>
+          <p>Yasal oranların geçerlilik süresi dolduğunda sayfa bunu kendiliğinden söyler; eski oranla sessizce hesaplamaz.</p>
+        </li>
+      </ul>
+    </section>
+  </div>
+</BaseLayout>

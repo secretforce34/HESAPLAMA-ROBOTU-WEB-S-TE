@@ -1,0 +1,50 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { SITE } from '../site.config';
+---
+
+<BaseLayout title="Hakkımızda ve Yöntemimiz" description={`${SITE.name} nasıl çalışır, hesaplar nasıl doğrulanır, oranlar ne zaman güncellenir?`}>
+  <div class="container">
+    <Breadcrumbs items={[{ name: 'Ana sayfa', href: '/' }, { name: 'Hakkımızda' }]} />
+    <article class="prose" style="padding-bottom:16px">
+      <h1>Hakkımızda ve yöntemimiz</h1>
+      <p>
+        {SITE.name}, Türkiye’de para ile ilgili en sık sorulan soruları — “net maaşım ne kadar?”, “bu kredinin gerçek maliyeti
+        ne?”, “kiraya ne kadar zam yapılabilir?” — açık, doğru ve kaynaklı biçimde yanıtlamak için hazırlanmış ücretsiz
+        hesaplama robotlarından oluşur.
+      </p>
+
+      <h2>Hesapları nasıl hazırlıyoruz?</h2>
+      <ol>
+        <li><strong>Kaynak:</strong> Kurallar kanun ve yönetmelik metinlerinden (mevzuat.gov.tr, Resmî Gazete) ve resmî kurumların (SGK, GİB, TCMB, TÜİK, Çalışma Bakanlığı) yayımladığı tablolardan alınır.</li>
+        <li><strong>Tek yerde oranlar:</strong> Yasal oranlar her aracın kodundan ayrı, kaynak bağlantılarıyla birlikte tek bir dosyada tutulur.</li>
+        <li><strong>Test:</strong> Her robot, resmî örneklerden ve elle doğrulanmış senaryolardan oluşan otomatik testlerden geçmeden yayına alınmaz.</li>
+        <li><strong>Şeffaflık:</strong> Her sayfada kullanılan oranlar, geçerlilik tarihleri, kaynaklar ve son kontrol tarihi yazar.</li>
+      </ol>
+
+      <h2>Oranlar ne zaman güncellenir?</h2>
+      <p>
+        Vergi dilimleri, asgari ücret ve SGK sınırları gibi yasal oranlar genellikle her yıl Ocak ayında, bazıları Temmuz’da
+        değişir. Bir oranın geçerlilik süresi dolduğu hâlde yenisi eklenmemişse sayfa bunu sarı bir uyarıyla kendiliğinden
+        belirtir. Enflasyon ve kur gibi aylık veriler resmî kaynaklardan düzenli olarak eklenir.
+      </p>
+
+      <h2>Gizlilik</h2>
+      <p>
+        Hesaplamalar tamamen tarayıcınızda çalışır. Girdiğiniz maaş, borç veya birikim bilgileri hiçbir sunucuya gönderilmez
+        ve saklanmaz. Ayrıntılar için <a href="/gizlilik/">gizlilik sayfasına</a> bakın.
+      </p>
+
+      <h2>Sınırlarımız</h2>
+      <p>
+        Robotlar en yaygın durumları doğru hesaplamak için tasarlanmıştır; sözleşmenize, işyerinize ya da kişisel durumunuza
+        özgü istisnaları bilemez. Sonuçlar bilgilendirme amaçlıdır; hukuki, mali veya yatırım tavsiyesi değildir. Ayrıntılar:
+        <a href="/sorumluluk-reddi/">sorumluluk reddi</a>.
+      </p>
+
+      <h2>İletişim</h2>
+      <p>Bir hata mı fark ettiniz ya da yeni bir hesaplama mı önermek istiyorsunuz? <a href={`mailto:${SITE.email}`}>{SITE.email}</a></p>
+    </article>
+  </div>
+</BaseLayout>

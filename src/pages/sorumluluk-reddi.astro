@@ -1,0 +1,29 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Breadcrumbs from '../components/Breadcrumbs.astro';
+import { SITE } from '../site.config';
+---
+
+<BaseLayout title="Sorumluluk Reddi" description={`${SITE.name} hesaplamaları bilgilendirme amaçlıdır; hukuki, mali veya yatırım tavsiyesi değildir.`}>
+  <div class="container">
+    <Breadcrumbs items={[{ name: 'Ana sayfa', href: '/' }, { name: 'Sorumluluk reddi' }]} />
+    <article class="prose" style="padding-bottom:16px">
+      <h1>Sorumluluk reddi</h1>
+      <p>
+        {SITE.name} üzerindeki tüm hesaplamalar, açıklamalar ve içerikler genel bilgilendirme amaçlıdır. Hukuki, mali,
+        vergisel veya yatırım tavsiyesi niteliği taşımaz.
+      </p>
+      <ul>
+        <li>Hesaplamalar, sayfada belirtilen tarihte geçerli olan mevzuat ve oranlar esas alınarak yapılır. Mevzuat değişebilir.</li>
+        <li>Sonuçlar; sözleşmenize, işyeri uygulamalarına, yargı kararlarına ve kişisel durumunuza göre farklılık gösterebilir.</li>
+        <li>Resmî işlemlerde ilgili kurumun (SGK, GİB, banka, işveren vb.) hesapladığı tutar esas alınır.</li>
+        <li>Geçmiş piyasa verilerine dayanan karşılaştırmalar gelecekteki getirilerin göstergesi değildir; alım-satım önerisi içermez.</li>
+        <li>Önemli kararlar öncesinde bir avukat, mali müşavir veya yetkili kurumdan destek almanızı öneririz.</li>
+      </ul>
+      <p>
+        İçeriklerde bir hata görürseniz <a href={`mailto:${SITE.email}`}>{SITE.email}</a> adresine bildirmeniz, düzeltmemize
+        yardımcı olur.
+      </p>
+    </article>
+  </div>
+</BaseLayout>
