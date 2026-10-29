@@ -1,0 +1,67 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kredi-erken-kapama/Calculator';
+import { meta } from '../tools/kredi-erken-kapama/meta';
+import { erkenKapama } from '../tools/kredi-erken-kapama/calc';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const ihtiyac = erkenKapama({ tur: 'ihtiyac', anapara: 200000, vade: 36, aylikFaiz: 3.5, kkdf: 15, bsmv: 15, odenenTaksit: 12, gecenGun: 0, faizTipi: 'sabit', ticariOran: 0 });
+const konut = erkenKapama({ tur: 'konut', anapara: 2000000, vade: 120, aylikFaiz: 2.8, kkdf: 0, bsmv: 0, odenenTaksit: 24, gecenGun: 0, faizTipi: 'sabit', ticariOran: 0 });
+
+const faq: FaqItem[] = [
+  {
+    q: 'Kredi erken kapatılırsa faiz geri ödenir mi?',
+    a: 'Erken kapatmada henüz işlememiş faiz ve buna bağlı vergiler alınmaz; yalnızca kalan anapara ile son taksitten bu yana işleyen faiz ödenir (6502 sayılı Kanun md. 30). Peşin ödenen masraflar ve geçmiş taksitlerdeki faiz iade edilmez.',
+  },
+  {
+    q: 'İhtiyaç kredisini erken kapatınca ceza var mı?',
+    a: 'Hayır. Tüketici kredilerinde (ihtiyaç, taşıt vb.) erken ödeme tazminatı alınamaz.',
+  },
+  {
+    q: 'Konut kredisi erken kapatma tazminatı ne kadar?',
+    a: 'Sabit faizli konut kredilerinde banka, erken ödenen tutarın kalan vade 36 ay ve altındaysa en fazla %1’ini, 36 aydan uzunsa en fazla %2’sini erken ödeme tazminatı olarak isteyebilir. Değişken faizli konut kredilerinde tazminat alınamaz (6502 sayılı Kanun md. 37).',
+  },
+  {
+    q: 'Ara ödemede taksit mi düşsün, vade mi kısalsın?',
+    a: 'Vadeyi kısaltmak toplamda daha fazla faiz tasarrufu sağlar, çünkü borç daha kısa sürede kapanır. Taksiti düşürmek ise aylık ödemenizi azaltır. Hangisinin uygun olduğu bütçenize bağlıdır.',
+  },
+  {
+    q: 'Kapama tutarını bankaya nasıl sorarım?',
+    a: 'İnternet ya da mobil bankacılıkta “kredi kapama tutarı” bölümünden veya şubeden öğrenebilirsiniz. Banka işlemiş günlük faizi de ekleyeceği için tutar, ödeme yapılan güne göre birkaç lira değişebilir.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Erken kapama tutarı nasıl hesaplanır?</h2>
+  <div class="formula">Kapama tutarı = Kalan anapara + İşlemiş faiz (ve KKDF, BSMV) + Erken ödeme tazminatı
+Tasarruf      = Kalan taksitlerin toplamı − Kapama tutarı</div>
+  <table>
+    <thead><tr><th>Kredi</th><th>Erken ödeme tazminatı</th></tr></thead>
+    <tbody>
+      <tr><td>İhtiyaç, taşıt ve diğer tüketici kredileri</td><td>Alınamaz</td></tr>
+      <tr><td>Sabit faizli konut kredisi, kalan vade ≤ 36 ay</td><td>En fazla %1</td></tr>
+      <tr><td>Sabit faizli konut kredisi, kalan vade &gt; 36 ay</td><td>En fazla %2</td></tr>
+      <tr><td>Değişken faizli konut kredisi</td><td>Alınamaz</td></tr>
+      <tr><td>Ticari kredi</td><td>Sözleşmeye göre</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>İhtiyaç kredisi:</strong> 200.000 TL, 36 ay, aylık %3,5 (KKDF ve BSMV dahil). 12 taksit ödendikten sonra kapama tutarı
+      {formatTL(ihtiyac.kapamaTutari)}; kalan 24 taksit ({formatTL(ihtiyac.kalanOdemeler)}) yerine ödendiği için {formatTL(ihtiyac.tasarruf)}
+      tasarruf edilir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Konut kredisi:</strong> 2.000.000 TL, 120 ay, aylık %2,8, sabit faizli. 24 taksit sonra kalan anapara {formatTL(konut.kalanAnapara)};
+      %2 tazminat ({formatTL(konut.tazminat)}) ile kapama tutarı {formatTL(konut.kapamaTutari)}, tasarruf {formatTL(konut.tasarruf)}.
+    </p>
+  </div>
+</ToolLayout>
