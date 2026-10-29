@@ -1,0 +1,53 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/bes-hesaplama/Calculator';
+import { meta } from '../tools/bes-hesaplama/meta';
+import { besKurallari } from '../data/params/bes';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const p = besKurallari.values;
+
+const faq: FaqItem[] = [
+  {
+    q: 'BES devlet katkısı 2026’da yüzde kaç?',
+    a: `1 Ocak 2026’dan itibaren ödenen katkı paylarına %${p.devletKatkisiOrani} devlet katkısı eklenir (önceden %30’du). Bir takvim yılında alınabilecek devlet katkısı en fazla ${formatTL(p.yillikUstSinir, 0)}’dir; bu sınır yıllık brüt asgari ücretin %20’sidir.`,
+  },
+  {
+    q: 'BES’ten erken çıkarsam devlet katkısını alabilir miyim?',
+    a: 'Sistemde 3 yıldan az kalırsanız devlet katkısının hiçbirini alamazsınız. 3 yılını dolduranlar %15’ini, 6 yılını dolduranlar %35’ini, 10 yılını dolduranlar %60’ını alır. Hak kazanılmayan kısım devlete geri döner.',
+  },
+  {
+    q: 'BES’ten emeklilik için şartlar nelerdir?',
+    a: `Sistemde en az ${p.emeklilikYil} yıl kalmak ve ${p.emeklilikYas} yaşını doldurmak gerekir. Emeklilikte devlet katkısının ve getirisinin tamamı alınır. Vefat ve maluliyet hâlinde de devlet katkısının tamamı hak edilir.`,
+  },
+  {
+    q: 'BES’te stopaj ne kadar kesilir?',
+    a: `Stopaj yalnızca sizin ödediğiniz katkı paylarının getirisinden kesilir; anaparadan kesinti yapılmaz. 10 yıldan önce ayrılırsanız %${p.stopaj.onYildanAz}, 10 yılı doldurup emeklilik hakkı kazanmadan ayrılırsanız %${p.stopaj.onYilVeUzeri}, emeklilik, vefat veya maluliyette %${p.stopaj.emeklilik} uygulanır.`,
+  },
+  {
+    q: 'Devlet katkısı için en fazla ne kadar ödemeliyim?',
+    a: `Yıllık sınır ${formatTL(p.yillikUstSinir, 0)} olduğundan, yılda ${formatTL(p.yillikUstSinir / (p.devletKatkisiOrani / 100), 0)} (ayda yaklaşık ${formatTL(p.yillikUstSinir / 12 / (p.devletKatkisiOrani / 100), 0)}) üzerindeki katkı paylarına devlet katkısı verilmez.`,
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Nasıl hesaplanır?</h2>
+  <p>
+    Her ay ödenen katkı payı ve buna eklenen %{p.devletKatkisiOrani} devlet katkısı ayrı hesaplarda birikir ve girdiğiniz getiriyle büyür.
+    Çıkışta katkı payı birikiminin getirisinden stopaj kesilir, devlet katkısının ise sistemde kaldığınız süreye göre hak ettiğiniz kısmı eklenir.
+  </p>
+  <div class="formula">Elinize geçen = Katkı payı birikimi − Stopaj + Devlet katkısı birikimi × Hak oranı
+Stopaj = (Katkı payı birikimi − Ödenen katkı) × Stopaj oranı</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      Ayda 3.000 TL ödeyen biri bir yılda 36.000 TL katkı payı öder; buna %{p.devletKatkisiOrani} yani 7.200 TL devlet katkısı eklenir. 4. yılda
+      sistemden ayrılırsa devlet katkısı birikiminin %15’ini alır ve katkı payı getirisinden %{p.stopaj.onYildanAz} stopaj kesilir.
+    </p>
+  </div>
+</ToolLayout>

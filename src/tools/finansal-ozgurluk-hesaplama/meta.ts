@@ -15,5 +15,5 @@ export const meta: ToolMeta = {
   paramSets: [],
   sources: [],
   lastReviewed: '2026-10-29',
-  related: ['ya-o-gun-alsaydim', 'enflasyon-hesaplama', 'ne-zaman-emekli-olurum'],
+  related: ['bes-hesaplama', 'ya-o-gun-alsaydim', 'enflasyon-hesaplama'],
 };
