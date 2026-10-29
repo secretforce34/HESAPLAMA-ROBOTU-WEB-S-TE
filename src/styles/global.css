@@ -1253,6 +1253,15 @@ table.data tfoot td {
   background: var(--surface-2);
 }
 
+/* Dar ekranda geniş içerik tabloları sayfayı taşırmasın: tablo kendi içinde yatay kayar */
+@media (max-width: 640px) {
+  .prose table:not(.table-wrap table) {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+}
+
 .prose .table-wrap table {
   margin: 0;
 }

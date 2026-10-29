@@ -35,9 +35,27 @@ export const emeklilikKurallari: ParamSet<{
   kismiYasTablosu: YasKademesi[];
   /** 5400 gün şartının başlangıç yılına göre kademesi */
   kismiGunKademesi: { from: string; to: string; gun: number }[];
+  /**
+   * 4/c memurlar: 01.10.2008’den önce göreve başlayanlar 5434 sayılı Kanun’a, sonrakiler 5510’a tabidir.
+   * Hizmet yılı gün olarak girilir (1 yıl = 360 gün).
+   */
+  memur: {
+    /** 5434’e tabi son başlangıç tarihi (dahil) */
+    son5434: string;
+    /** EYT: 08.09.1999 ve öncesi — kadın 20, erkek 25 fiili hizmet yılı, yaş yok (5434 geçici 205, 7438) */
+    eyt: { kadin: number; erkek: number };
+    /** 09.09.1999–30.09.2008: 25 fiili hizmet yılı, kadın 58 / erkek 60 yaş (5434 md. 39/b) */
+    donem2Gun: number;
+    /** 5434 md. 39: 15 yıl hizmet + 61 yaş */
+    donem2KismiGun: number;
+    donem2KismiYas: number;
+    /** 01.10.2008 sonrası: 9000 gün + kademeli yaş; yaştan emeklilik 5400 gün (5510 md. 28) */
+    donem3Gun: number;
+    kismiGun: number;
+  };
 }> = {
   id: 'emeklilik-kurallari',
-  title: 'Yaşlılık aylığı (emeklilik) şartları – 4/a ve 4/b',
+  title: 'Yaşlılık aylığı (emeklilik) şartları – 4/a, 4/b ve 4/c',
   validFrom: '2023-03-03',
   validTo: null,
   lastReviewed: '2026-10-29',
@@ -108,6 +126,15 @@ export const emeklilikKurallari: ParamSet<{
       { from: '2015-01-01', to: '2015-12-31', gun: 5300 },
       { from: '2016-01-01', to: '2999-12-31', gun: 5400 },
     ],
+    memur: {
+      son5434: '2008-09-30',
+      eyt: { kadin: 7200, erkek: 9000 },
+      donem2Gun: 9000,
+      donem2KismiGun: 5400,
+      donem2KismiYas: 61,
+      donem3Gun: 9000,
+      kismiGun: 5400,
+    },
   },
   sources: [
     {
@@ -116,6 +143,9 @@ export const emeklilikKurallari: ParamSet<{
     },
     { label: '5510 sayılı Kanun md. 28, geçici md. 10 ve md. 41 (borçlanma)', url: 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=5510&MevzuatTur=1&MevzuatTertip=5' },
     { label: 'EYT (7438 sayılı Kanun) prim günü tabloları – Harbiye Hukuk derlemesi', url: 'https://www.harbiyehukuk.com/eyt-nedir-eyt-basvuru-sartlari/' },
+    { label: '5434 sayılı T.C. Emekli Sandığı Kanunu, geçici md. 205 (08.09.1999 öncesi memurlar: kadın 20, erkek 25 fiili hizmet yılı)', url: 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=5434&MevzuatTur=1&MevzuatTertip=3' },
+    { label: 'Memurlar.net – Memurluk statüsünden emekli olmak için kaç yıl hizmet aranır? (1999–2008 arası: 25 yıl, kadın 58 / erkek 60)', url: 'https://www.memurlar.net/haber/1109653/' },
+    { label: 'Memurlar.net – Memurlar için 2008 öncesi ve sonrası kısmi emeklilik şartları (5400 gün, 61/63 yaş tablosu)', url: 'https://www.memurlar.net/haber/1020835/' },
   ],
   note: 'Kesin emeklilik tarihi için e-Devlet’teki SGK “Ne Zaman Emekli Olabilirim” uygulaması ve hizmet dökümü esas alınır.',
 };

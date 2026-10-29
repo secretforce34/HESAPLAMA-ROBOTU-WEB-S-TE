@@ -115,3 +115,44 @@ describe('yardımcılar', () => {
     expect(validateEmeklilik({ dogum: '1980-01-01', giris: '2000-01-01', gun: 100, yillik: 360, bugun: '2026-10-29' })).toEqual({});
   });
 });
+
+describe('4/c memur', () => {
+  const memur = { ...temel, statu: '4c' as const };
+
+  it('memurlarda 5434’ten 5510’a geçiş 01.10.2008', () => {
+    expect(grupBul('2008-09-30', '4c')).toBe('1999-2008');
+    expect(grupBul('2008-10-01', '4c')).toBe('2008-sonrasi');
+    expect(grupBul('2008-09-30', '4a')).toBe('2008-sonrasi');
+  });
+
+  it('EYT: kadın 20, erkek 25 fiili hizmet yılı, yaş şartı yok', () => {
+    const e = hesaplaEmeklilik({ ...memur, ilkGiris: '1996-09-01', primGun: 8000 });
+    expect(e.grup).toBe('eyt');
+    expect(e.ana.sartlar[0].ad).toBe('Hizmet süresi');
+    expect(e.ana.sartlar[0].gereken).toContain('9.000 gün (25 tam yıl)');
+    const k = hesaplaEmeklilik({ ...memur, cinsiyet: 'kadin', ilkGiris: '1996-09-01', primGun: 7200 });
+    expect(k.ana.tamam).toBe(true);
+  });
+
+  it('1999–2008: 25 yıl (9000 gün) + kadın 58 / erkek 60; 15 yıl + 61 yaş seçeneği', () => {
+    const r = hesaplaEmeklilik({ ...memur, dogum: '1978-04-10', ilkGiris: '2005-02-01', primGun: 7000, yillikGun: 360 });
+    expect(r.grup).toBe('1999-2008');
+    expect(r.grupAdi).toContain('30.09.2008');
+    expect(r.ana.sartlar.find((s) => s.ad === 'Yaş')!.tarih).toBe('2038-04-10');
+    expect(r.ana.sartlar.find((s) => s.ad === 'Hizmet süresi')!.gereken).toContain('9.000');
+    expect(r.alternatifler[0].ad).toBe('15 yıl hizmet + 61 yaş');
+    expect(r.alternatifler[0].tarih).toBe('2039-04-10');
+  });
+
+  it('Haziran 2008’de göreve başlayan memur hâlâ 5434’e tabi; SSK’lı 5510’a', () => {
+    expect(hesaplaEmeklilik({ ...memur, ilkGiris: '2008-06-01' }).grup).toBe('1999-2008');
+    expect(hesaplaEmeklilik({ ...temel, ilkGiris: '2008-06-01' }).grup).toBe('2008-sonrasi');
+  });
+
+  it('01.10.2008 sonrası: 9000 gün + kademeli yaş, yaştan emeklilik 5400 gün', () => {
+    const r = hesaplaEmeklilik({ ...memur, dogum: '1985-01-01', ilkGiris: '2010-09-01', primGun: 5800, yillikGun: 360 });
+    expect(r.grup).toBe('2008-sonrasi');
+    expect(r.ana.sartlar[0].gereken).toBe('9.000 gün');
+    expect(r.alternatifler[0].ad).toContain('5.400 gün');
+  });
+});

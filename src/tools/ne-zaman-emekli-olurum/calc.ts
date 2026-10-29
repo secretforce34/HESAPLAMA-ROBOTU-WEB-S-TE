@@ -1,6 +1,6 @@
 import { emeklilikKurallari, type YasKademesi } from '../../data/params/emeklilik';
 
-export type Statu = '4a' | '4b';
+export type Statu = '4a' | '4b' | '4c';
 export type Cinsiyet = 'kadin' | 'erkek';
 export type Grup = 'eyt' | '1999-2008' | '2008-sonrasi';
 
@@ -83,17 +83,19 @@ const enGec = (tarihler: string[]) => tarihler.reduce((a, b) => (a > b ? a : b))
 
 // ---------- kurallar ----------
 
-export function grupBul(baslangic: string): Grup {
+/** Memurlarda 5510’a geçiş 01.10.2008’dir; SSK ve Bağ-Kur’da 01.05.2008. */
+export function grupBul(baslangic: string, statu: Statu = '4a'): Grup {
   if (baslangic <= '1999-09-08') return 'eyt';
-  if (baslangic <= '2008-04-30') return '1999-2008';
+  if (baslangic <= (statu === '4c' ? emeklilikKurallari.values.memur.son5434 : '2008-04-30')) return '1999-2008';
   return '2008-sonrasi';
 }
 
-const GRUP_ADI: Record<Grup, string> = {
-  eyt: '08.09.1999 ve öncesi sigortalı (EYT – yaş şartı yok)',
-  '1999-2008': '09.09.1999 – 30.04.2008 arası sigortalı',
-  '2008-sonrasi': '01.05.2008 ve sonrası sigortalı (5510 sayılı Kanun)',
-};
+function grupAdi(g: Grup, statu: Statu): string {
+  if (g === 'eyt') return '08.09.1999 ve öncesi sigortalı (EYT – yaş şartı yok)';
+  if (statu === '4c')
+    return g === '1999-2008' ? '09.09.1999 – 30.09.2008 arası göreve başlayan (5434 sayılı Kanun)' : '01.10.2008 ve sonrası göreve başlayan (5510 sayılı Kanun)';
+  return g === '1999-2008' ? '09.09.1999 – 30.04.2008 arası sigortalı' : '01.05.2008 ve sonrası sigortalı (5510 sayılı Kanun)';
+}
 
 function kademe(tablo: YasKademesi[], tarih: string, c: Cinsiyet): number {
   const k = tablo.find((t) => tarih >= t.from && tarih <= t.to) ?? tablo[tablo.length - 1];
@@ -130,8 +132,11 @@ export function hesaplaEmeklilik(i: EmeklilikInput): EmeklilikSonucu {
   const k = emeklilikKurallari.values;
   const baslangic = i.borclanmaGiristenOnce && i.borclanmaGun > 0 ? gunEkle(i.ilkGiris, -i.borclanmaGun) : i.ilkGiris;
   const toplamGun = i.primGun + Math.max(0, i.borclanmaGun);
-  const grup = grupBul(baslangic);
+  const grup = grupBul(baslangic, i.statu);
   const kadin = i.cinsiyet === 'kadin';
+  const memur = i.statu === '4c';
+  const m = k.memur;
+  const gunAdi = memur ? 'Hizmet süresi' : 'Prim günü';
   const alternatifler: Yol[] = [];
   let ana: Yol | null = null;
 
@@ -145,20 +150,27 @@ export function hesaplaEmeklilik(i: EmeklilikInput): EmeklilikSonucu {
         sart(i, 'Yaş', 'Yaş şartı yok', baslangic),
       ]);
     } else {
-      const gun = kadin ? k.eytBagkur.kadin : k.eytBagkur.erkek;
+      const gun = memur ? (kadin ? m.eyt.kadin : m.eyt.erkek) : kadin ? k.eytBagkur.kadin : k.eytBagkur.erkek;
       ana = yolKur(i, 'Tam emeklilik (EYT)', [
-        sart(i, 'Prim günü', `${gun.toLocaleString('tr-TR')} gün (${kadin ? 20 : 25} tam yıl)`, gunTarihi(i, toplamGun, gun)),
+        sart(i, gunAdi, `${gun.toLocaleString('tr-TR')} gün (${gun / 360} tam yıl)`, gunTarihi(i, toplamGun, gun)),
         sart(i, 'Yaş', 'Yaş şartı yok', baslangic),
       ]);
     }
   } else if (grup === '1999-2008') {
     const yas = kadin ? k.donem2.kadinYas : k.donem2.erkekYas;
-    const gun = i.statu === '4a' ? k.donem2.ssk : k.donem2.bagkur;
+    const gun = i.statu === '4a' ? k.donem2.ssk : memur ? m.donem2Gun : k.donem2.bagkur;
     const yasTarihi = yilEkle(i.dogum, yas);
     ana = yolKur(i, 'Tam emeklilik', [
       sart(i, 'Yaş', `${yas}`, yasTarihi),
-      sart(i, 'Prim günü', `${gun.toLocaleString('tr-TR')} gün`, gunTarihi(i, toplamGun, gun)),
+      sart(i, gunAdi, `${gun.toLocaleString('tr-TR')} gün${memur ? ` (${gun / 360} yıl)` : ''}`, gunTarihi(i, toplamGun, gun)),
     ]);
+    if (memur) {
+      const alt = yolKur(i, `${m.donem2KismiGun / 360} yıl hizmet + ${m.donem2KismiYas} yaş`, [
+        sart(i, 'Yaş', `${m.donem2KismiYas}`, yilEkle(i.dogum, m.donem2KismiYas)),
+        sart(i, gunAdi, `${m.donem2KismiGun.toLocaleString('tr-TR')} gün (${m.donem2KismiGun / 360} yıl)`, gunTarihi(i, toplamGun, m.donem2KismiGun)),
+      ]);
+      if (alt) alternatifler.push(alt);
+    }
     if (i.statu === '4a') {
       const alt = yolKur(i, `${k.donem2.sskKismiSure} yıl sigortalılık + ${k.donem2.sskKismiGun.toLocaleString('tr-TR')} gün`, [
         sart(i, 'Yaş', `${yas}`, yasTarihi),
@@ -168,22 +180,24 @@ export function hesaplaEmeklilik(i: EmeklilikInput): EmeklilikSonucu {
       if (alt) alternatifler.push(alt);
     }
   } else {
-    const gun = i.statu === '4a' ? k.donem3.ssk : k.donem3.bagkur;
+    const gun = i.statu === '4a' ? k.donem3.ssk : memur ? m.donem3Gun : k.donem3.bagkur;
     const gunT = gunTarihi(i, toplamGun, gun);
     if (gunT) {
       // Gerekli yaş, gün şartının tamamlandığı tarihe göre belirlenir (5510 md. 28).
       const yas = kademe(k.yasTablosu, gunT, i.cinsiyet);
       ana = yolKur(i, 'Tam emeklilik', [
-        sart(i, 'Prim günü', `${gun.toLocaleString('tr-TR')} gün`, gunT),
+        sart(i, gunAdi, `${gun.toLocaleString('tr-TR')} gün`, gunT),
         sart(i, 'Yaş', `${yas} (günün tamamlandığı yıla göre)`, yilEkle(i.dogum, yas)),
       ]);
     }
-    const kGun = (k.kismiGunKademesi.find((g) => baslangic >= g.from && baslangic <= g.to) ?? k.kismiGunKademesi[k.kismiGunKademesi.length - 1]).gun;
+    const kGun = memur
+      ? m.kismiGun
+      : (k.kismiGunKademesi.find((g) => baslangic >= g.from && baslangic <= g.to) ?? k.kismiGunKademesi[k.kismiGunKademesi.length - 1]).gun;
     const kGunT = gunTarihi(i, toplamGun, kGun);
     if (kGunT) {
       const kYas = kademe(k.kismiYasTablosu, kGunT, i.cinsiyet);
       const alt = yolKur(i, `Yaştan (kısmi) emeklilik – ${kGun.toLocaleString('tr-TR')} gün`, [
-        sart(i, 'Prim günü', `${kGun.toLocaleString('tr-TR')} gün`, kGunT),
+        sart(i, gunAdi, `${kGun.toLocaleString('tr-TR')} gün`, kGunT),
         sart(i, 'Yaş', `${kYas}`, yilEkle(i.dogum, kYas)),
       ]);
       if (alt) alternatifler.push(alt);
@@ -195,7 +209,7 @@ export function hesaplaEmeklilik(i: EmeklilikInput): EmeklilikSonucu {
     ana = { ad: 'Tam emeklilik', sartlar: [], tarih: '9999-12-31', yas: 0, tamam: false };
   }
   const enErken = [ana, ...alternatifler].reduce((a, b) => (b.tarih < a.tarih ? b : a));
-  return { grup, grupAdi: GRUP_ADI[grup], baslangic, toplamGun, ana, alternatifler, enErken };
+  return { grup, grupAdi: grupAdi(grup, i.statu), baslangic, toplamGun, ana, alternatifler, enErken };
 }
 
 export function kalanSure(bugun: string, hedef: string): { yil: number; ay: number } {

@@ -26,8 +26,12 @@ const faq: FaqItem[] = [
     a: 'e-Devlet’teki SGK “Ne Zaman Emekli Olabilirim” hizmeti ve hizmet dökümünüz resmî bilgiyi verir. Farklı statülerde (SSK, Bağ-Kur, memurluk) çalıştıysanız son 7 yılda en çok prim ödediğiniz statü esas alınır; bu tür durumlarda SGK’dan teyit almanız önemlidir.',
   },
   {
-    q: 'Memurlar (4/c) bu hesaplamaya dahil mi?',
-    a: 'Hayır. Bu robot SSK (4/a) ve Bağ-Kur (4/b) sigortalıları içindir. Memurların (Emekli Sandığı) emeklilik şartları hizmet yılı esasına göre ayrıca belirlenir.',
+    q: 'Memurlar (4/c) ne zaman emekli olur?',
+    a: '08.09.1999 ve öncesinde sigortalı olan memurlarda yaş şartı yoktur: kadın 20, erkek 25 fiili hizmet yılı yeter. 09.09.1999 ile 30.09.2008 arasında göreve başlayanlar 5434 sayılı Kanun’a tabidir ve 25 hizmet yılı ile kadın 58, erkek 60 yaşında emekli olur (15 yıl hizmet + 61 yaş yolu da vardır). 01.10.2008 ve sonrasında başlayanlar 5510’a tabidir: 9.000 gün ve kademeli yaş (58/60’tan 65’e).',
+  },
+  {
+    q: 'Memurlarda 2008 sınırı neden Ekim?',
+    a: '5510 sayılı Kanun memurlar için 01.10.2008’de yürürlüğe girdi. Bu tarihten önce göreve başlayan memurlar, SSK ve Bağ-Kur’lulardaki 01.05.2008 sınırından farklı olarak eski Emekli Sandığı (5434) kurallarına tabi kalır.',
   },
 ];
 ---
@@ -37,11 +41,11 @@ const faq: FaqItem[] = [
 
   <h2>Emeklilik şartları ilk girişe göre nasıl değişir?</h2>
   <table>
-    <thead><tr><th>İlk sigortalılık</th><th>SSK (4/a)</th><th>Bağ-Kur (4/b)</th></tr></thead>
+    <thead><tr><th>İlk sigortalılık</th><th>SSK (4/a)</th><th>Bağ-Kur (4/b)</th><th>Memur (4/c)</th></tr></thead>
     <tbody>
-      <tr><td>08.09.1999 ve öncesi (EYT)</td><td>Kadın 20 yıl, erkek 25 yıl + 5.000–5.975 gün; yaş yok</td><td>Kadın 7.200, erkek 9.000 gün; yaş yok</td></tr>
-      <tr><td>09.09.1999 – 30.04.2008</td><td>Kadın 58 / erkek 60 yaş + 7.000 gün (ya da 25 yıl + 4.500 gün)</td><td>Kadın 58 / erkek 60 yaş + 9.000 gün</td></tr>
-      <tr><td>01.05.2008 ve sonrası</td><td>7.200 gün + kademeli yaş (58/60 → 65)</td><td>9.000 gün + kademeli yaş</td></tr>
+      <tr><td>08.09.1999 ve öncesi (EYT)</td><td>Kadın 20 yıl, erkek 25 yıl + 5.000–5.975 gün; yaş yok</td><td>Kadın 7.200, erkek 9.000 gün; yaş yok</td><td>Kadın 20, erkek 25 hizmet yılı; yaş yok</td></tr>
+      <tr><td>09.09.1999 – 2008</td><td>30.04.2008’e kadar: kadın 58 / erkek 60 yaş + 7.000 gün (ya da 25 yıl + 4.500 gün)</td><td>30.04.2008’e kadar: kadın 58 / erkek 60 yaş + 9.000 gün</td><td>30.09.2008’e kadar: kadın 58 / erkek 60 yaş + 25 hizmet yılı</td></tr>
+      <tr><td>2008 ve sonrası</td><td>01.05.2008’den: 7.200 gün + kademeli yaş (58/60 → 65)</td><td>01.05.2008’den: 9.000 gün + kademeli yaş</td><td>01.10.2008’den: 9.000 gün + kademeli yaş</td></tr>
     </tbody>
   </table>
 

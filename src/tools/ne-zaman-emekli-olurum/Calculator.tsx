@@ -76,6 +76,7 @@ export default function Calculator() {
           options={[
             { value: '4a', label: 'SSK (4/a, işçi)' },
             { value: '4b', label: 'Bağ-Kur (4/b, esnaf)' },
+            { value: '4c', label: 'Memur (4/c, Emekli Sandığı)' },
           ]}
         />
         <Segmented
@@ -92,23 +93,31 @@ export default function Calculator() {
           <DateField id="ne-dogum" label="Doğum tarihi" value={dogum} onChange={setDogum} error={errors.dogum} />
           <DateField
             id="ne-giris"
-            label="İlk sigorta başlangıcı"
+            label={statu === '4c' ? 'Memuriyete (ya da ilk sigortaya) başlangıç' : 'İlk sigorta başlangıcı'}
             value={giris}
             onChange={setGiris}
             error={errors.giris}
-            hint="İlk kez sigortalı olduğunuz gün (staj ve çıraklık hariç olabilir)."
+            hint={
+              statu === '4c'
+                ? 'Memurluktan önce SSK veya Bağ-Kur’lu çalıştıysanız ilk sigortalı olduğunuz gün; EYT ve grup buna göre belirlenir.'
+                : 'İlk kez sigortalı olduğunuz gün (staj ve çıraklık hariç olabilir).'
+            }
           />
         </div>
         <NumberField
           id="ne-gun"
-          label="Bugüne kadar ödenen prim günü"
+          label={statu === '4c' ? 'Bugüne kadarki toplam hizmet süresi' : 'Bugüne kadar ödenen prim günü'}
           value={gun}
           onChange={setGun}
           suffix="gün"
           decimals={0}
           inputMode="numeric"
           error={errors.gun}
-          hint="e-Devlet → SGK Tescil ve Hizmet Dökümü’ndeki toplam gün."
+          hint={
+            statu === '4c'
+              ? 'e-Devlet → SGK Hizmet Dökümü (4/c). 1 yıl = 360 gün; birleştirilen SSK ve Bağ-Kur günleri dahil.'
+              : 'e-Devlet → SGK Tescil ve Hizmet Dökümü’ndeki toplam gün.'
+          }
         />
         <NumberField
           id="ne-yillik"
@@ -156,7 +165,7 @@ export default function Calculator() {
             )}
             <Callout kind="info">
               <strong>Grubunuz:</strong> {r.grupAdi}
-              {r.baslangic !== giris && <> — borçlanmayla başlangıç {formatDateTR(r.baslangic)} kabul edildi</>}. Toplam prim günü{' '}
+              {r.baslangic !== giris && <> — borçlanmayla başlangıç {formatDateTR(r.baslangic)} kabul edildi</>}. {statu === '4c' ? 'Toplam hizmet süresi' : 'Toplam prim günü'}{' '}
               {formatNumber(r.toplamGun, 0)}.
             </Callout>
             <YolKutusu yol={r.ana} bugun={bugun} />
@@ -169,6 +178,12 @@ export default function Calculator() {
               ve SGK’dan teyit edin.
             </Callout>
             {statu === '4b' && <Callout kind="info">Bağ-Kur’da emeklilik için prim ve genel sağlık sigortası borcunun bulunmaması gerekir.</Callout>}
+            {statu === '4c' && (
+              <Callout kind="info">
+                Memurlarda şartlar dolsa da emekliliğe dilekçeyle ayrılınır; 65 yaş haddinde ise re’sen emekliye sevk edilir. Fiili hizmet süresi
+                zammı (ör. öğretmen, polis, sağlıkçı) olanlarda yaş ve süre farklı hesaplanabilir; kurumunuzun personel biriminden teyit edin.
+              </Callout>
+            )}
             <ShareBar params={{}} summary={ozet} />
           </>
         ) : (
