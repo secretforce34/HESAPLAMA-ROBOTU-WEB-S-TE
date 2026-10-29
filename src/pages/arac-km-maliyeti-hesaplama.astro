@@ -1,0 +1,41 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/arac-km-maliyeti-hesaplama/Calculator';
+import { meta } from '../tools/arac-km-maliyeti-hesaplama/meta';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: '100 km’de ne kadar yakıt parası harcarım?',
+    a: '100 km yakıt maliyeti = ortalama tüketim (L/100 km) × litre fiyatı. 100 km’de 6,5 litre yakan ve benzini 60 TL’den alan bir araç için 6,5 × 60 = 390 TL’dir; km başına 3,90 TL eder.',
+  },
+  {
+    q: 'Arabanın gerçek maliyeti neden yakıttan çok daha yüksek çıkıyor?',
+    a: 'Sigorta, kasko, MTV, bakım, lastik, muayene, otopark ve değer kaybı gibi giderler yakıt kadar, bazen daha fazla tutar. Az kullanılan araçta bu sabit giderler daha az kilometreye bölündüğü için km başına maliyet yükselir.',
+  },
+  {
+    q: 'Yolculuk masrafı kişi başı nasıl paylaşılır?',
+    a: 'Yakıt masrafına otoyol, köprü ve otopark ücretleri eklenir ve toplam yolcu sayısına bölünür. Yolculuk masrafı hesabında aracın sabit giderleri ve değer kaybı dahil edilmez.',
+  },
+  {
+    q: 'LPG dönüşümü kaç kilometrede kendini çıkarır?',
+    a: 'Dönüşüm maliyeti, iki yakıt arasındaki km başına fiyat farkına bölünür. “Başka yakıtla karşılaştır” bölümüne LPG tüketimini, fiyatını ve dönüşüm maliyetini yazarak aracınız için hesaplayabilirsiniz.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Nasıl hesaplanır?</h2>
+  <div class="formula">Km başına yakıt = Ortalama tüketim ÷ 100 × Birim fiyat
+Km başına toplam maliyet = (Yıllık yakıt + Yıllık diğer giderler + Değer kaybı) ÷ Yıllık km</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      Yılda 15.000 km yapan, 100 km’de 6,5 litre benzin yakan bir araç benzin 60 TL iken yılda 975 litre, yani 58.500 TL yakıt harcar. Yıllık 79.500 TL
+      sigorta, kasko, MTV, bakım ve otopark gideriyle toplam 138.000 TL’ye ulaşır: ayda 11.500 TL, km başına 9,20 TL.
+    </p>
+  </div>
+</ToolLayout>

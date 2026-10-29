@@ -9,19 +9,25 @@ export const CATEGORIES = [
     id: 'kredi-borc',
     name: 'Kredi & Borç',
     icon: '🏦',
-    description: 'Kredi taksiti, gerçek maliyet, kredi kartı borcu ve taksit-peşin karşılaştırmaları.',
+    description: 'Kredi taksiti, gerçek maliyet, kredi kartı borcu, borç kapatma planı ve taksit-peşin karşılaştırmaları.',
   },
   {
     id: 'ev-kira',
     name: 'Ev & Kira',
     icon: '🏠',
-    description: 'Yasal kira artışı, ev alım masrafları ve aidat paylaşımı.',
+    description: 'Yasal kira artışı, kirada mı ev mi, ev alım masrafları ve aidat paylaşımı.',
+  },
+  {
+    id: 'arac-ulasim',
+    name: 'Araç & Ulaşım',
+    icon: '🚗',
+    description: 'Yakıt, kilometre başına araç maliyeti ve yolculuk masrafı hesapları.',
   },
   {
     id: 'birikim-enflasyon',
     name: 'Birikim & Enflasyon',
     icon: '📈',
-    description: 'Enflasyon, alım gücü, mevduat getirisi ve geçmişe dönük yatırım karşılaştırmaları.',
+    description: 'Enflasyon, kişisel enflasyon, BES, finansal özgürlük ve geçmişe dönük yatırım karşılaştırmaları.',
   },
   {
     id: 'borsa',
@@ -39,7 +45,7 @@ export const CATEGORIES = [
     id: 'vergi-isletme',
     name: 'Vergi & İşletme',
     icon: '🧾',
-    description: 'KDV, serbest meslek makbuzu, vade, iskonto ve fiyatlama hesapları.',
+    description: 'KDV, serbest meslek makbuzu, miras ve veraset vergisi, vade, iskonto ve fiyatlama hesapları.',
   },
 ] as const;
 
