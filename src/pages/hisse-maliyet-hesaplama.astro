@@ -1,0 +1,68 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/hisse-maliyet-hesaplama/Calculator';
+import { meta } from '../tools/hisse-maliyet-hesaplama/meta';
+import { hedefIcinLot, hesaplaMaliyet } from '../tools/hisse-maliyet-hesaplama/calc';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Hisse ortalama maliyeti nasıl hesaplanır?',
+    a: 'Tüm alışlarınızın toplam tutarı (komisyon dahil) toplam lot sayısına bölünür. 100 lotu 10 TL’den, 100 lotu 20 TL’den aldıysanız ortalamanız 3.000 ÷ 200 = 15 TL’dir.',
+  },
+  {
+    q: 'Satış yapınca ortalama maliyet değişir mi?',
+    a: 'Ağırlıklı ortalama maliyet yönteminde değişmez. Satılan lotlar o anki ortalama maliyetle elden çıkmış sayılır; kalan lotların ortalaması aynı kalır, kâr ya da zarar gerçekleşmiş olur.',
+  },
+  {
+    q: 'Bedelsiz sermaye artırımı maliyetimi nasıl etkiler?',
+    a: 'Toplam maliyetiniz aynı kalır, lot sayınız artar; bu yüzden pay başı ortalama maliyet düşer. %100 bedelsizde ortalamanız yarıya iner. İşlem listesine “Bedelsiz / bölünme” satırı ekleyerek hesaplayabilirsiniz.',
+  },
+  {
+    q: 'Ortalamayı düşürmek için kaç lot almalıyım?',
+    a: 'Hedef ortalama, yeni alış fiyatının üzerinde olmalıdır. Gereken lot = (mevcut toplam maliyet − hedef × mevcut lot) ÷ (hedef − yeni alış fiyatı). Robot bu hesabı komisyonla birlikte yapar.',
+  },
+  {
+    q: 'Komisyon oranını nereden öğrenirim?',
+    a: 'Aracı kurumunuzun fiyat listesinde ya da işlem dekontunuzda yazar. Oranı yüzde olarak girin: binde 2 için 0,2. Komisyona eklenen vergiler dahil toplam oranı yazmanız en doğrusudur.',
+  },
+];
+
+const ornek = hesaplaMaliyet(
+  [
+    { tur: 'alis', lot: 100, fiyat: 10 },
+    { tur: 'alis', lot: 100, fiyat: 20 },
+  ],
+  0,
+);
+const gereken = hedefIcinLot(ornek, 12, 10, 0);
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Ortalama maliyet nasıl hesaplanır?</h2>
+  <div class="formula">Ortalama maliyet = Toplam alış tutarı (komisyon dahil) ÷ Toplam lot
+Satışta: kalan maliyet = toplam maliyet − satılan lot × ortalama
+Bedelsizde: lot × (1 + oran), toplam maliyet aynı</div>
+  <p>
+    Robot işlemlerinizi girdiğiniz sırayla işler. Bu yüzden önce alışları, sonra satışları ya da bedelsizi doğru sırada girin.
+  </p>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      100 lot 10 TL ve 100 lot 20 TL’den alınan bir hissenin ortalama maliyeti {formatNumber(ornek.ortalama, 2)} TL’dir
+      (toplam {formatTL(ornek.toplamMaliyet)}). Ortalamayı 12 TL’ye indirmek için 10 TL’den {formatNumber(gereken ?? 0, 0)} lot
+      daha almak gerekir.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Başa baş fiyatı, satış komisyonu da düşüldüğünde zarar etmeden satabileceğiniz en düşük fiyattır.</li>
+    <li>Ortalama düşürmek riskinizi azaltmaz; aynı hisseye daha çok para bağlamış olursunuz.</li>
+    <li>Bu hesaplama yatırım tavsiyesi değildir.</li>
+  </ul>
+</ToolLayout>

@@ -1,0 +1,76 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/halka-arz-lot-hesaplama/Calculator';
+import { meta } from '../tools/halka-arz-lot-hesaplama/meta';
+import { benimLotum, esitDagitim } from '../tools/halka-arz-lot-hesaplama/calc';
+import { formatNumber } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Halka arzda eşit dağıtım nasıl yapılır?',
+    a: 'Bireysel yatırımcılara ayrılan lot, talepte bulunan kişi sayısına bölünür. Bu paydan az isteyenlerin talebi tamamen karşılanır; artan lot, talebi karşılanamayanlar arasında yeniden eşit bölünür. Bu işlem lotlar bitene kadar sürer (SPK II-5.2 md. 20/2).',
+  },
+  {
+    q: 'Daha fazla lot talep edersem daha çok mu alırım?',
+    a: 'Eşit dağıtımda hayır. Talebiniz eşit payın üzerindeyse fazlası size ek lot getirmez; yalnızca daha çok tutar bloke edilir ve sonra iade edilir. Eşit payın altında talep ederseniz istediğiniz kadarını alırsınız.',
+  },
+  {
+    q: 'Birden fazla aracı kurumdan talep verirsem lotum artar mı?',
+    a: 'Hayır. Dağıtımda aynı kişinin birden fazla talebi varsa yalnızca en yüksek miktarlı talebi dikkate alınır (SPK II-5.2 md. 22). Talepler kimlik bilgileriyle birleştirilir.',
+  },
+  {
+    q: 'Küsurat lotlar ne olur?',
+    a: 'Eşit pay tam sayı çıkmazsa küsurat tam sayıya tamamlanır ve talebi karşılanamayan yatırımcılar arasında ihraççının uygun gördüğü şekilde dağıtılır. Bu yüzden bazı katılımcılar bir lot fazla alır.',
+  },
+  {
+    q: 'Oransal dağıtım nedir?',
+    a: 'Gruba ayrılan lotun toplam talebe bölünmesiyle bir karşılama oranı bulunur; herkesin talebi bu oranla çarpılarak karşılanır. SPK’nın 2023 tarihli ilke kararıyla ilk halka arzlarda bireysel yatırımcılara oransal değil eşit dağıtım uygulanır; yöntem her halka arzın izahnamesinde yazar.',
+  },
+  {
+    q: 'Kesin sonucu nereden öğrenirim?',
+    a: 'Dağıtım sonuçları, talep toplamanın bitimini izleyen günlerde Kamuyu Aydınlatma Platformu’nda (KAP) yatırımcı grupları bazında açıklanır. Bu robotun sonucu bir tahmindir ve yatırım tavsiyesi değildir.',
+  },
+];
+
+const ornek = esitDagitim(12_550_000, [
+  { kisi: 518_651, talep: Number.MAX_SAFE_INTEGER },
+  { kisi: 1, talep: 1000 },
+]);
+const ornekBen = benimLotum(ornek, 1000);
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Halka arzda lot nasıl dağıtılır?</h2>
+  <p>
+    Talep toplama yöntemiyle yapılan halka arzlarda paylar, izahnamede belirtilen yatırımcı gruplarına (yurt içi bireysel,
+    yurt içi kurumsal, yurt dışı kurumsal vb.) ayrılır. Bireysel gruptaki dağıtım, SPK’nın Sermaye Piyasası Araçlarının
+    Satışı Tebliği’ndeki kurallara göre yapılır. 2023’ten beri ilk halka arzlarda bireysel yatırımcılara eşit dağıtım
+    uygulanır.
+  </p>
+  <div class="formula">1. tur:  eşit pay = ayrılan lot ÷ talep eden kişi sayısı
+         eşit payın altında isteyenler → talebi kadar alır
+2. tur:  kalan lot ÷ talebi karşılanamayan kişi sayısı → yeni eşit pay
+…        lotlar bitene kadar tekrar
+Son:     küsurat tam sayıya tamamlanır, bazılarına 1 lot fazla verilir</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      Bireysel yatırımcılara 12.550.000 lot ayrılan ve 518.652 kişinin talepte bulunduğu bir halka arzda herkes eşit paydan
+      fazla talep ederse kişi başı pay {formatNumber(ornek.esitPay ?? 0, 3)} lottur. Bu durumda katılımcıların bir kısmı
+      {formatNumber(ornekBen.enAz, 0)}, küsurattan pay alanlar {formatNumber(ornekBen.enCok, 0)} lot alır. 1.000 lot talep eden
+      bir yatırımcının kalan bloke tutarı iade edilir.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li><strong>Katılımcı sayısı belirleyicidir.</strong> Talep toplama bitmeden kesin sayı bilinmez; senaryo tablosu farklı katılım düzeylerinde payınızı gösterir.</li>
+    <li><strong>Az isteyenler payı büyütür.</strong> Eşit paydan az talep eden her katılımcının artan lotu diğerlerine dağıtılır. “Gelişmiş” bölümünden bu grupları ekleyebilirsiniz.</li>
+    <li><strong>Bloke ve iade:</strong> Talep ettiğiniz tutar hesabınızda bloke edilir; size düşmeyen kısım dağıtım listesinin kesinleşmesinden sonra iade edilir (md. 23).</li>
+    <li>Bu hesaplama yatırım tavsiyesi değildir. SPK düzenlemelerine göre yatırım danışmanlığı yalnızca yetkili kuruluşlarca yapılabilir.</li>
+  </ul>
+</ToolLayout>

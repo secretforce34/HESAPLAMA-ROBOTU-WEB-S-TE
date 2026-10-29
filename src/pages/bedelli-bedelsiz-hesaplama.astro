@@ -1,0 +1,79 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/bedelli-bedelsiz-hesaplama/Calculator';
+import { meta } from '../tools/bedelli-bedelsiz-hesaplama/meta';
+import { portfoy, teorikFiyat } from '../tools/bedelli-bedelsiz-hesaplama/calc';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Bedelsiz sermaye artırımı hisseyi değerli yapar mı?',
+    a: 'Hayır. Bedelsiz artırımda şirketin değeri değişmez; pay sayısı artar, fiyat da aynı oranda düşer. %100 bedelsizde payınız iki katına çıkar, fiyat yarıya iner ve toplam değeriniz aynı kalır.',
+  },
+  {
+    q: 'Rüçhan hakkımı kullanmazsam ne olur?',
+    a: 'Bedelli artırımda fiyat, yeni payların düşük fiyattan verilmesi nedeniyle düşer. Rüçhan hakkınızı kullanmaz ve borsada satmazsanız bu hakkın değerini kaybedersiniz. Robot, kaybedilen yaklaşık değeri ayrıca gösterir.',
+  },
+  {
+    q: '%100 bedelsiz ne demek?',
+    a: 'Her 1 paya 1 yeni pay verilmesi demektir. %50 bedelsizde her 2 paya 1 yeni pay, %300 bedelsizde her 1 paya 3 yeni pay verilir.',
+  },
+  {
+    q: 'Teorik fiyat ile açılış fiyatı aynı mı?',
+    a: 'Teorik fiyat, Borsa İstanbul’un o gün fiyat limitlerini belirlemek için kullandığı referanstır. İşlemler fiyat adımına yuvarlanarak başlar ve gün içinde arz-talebe göre fiyat teorik fiyattan farklılaşabilir.',
+  },
+  {
+    q: 'Rüçhan fiyatı hisse fiyatından yüksekse ne olur?',
+    a: 'Borsa İstanbul kuralına göre kapanış fiyatı ya da temettü ve bedelsiz sonrası fiyat rüçhan kullanma fiyatının altındaysa, bedelli oran teorik fiyat hesabına katılmaz.',
+  },
+];
+
+const o1 = teorikFiyat({ kapanis: 60, bedelsizYuzde: 200, bedelliYuzde: 0, rucanFiyati: 1, brutTemettu: 0 });
+const o2 = portfoy({ kapanis: 40, bedelsizYuzde: 0, bedelliYuzde: 100, rucanFiyati: 1, brutTemettu: 0, lot: 200, kullanim: 1 });
+const o3 = teorikFiyat({ kapanis: 90, bedelsizYuzde: 100, bedelliYuzde: 50, rucanFiyati: 1, brutTemettu: 1.5 });
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Teorik fiyat nasıl hesaplanır?</h2>
+  <p>
+    Borsa İstanbul, sermaye artırımı ve temettü günlerinde payın yeni referans fiyatını aşağıdaki formülle hesaplar. Bedelsiz,
+    bedelli ve nakit temettü aynı gün gerçekleşirse hepsi tek formülde yer alır.
+  </p>
+  <div class="formula">Teorik fiyat = (Kapanış + n2 × R − T) ÷ (1 + n1 + n2)
+Rüçhan hakkı referans değeri = (Teorik fiyat − R) × n2
+
+n1: bedelsiz oranı   (%100 → 1)
+n2: bedelli oranı    (%50  → 0,5)
+R : rüçhan kullanma fiyatı (genelde 1 TL)
+T : pay başına brüt nakit temettü</div>
+  <p>Teorik fiyat virgülden sonra üç haneye yuvarlanır. İşlemler fiyat adımına göre en yakın kademeden başlar.</p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p><strong>%200 bedelsiz:</strong> 60 TL kapanışlı pay için teorik fiyat 60 ÷ 3 = {formatNumber(o1.teorikFiyat, 3)} TL olur. 100 lotunuz 300 lota çıkar; toplam değer değişmez.</p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>%100 bedelli (1 TL):</strong> 40 TL kapanış, 200 lot. Teorik fiyat (40 + 1) ÷ 2 = {formatNumber(o2.teorikFiyat, 3)} TL.
+      Hakkınızı kullanırsanız {formatTL(o2.odeme)} ödersiniz ve {formatNumber(o2.toplamLot, 0)} lotunuz olur; net değeriniz
+      {formatTL(o2.netDeger)} ile öncekiyle aynıdır.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Hepsi bir arada:</strong> 90 TL kapanış, %100 bedelsiz, %50 bedelli ve 1,50 TL brüt temettü aynı gün
+      gerçekleşirse teorik fiyat (90 + 0,5 − 1,5) ÷ 2,5 = {formatNumber(o3.teorikFiyat, 3)} TL olur.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Temettünün pay olarak dağıtılan kısmı bedelsiz artırım gibi hesaba katılır; nakit kısmı fiyattan düşülür.</li>
+    <li>Rüçhan hakları kullanım süresi boyunca borsada ayrıca işlem görebilir; kullanmayacaksanız satmak değeri korur.</li>
+    <li>Nakit temettüde stopaj kesintisi yapılır; robot brüt tutarı gösterir.</li>
+    <li>Bu hesaplama yatırım tavsiyesi değildir.</li>
+  </ul>
+</ToolLayout>
