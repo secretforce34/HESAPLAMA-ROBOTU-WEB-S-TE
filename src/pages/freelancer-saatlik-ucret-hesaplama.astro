@@ -1,0 +1,63 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/freelancer-saatlik-ucret-hesaplama/Calculator';
+import { meta } from '../tools/freelancer-saatlik-ucret-hesaplama/meta';
+import { hesaplaUcret } from '../tools/freelancer-saatlik-ucret-hesaplama/calc';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Freelancer saatlik ücret nasıl belirlenir?',
+    a: 'Önce yılda elinize geçmesini istediğiniz neti, giderlerinizi ve vergi yükünüzü toplayarak gereken yıllık ciroyu bulun. Sonra bu ciroyu, yıl içinde müşteriye gerçekten faturalayabileceğiniz saate bölün. Çıkan tutar, altına inmemeniz gereken saatlik ücrettir.',
+  },
+  {
+    q: 'Faturalanabilir saat neden önemli?',
+    a: 'Serbest çalışanlar zamanlarının bir kısmını müşteri bulmaya, teklif hazırlamaya, yazışmaya ve muhasebeye harcar. Bu saatler ücretlendirilemez. Faturalanabilir oran %70 ise 8 saatlik günün yalnızca 5,6 saati gelir getirir; ücret buna göre belirlenmelidir.',
+  },
+  {
+    q: 'Vergi ve sigorta yükünü kaç yazmalıyım?',
+    a: 'Gelir vergisi kademelidir; ayrıca Bağ-Kur primi, varsa istisnalar (genç girişimci, hizmet ihracatı indirimi gibi) ve gider kalemleri sonucu değiştirir. Robottaki oran bir tahmindir; kendi durumunuzu mali müşavirinizle netleştirin.',
+  },
+  {
+    q: 'Günlük ücret ile saatlik ücret arasındaki fark ne?',
+    a: 'Günlük ücret, saatlik ücretin günlük çalışma saatiyle çarpımıdır. Tam gün ayırdığınız işlerde (atölye, eğitim, yerinde çalışma) günlük, parça işlerde saatlik ya da proje bazlı ücret kullanmak daha anlaşılırdır.',
+  },
+];
+
+const o = hesaplaUcret({
+  hedefAylikNet: 60_000,
+  aylikGider: 7_500,
+  vergiYuku: 25,
+  haftalikGun: 5,
+  gunlukSaat: 8,
+  calisilmayanGun: 40,
+  faturalanabilir: 70,
+});
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Saatlik ücret nasıl hesaplanır?</h2>
+  <div class="formula">Gereken yıllık ciro = Hedef yıllık net ÷ (1 − vergi yükü) + Yıllık giderler
+Çalışılan gün       = 52 × haftalık gün − (izin + resmî tatil + hastalık)
+Faturalanabilir saat = Çalışılan gün × günlük saat × faturalanabilir oran
+Saatlik ücret       = Gereken yıllık ciro ÷ Faturalanabilir saat</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      Ayda 60.000 TL net hedefleyen, ayda 7.500 TL gideri olan, vergi yükünü %25 tahmin eden ve yılda 40 gün çalışmayan bir
+      serbest çalışan, haftada 5 gün × 8 saat ve %70 faturalanabilir oranla yılda {formatNumber(o.yillikFaturaSaati, 0)} saat
+      faturalayabilir. Gereken yıllık ciro {formatTL(o.yillikCiro, 0)} olduğundan saatte en az {formatTL(o.saatlik)} istemelidir.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Bu hesap “asgari” ücreti verir: işinizin değeri, deneyiminiz ve piyasa koşulları daha yüksek bir ücreti haklı kılabilir.</li>
+    <li>Emeklilik birikimi, eğitim ve beklenmedik boşluklar için hedef netinizi biraz yüksek tutmak tampon sağlar.</li>
+    <li>Dövizle çalışıyorsanız kur farkı ve aracı ücretlerini de hesaba katın.</li>
+  </ul>
+</ToolLayout>

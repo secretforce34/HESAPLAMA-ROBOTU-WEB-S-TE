@@ -1,0 +1,73 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/zam-hesaplama/Calculator';
+import { meta } from '../tools/zam-hesaplama/meta';
+import { eskiyeDonusIndirimi, hacimDengesi, toplamZamOrani, yeniFiyatiBul } from '../tools/zam-hesaplama/calc';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Yüzde zam nasıl hesaplanır?',
+    a: 'Yeni fiyat = eski fiyat × (1 + zam oranı). 250 TL’lik bir ürüne %20 zam yapılırsa 250 × 1,20 = 300 TL olur. Zam oranını bulmak için (yeni ÷ eski − 1) × 100 hesaplanır.',
+  },
+  {
+    q: 'Önce %10 sonra %15 zam toplam %25 mi eder?',
+    a: 'Hayır. Ardışık zamlar çarpılarak birleşir: 1,10 × 1,15 = 1,265, yani toplam zam %26,5’tir. İkinci zam, ilk zamlı fiyatın üzerine yapılır.',
+  },
+  {
+    q: '%20 zamdan sonra eski fiyata dönmek için %20 indirim yeterli mi?',
+    a: 'Hayır. 100 TL %20 zamla 120 TL olur; 120 TL’ye %20 indirim 96 TL eder. Eski fiyata dönmek için yaklaşık %16,67 indirim gerekir.',
+  },
+  {
+    q: 'Kâr marjı ile markup (kâr oranı) arasındaki fark nedir?',
+    a: 'Marj, kârın satış fiyatına oranıdır; markup ise kârın maliyete oranıdır. 80 TL’ye alınıp 100 TL’ye satılan üründe kâr 20 TL’dir: marj %20, markup %25 olur. Fiyatı belirlerken hangisini kullandığınızı karıştırmamak önemlidir.',
+  },
+  {
+    q: 'Zam yaparsam kaç müşteri kaybetmeyi kaldırabilirim?',
+    a: 'Brüt kârın aynı kalması için gereken satış adedi, eski birim kâr ÷ yeni birim kâr oranıyla bulunur. Birim kârınız yüksekse daha az, düşükse daha çok kaybı kaldırabilirsiniz. Robot bu hesabı farklı zam oranları için tablo halinde gösterir.',
+  },
+];
+
+const ardisik = toplamZamOrani([10, 15]);
+const ornekFiyat = yeniFiyatiBul(250, [20]);
+const donus = eskiyeDonusIndirimi(20);
+const hacim = hacimDengesi(100, 60, 10);
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Zam ve fiyat nasıl hesaplanır?</h2>
+  <div class="formula">Yeni fiyat     = Eski fiyat × (1 + zam oranı)
+Zam oranı      = (Yeni fiyat ÷ Eski fiyat − 1) × 100
+Ardışık zamlar = (1 + z1) × (1 + z2) × … − 1
+Kâr marjı      = (Satış − Maliyet) ÷ Satış
+Markup         = (Satış − Maliyet) ÷ Maliyet</div>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p><strong>Yüzde zam:</strong> 250 TL’ye %20 zam → {formatTL(ornekFiyat.yeni)}.</p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Ardışık zam:</strong> önce %10, sonra %15 zam toplamda %{formatNumber(ardisik, 2)} zam demektir. Eski fiyata
+      dönmek için %{formatNumber(eskiyeDonusIndirimi(ardisik), 2)} indirim gerekir (tek %20 zamda bu oran
+      %{formatNumber(donus, 2)}).
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Zamda satış kaybı:</strong> 100 TL’ye sattığınız, değişken maliyeti 60 TL olan bir üründe %10 zam yaparsanız
+      birim kârınız 40 TL’den 50 TL’ye çıkar. Brüt kârınız aynı kalırken satış adedinizin %{formatNumber(Math.abs(hacim.adetDegisimi), 1)}
+      kadar düşmesini kaldırabilirsiniz.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>KDV dahil fiyatla çalışıyorsanız zam oranı KDV hariç fiyata da aynen yansır; ama kâr hesabı her zaman KDV hariç fiyatla yapılmalıdır.</li>
+    <li>Satış kaybı hesabı sabit giderlerin değişmediğini varsayar; yalnızca birim başına değişken maliyet dikkate alınır.</li>
+    <li>Fiyat kararları rakipler, talep ve müşteri ilişkileri gibi hesap dışı etkenlere de bağlıdır.</li>
+  </ul>
+</ToolLayout>

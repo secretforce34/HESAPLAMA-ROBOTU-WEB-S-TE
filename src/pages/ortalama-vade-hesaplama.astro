@@ -1,0 +1,130 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/ortalama-vade-hesaplama/Calculator';
+import { meta } from '../tools/ortalama-vade-hesaplama/meta';
+import { addDaysIso, hesaplaOrtalamaVade } from '../tools/ortalama-vade-hesaplama/calc';
+import { formatDateTR, formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Ortalama vade nasıl hesaplanır?',
+    a: 'Her tutarı vadeye kalan gün sayısıyla çarpın, çarpımları toplayın ve toplamı tutarlar toplamına bölün: ortalama vade = Σ(tutar × gün) ÷ Σ tutar. Çıkan gün sayısını baz tarihe eklerseniz ortalama vade tarihini bulursunuz. Hesaplayıcı bunu satır satır gösterir.',
+  },
+  {
+    q: 'Tutar ağırlıklı ortalama ile düz ortalama arasındaki fark nedir?',
+    a: 'Düz ortalama her çek ya da senedi eşit sayar; tutarı küçük, vadesi uzak bir senet sonucu gereğinden fazla uzatır. Tutar ağırlıklı ortalamada ise büyük tutar ortalamayı kendi vadesine doğru çeker. Örneğin 1.000 TL’lik 10 gün ile 9.000 TL’lik 100 gün vadeli iki senedin düz ortalaması 55 gün, tutar ağırlıklı ortalaması 91 gündür.',
+  },
+  {
+    q: 'Vadesi geçmiş çek ya da senet ortalamaya nasıl girer?',
+    a: 'Baz tarihten önce vadesi dolmuş bir satır negatif gün alır (10 gün gecikmiş senet −10 gün). Bu, “bütün borcu tek tarihte kapatırsam hangi gün denk olur?” sorusunun matematiksel olarak doğru cevabını verir. İsterseniz gelişmiş ayarlardan bu satırları 0 gün sayabilir ya da ortalamanın dışında bırakabilirsiniz.',
+  },
+  {
+    q: 'Ortalama vade tarihi ne işe yarar?',
+    a: 'Birden çok ödemeyi ya da tahsilatı tek bir tarihle özetlemek için kullanılır. Örneğin farklı vadelerdeki çek ve senetleri tek bir ödemeyle değiştirmek ya da bir portföyün ortalama tahsil süresini görmek istediğinizde ortalama vade tarihi karşılaştırma noktası olur. Bir tavsiye değil, aritmetik bir özettir.',
+  },
+  {
+    q: 'Faizi dikkate alan denk vade nedir?',
+    a: 'Düz ağırlıklı ortalama faizi yok sayar. Denk vade ise her tutarın bugünkü değerini (tutar ÷ (1 + faiz × gün ÷ esas)) hesaba katar ve toplam tutarın hangi günde ödenirse bu bugünkü değerler toplamına eşit olacağını bulur. Faiz varken bu tarih, ağırlıklı ortalamadan biraz önce çıkar. Faiz oranını gelişmiş ayarlarda girmeniz yeterli.',
+  },
+  {
+    q: 'Gün sayısı nasıl sayılıyor, artık yıl dikkate alınıyor mu?',
+    a: 'Günler takvim günü olarak sayılır: baz tarih sayılmaz, vade günü sayılır. Şubat 29 gibi artık yıl günleri ve ay uzunlukları takvime göre otomatik hesaba girer. 360 gün esası yalnızca faizli denk vadede kullanılır; ortalama vadenin kendisi takvim gününe bağlıdır.',
+  },
+  {
+    q: 'Çeklerde vade olarak hangi tarihi girmeliyim?',
+    a: 'Hesaplayıcı, listeye girdiğiniz tarihi o çekin ödeme günü olarak kabul eder. Ticari uygulamada çekin üzerindeki keşide tarihi vade gibi kullanıldığı için çoğu kullanıcı bu tarihi girer; senette ise senedin üzerindeki vade tarihini yazın.',
+  },
+];
+
+const baz = '2026-10-29';
+const ornek1 = hesaplaOrtalamaVade({
+  baz,
+  gecmis: 'negatif',
+  satirlar: [
+    { tutar: 10000, vade: addDaysIso(baz, 30) },
+    { tutar: 20000, vade: addDaysIso(baz, 60) },
+    { tutar: 15000, vade: addDaysIso(baz, 90) },
+  ],
+})!;
+const ornek2 = hesaplaOrtalamaVade({
+  baz,
+  gecmis: 'negatif',
+  satirlar: [
+    { tutar: 1000, vade: addDaysIso(baz, 10) },
+    { tutar: 9000, vade: addDaysIso(baz, 100) },
+  ],
+})!;
+const gecmisSatirlar = [
+  { tutar: 10000, vade: '2026-10-19' },
+  { tutar: 10000, vade: '2026-11-28' },
+];
+const gecmisNegatif = hesaplaOrtalamaVade({ baz, gecmis: 'negatif', satirlar: gecmisSatirlar })!;
+const gecmisSifir = hesaplaOrtalamaVade({ baz, gecmis: 'sifir', satirlar: gecmisSatirlar })!;
+const gecmisDisla = hesaplaOrtalamaVade({ baz, gecmis: 'disla', satirlar: gecmisSatirlar })!;
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Ortalama vade nasıl hesaplanır?</h2>
+  <p>
+    Farklı tarihlerde vadesi dolan birden çok çek ya da senedi tek bir tarihle özetlemek için tutar ağırlıklı ortalama
+    vade kullanılır. Her satırın vadesi, <strong>baz tarihten</strong> (genellikle bugün) kaç gün uzakta olduğuyla
+    ölçülür; büyük tutarlar ortalamayı kendi vadelerine doğru daha çok çeker.
+  </p>
+  <div class="formula">Ortalama vade (gün) = Σ (tutar × vadeye kalan gün) ÷ Σ tutar
+Ortalama vade tarihi = baz tarih + ortalama vade (tam güne yuvarlanır)</div>
+  <p>
+    Hesaplayıcıda vadeleri tarih olarak ya da “bazdan itibaren gün” olarak girebilirsiniz. Baz tarihi değiştirdiğinizde
+    günler yeniden hesaplanır; geçmiş bir tarihe göre hesap yapmak da mümkündür.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>Üç senet:</strong> 10.000 TL (30 gün), 20.000 TL (60 gün) ve 15.000 TL (90 gün). Σ(tutar × gün) =
+      300.000 + 1.200.000 + 1.350.000 = 2.850.000; Σ tutar = {formatTL(ornek1.toplamTutar, 0)}. Ortalama vade
+      2.850.000 ÷ 45.000 = {formatNumber(ornek1.ortalamaGun, 2)} gün; yuvarlanınca {ornek1.ortalamaGunYuvarlak} gün, yani
+      {formatDateTR(ornek1.ortalamaVadeTarihi)}. Düz ortalama ise {formatNumber(ornek1.basitOrtalamaGun, 0)} gündür.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Tutar farkı büyükse:</strong> 1.000 TL (10 gün) ile 9.000 TL (100 gün) için (10.000 + 900.000) ÷ 10.000 =
+      {formatNumber(ornek2.ortalamaGun, 0)} gün. Düz ortalama 55 gün olurdu; büyük tutar sonucu 91 güne çeker.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Vadesi geçmiş satır:</strong> Baz tarihte 10 gün gecikmiş 10.000 TL ile 30 gün sonra vadeli 10.000 TL var.
+      Negatif gün yöntemiyle (−10 + 30) ÷ 2 = {formatNumber(gecmisNegatif.ortalamaGun, 0)} gün; geçmiş satır 0 gün sayılırsa
+      {formatNumber(gecmisSifir.ortalamaGun, 0)} gün; ortalamanın dışında bırakılırsa {formatNumber(gecmisDisla.ortalamaGun, 0)} gün
+      çıkar.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Baz tarih sonucu değiştirir.</strong> Ortalama vade günle ifade edildiğinden, aynı liste farklı baz
+      tarihlerde farklı gün sayısı verir; negatif gün yönteminde ortalama vade <em>tarihi</em> ise baz tarih değişse de aynı kalır.
+    </li>
+    <li>
+      <strong>Tutar ağırlığı önemlidir.</strong> Düz ortalama yalnızca vadelerin ortasını gösterir; borcun ya da alacağın
+      gerçek ağırlık merkezini göstermez.
+    </li>
+    <li>
+      <strong>Gecikmiş satırlar.</strong> Negatif gün, “tek ödemeyle kapatma” mantığına uyar. Portföyün yalnızca henüz
+      gelmemiş kısmını görmek istiyorsanız gecikmiş satırları dışarıda bırakın.
+    </li>
+    <li>
+      <strong>Faizsiz özet.</strong> Standart ortalama vade faizi hesaba katmaz. Faiz önemliyse gelişmiş ayarlardan oranı
+      girerek denk vadeyi görebilirsiniz.
+    </li>
+    <li>
+      <strong>İskonto ile birlikte.</strong> Aynı çek ve senetleri bir finansman kuruluşuna iskonto ettirdiğinizde
+      ele geçen tutarı bulmak için Senet ve Çek İskonto Hesaplama aracını kullanabilirsiniz.
+    </li>
+  </ul>
+</ToolLayout>

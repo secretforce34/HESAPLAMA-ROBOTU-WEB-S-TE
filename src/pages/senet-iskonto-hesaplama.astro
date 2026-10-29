@@ -1,0 +1,128 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/senet-iskonto-hesaplama/Calculator';
+import { meta } from '../tools/senet-iskonto-hesaplama/meta';
+import { hesaplaIskonto, type IskontoAyar } from '../tools/senet-iskonto-hesaplama/calc';
+import { bsmvOranlari } from '../data/params/serbest-meslek';
+import { annualFromMonthly } from '../lib/finance';
+import { formatPercent, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const bsmv = bsmvOranlari.values.genelOran;
+const bsmvTuketici = bsmvOranlari.values.tuketiciKredisiOrani;
+
+const temel: IskontoAyar = { oran: 48, oranDonemi: 'yillik', gunEsasi: 365, komisyonYuzde: 0, sabitKomisyon: 0, bsmvOrani: 0 };
+const o1 = hesaplaIskonto([{ nominal: 100000, gun: 90 }], temel);
+const o360 = hesaplaIskonto([{ nominal: 100000, gun: 90 }], { ...temel, gunEsasi: 360 });
+const o2 = hesaplaIskonto([{ nominal: 100000, gun: 90 }], { ...temel, bsmvOrani: bsmv });
+const o3 = hesaplaIskonto(
+  [
+    { nominal: 40000, gun: 30 },
+    { nominal: 60000, gun: 60 },
+    { nominal: 80000, gun: 120 },
+  ],
+  { ...temel, bsmvOrani: bsmv, komisyonYuzde: 0.25 },
+);
+const aylikBilesik = annualFromMonthly(0.03) * 100;
+
+const yuzde = (x: number | null) => (x === null ? '–' : formatPercent(x * 100, 1));
+
+const faq: FaqItem[] = [
+  {
+    q: 'İç iskonto ile dış iskonto arasındaki fark nedir?',
+    a: 'Dış iskontoda (ticari iskonto) faiz nominal değer üzerinden hesaplanır: iskonto = nominal × oran × gün ÷ yıl günü. İç iskontoda ise ele geçen (peşin) tutar esas alınır: peşin değer = nominal ÷ (1 + oran × gün ÷ yıl günü). Aynı oran ve vadede dış iskonto her zaman daha yüksek çıkar, yani ele geçen tutar daha azdır.',
+  },
+  {
+    q: 'Banka ya da finans kuruluşu senet iskontosunda hangi yöntemi uygular?',
+    a: 'Ticari uygulamada iskonto genellikle nominal değer üzerinden, yani dış iskonto yöntemiyle hesaplanır. Kuruluşunuzun hangi yöntemi, hangi gün esasını ve hangi masrafları uyguladığı iskonto dekontunda yazar; hesaplayıcıda iki yöntemi de yan yana görüp dekontla karşılaştırabilirsiniz.',
+  },
+  {
+    q: 'BSMV nedir, iskontoda ne kadar uygulanır?',
+    a: `Banka ve Sigorta Muameleleri Vergisi (6802 sayılı Gider Vergileri Kanunu), bankaların faiz, iskonto ve komisyon gibi gelirlerinden alınır ve çoğunlukla müşteriye yansıtılır. Karar ile ayrıca belirlenmeyen banka muamelelerinde genel oran %${bsmv}’tir; tüketici kredilerinde ise %${bsmvTuketici}’tir. Ticari senet iskontosunda genel oranın uygulanması beklenir, ancak kesin oran işlem türüne göre değişebileceği için dekontunuzdaki oranı hesaplayıcıya yazabilirsiniz.`,
+  },
+  {
+    q: 'Yıllık gerçek (efektif) maliyet neden nominal orandan yüksek çıkıyor?',
+    a: 'Dış iskontoda kesinti vade sonundaki nominal tutar üzerinden hesaplanır ama siz parayı vadeden önce, kesinti düşülmüş olarak alırsınız. Gerçekte kullandığınız para nominalden küçüktür; kesintiyi bu daha küçük tutara oranladığınızda maliyet yükselir. BSMV ve komisyon eklenince fark daha da açılır. Hesaplayıcı hem basit hem bileşik yıllık gerçek maliyeti gösterir.',
+  },
+  {
+    q: '365 gün esası ile 360 gün esası ne kadar fark yaratır?',
+    a: `Aynı yıllık oranla 360 gün esası daha fazla iskonto doğurur, çünkü günlük oran daha yüksektir. Örneğin 100.000 TL’lik 90 günlük senette %48 oranla 365 gün esasında iskonto ${formatTL(o1.dis.iskonto)}, 360 gün esasında ${formatTL(o360.dis.iskonto)} olur.`,
+  },
+  {
+    q: 'Aylık iskonto oranını yıllığa nasıl çeviririm?',
+    a: `Basit hesapta aylık oran 12 ile çarpılır: aylık %3 = yıllık %36. Faiz aylık olarak üst üste işliyorsa bileşik karşılığı (1,03)^12 − 1 = %${aylikBilesik.toFixed(2).replace('.', ',')} olur. Hesaplayıcıda “Aylık” dönemini seçerseniz oran günlük 30 günlük aya göre uygulanır ve maliyet 360 günlük yıla çevrilir.`,
+  },
+  {
+    q: 'Birden çok senedi birlikte iskonto ettirirsem nasıl hesaplanır?',
+    a: 'Her senedin iskontosu kendi vadesine göre ayrı hesaplanır ve toplanır. Toplam ele geçen tutardan ve bu tutarın kullanıldığı gün sayısından portföyün tek bir yıllık gerçek maliyeti bulunur. Hangi vadenin ortalamada ne kadar ağırlık taşıdığını görmek isterseniz Ortalama Vade Hesaplama aracını kullanabilirsiniz.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Senet ve çek iskontosu nasıl hesaplanır?</h2>
+  <p>
+    İskonto, vadesi gelmemiş bir senet ya da çeki vadesinden önce nakde çevirirken ödediğiniz bedeldir. İki ayrı yöntem
+    vardır; hesaplayıcı ikisini birlikte gösterir.
+  </p>
+  <div class="formula">Dış iskonto  = Nominal × oran × gün ÷ yıl günü          Ele geçen = Nominal − dış iskonto
+İç iskonto   : Peşin değer = Nominal ÷ (1 + oran × gün ÷ yıl günü)   İskonto = Nominal − peşin değer
+BSMV         = (İskonto + komisyon) × BSMV oranı
+Ele geçen    = Nominal − iskonto − komisyon − BSMV
+Basit yıllık gerçek maliyet = Toplam kesinti ÷ (Ele geçen × gün ÷ yıl günü)</div>
+  <p>
+    Yıl günü 365 ya da 360 olabilir; aylık oran verilmişse aylar 30 gün sayılır. Birden çok senet girdiğinizde her biri
+    kendi vadesiyle hesaplanır, toplamlar ve portföyün tek bir gerçek maliyeti ayrıca verilir.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>100.000 TL, 90 gün, yıllık %48, 365 gün esası:</strong> Dış iskonto 100.000 × 0,48 × 90 ÷ 365 =
+      {formatTL(o1.dis.iskonto)}; ele geçen {formatTL(o1.dis.eleGecen)}. İç iskontoda peşin değer 100.000 ÷ 1,11836 =
+      {formatTL(o1.ic.eleGecen)}, iskonto {formatTL(o1.ic.iskonto)} olur; fark {formatTL(o1.dis.iskonto - o1.ic.iskonto)}.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>BSMV eklenince:</strong> Aynı senette %{bsmv} BSMV, iskonto üzerinden {formatTL(o2.dis.bsmv)} tutar. Toplam
+      kesinti {formatTL(o2.dis.toplamKesinti)}, ele geçen {formatTL(o2.dis.eleGecen)}. Kullandığınız para için yıllık gerçek
+      maliyet basit hesapla {yuzde(o2.dis.basitMaliyet)}, bileşik hesapla {yuzde(o2.dis.bilesikMaliyet)}’dir; görünen
+      nominal oran %48’dir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Üç senetlik portföy:</strong> 40.000 TL (30 gün), 60.000 TL (60 gün) ve 80.000 TL (120 gün) için, %48 yıllık
+      oran, %{bsmv} BSMV ve %0,25 komisyonla toplam ele geçen {formatTL(o3.dis.eleGecen)}; toplam kesinti
+      {formatTL(o3.dis.toplamKesinti)}. Portföyün nominal ağırlıklı ortalama vadesi {Math.round(o3.ortalamaGun)} gün,
+      basit yıllık gerçek maliyeti {yuzde(o3.dis.basitMaliyet)}’dir.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Nominal oran maliyeti tam göstermez.</strong> Kesinti nominal tutardan düşüldüğü için gerçek maliyet daha
+      yüksektir; vade uzadıkça fark büyür.
+    </li>
+    <li>
+      <strong>Gün esası önemlidir.</strong> 360 gün esası, aynı oranla 365 gün esasından daha fazla iskonto doğurur.
+    </li>
+    <li>
+      <strong>BSMV iskonto ve komisyona uygulanır.</strong> 6802 sayılı Gider Vergileri Kanunu md. 28 ve 33 uyarınca bankaların
+      aldığı paralar üzerinden hesaplanır; oranı Cumhurbaşkanı belirler. Bu sayfada varsayılan oran, ticari işlemlerdeki
+      genel oran olan %{bsmv}’tir; farklıysa değiştirebilirsiniz.
+    </li>
+    <li>
+      <strong>Diğer masraflar.</strong> Bazı kuruluşlar senet başına tahsilat masrafı ya da komisyon alır. “Komisyon ve
+      masraf” bölümüne yazarsanız hem ele geçen tutara hem gerçek maliyete yansır.
+    </li>
+    <li>
+      <strong>Hesap bir teklifi karşılaştırmak içindir.</strong> Sonuçlar girdiğiniz oran ve koşullara dayanır; kuruluşun
+      gerçek dekontu esastır.
+    </li>
+  </ul>
+</ToolLayout>

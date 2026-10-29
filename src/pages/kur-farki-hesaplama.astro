@@ -1,0 +1,56 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kur-farki-hesaplama/Calculator';
+import { meta } from '../tools/kur-farki-hesaplama/meta';
+import { hesaplaSaglayici } from '../tools/kur-farki-hesaplama/calc';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Gizli kur farkı (kur makası) nedir?',
+    a: 'Döviz bozdururken size piyasa kurundan daha düşük, döviz alırken daha yüksek bir kur uygulanır. Aradaki fark ücret olarak yazılmasa da cebinizden çıkan bir maliyettir. “Komisyonsuz” denen işlemlerde maliyet çoğunlukla bu makasın içindedir.',
+  },
+  {
+    q: 'Piyasa (orta) kuru nedir, nereden bakarım?',
+    a: 'Piyasadaki alış ve satış kurunun ortalamasıdır; bankalar arası piyasada oluşan fiyata en yakın değerdir. İşlemi yaptığınız andaki değeri finans sitelerinden ya da TCMB’nin günlük gösterge kurlarından bakıp karşılaştırma için kullanabilirsiniz.',
+  },
+  {
+    q: 'Sabit ücretli mi, makaslı mı seçenek daha ucuz?',
+    a: 'Tutara bağlıdır. Sabit ücret küçük tutarlarda yüksek oran tutar, büyük tutarlarda önemsizleşir. Makas ise her tutarda aynı oranda maliyettir. Robottaki karşılaştırma, girdiğiniz tutar için hangisinin daha az maliyetli olduğunu gösterir.',
+  },
+  {
+    q: 'Efektif kur ne demek?',
+    a: 'Tüm ücret ve komisyonlar dahil size gerçekte uygulanan kurdur: elinize geçen (ya da ödediğiniz) TL’nin döviz tutarına bölünmesiyle bulunur. Seçenekleri karşılaştırmanın en kolay yoludur.',
+  },
+];
+
+const o = hesaplaSaglayici('bozdurma', 2000, 42, { ad: '', kur: 41.37, sabitUcret: 0, komisyonYuzde: 0 });
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Gizli kur farkı nasıl hesaplanır?</h2>
+  <div class="formula">Bozdurma:  Elinize geçen = Tutar × Uygulanan kur × (1 − komisyon) − Sabit ücret
+Alma:      Ödediğiniz     = Tutar × Uygulanan kur × (1 + komisyon) + Sabit ücret
+
+Gizli makas     = Tutar × |Piyasa kuru − Uygulanan kur|
+Toplam maliyet  = Gizli makas + Komisyon + Sabit ücret
+Efektif kur     = Elinize geçen (ödediğiniz) TL ÷ Döviz tutarı</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      Yurt dışından aldığınız 2.000 $’ı piyasa kuru 42,00 TL iken 41,37 TL’den bozdurursanız elinize {formatTL(o.tl)} geçer.
+      Ücret yazmasa da {formatTL(o.kurMakasi)} (yaklaşık %{formatNumber(o.kurMakasiYuzde, 2)}) gizli makasa gitmiştir.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Makas genellikle hafta sonu, gece ve piyasa hareketli olduğunda genişler; aynı kurum farklı saatlerde farklı kur uygulayabilir.</li>
+    <li>Yurt dışından gelen ödemelerde gönderen tarafın ve aracı bankanın kestiği ücretler de olabilir; bunları sabit ücret olarak ekleyin.</li>
+    <li>Bu hesaplama bir karşılaştırma aracıdır; herhangi bir kurum önerisi içermez.</li>
+  </ul>
+</ToolLayout>

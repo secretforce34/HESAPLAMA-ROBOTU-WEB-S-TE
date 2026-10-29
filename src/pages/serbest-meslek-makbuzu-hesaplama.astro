@@ -1,0 +1,214 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/serbest-meslek-makbuzu-hesaplama/Calculator';
+import { meta } from '../tools/serbest-meslek-makbuzu-hesaplama/meta';
+import { hesaplaSmm } from '../tools/serbest-meslek-makbuzu-hesaplama/calc';
+import { serbestMeslekStopaji, smmKdvTevkifati } from '../data/params/serbest-meslek';
+import { tevkifatSiniriOn } from '../data/params/kdv';
+import { formatPercent, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const { genelOran, md18Oran } = serbestMeslekStopaji.values;
+const sinir2026 = tevkifatSiniriOn('2026-06-30').tutar;
+const sinir2025 = tevkifatSiniriOn('2025-06-30').tutar;
+
+const faq: FaqItem[] = [
+  {
+    q: 'Serbest meslek makbuzunda stopaj oranı kaç?',
+    a: `Serbest meslek erbabına yapılan ödemelerde Gelir Vergisi Kanunu md. 94/2-b gereği <strong>${formatPercent(genelOran)}</strong> gelir vergisi kesintisi (stopaj) yapılır. Kanunun 18. maddesi kapsamındaki işlerde (yazılım, kitap, makale, çeviri eseri, resim, fotoğraf, senaryo gibi eserlerin yayımı, satışı veya haklarının devri) oran <strong>${formatPercent(md18Oran)}</strong>’dir (md. 94/2-a). Oranlar Cumhurbaşkanı kararıyla değiştirilebilir.`,
+  },
+  {
+    q: 'Netten brüte nasıl geçilir? Net ücreti 1,20 ile çarpmak doğru mu?',
+    a: `Hayır. Stopaj brüt ücretin yüzdesi olduğu için brüt = net ÷ (1 − stopaj oranı) formülü kullanılır. %20 stopajda net ücret 0,80’e bölünür (yani 1,25 ile çarpılır). Örneğin eline 8.000 TL net geçmesini istiyorsanız brüt ücret 8.000 ÷ 0,80 = 10.000 TL olmalıdır; 8.000 × 1,20 = 9.600 TL yazarsanız stopajdan sonra net 7.680 TL kalır.`,
+  },
+  {
+    q: 'Stopajı kim keser? Bireysel müşteri de keser mi?',
+    a: 'Stopajı, Gelir Vergisi Kanunu md. 94’te sayılan ödeyiciler yapar: kamu kurumları, ticaret şirketleri, dernek ve vakıflar, kooperatifler, gerçek usulde vergilenen ticaret ve serbest meslek erbapları ve bilançoya göre zirai kazanç elde eden çiftçiler. Bireysel müşteriler (ör. kendi ihtiyacı için hizmet alan kişiler) stopaj yapmaz; makbuzdaki tutarın tamamı ve KDV size ödenir. Hesaplayıcıda bu durum için “Stopaj yok” seçeneğini kullanın.',
+  },
+  {
+    q: 'Stopaj KDV dahil tutardan mı, KDV hariç tutardan mı hesaplanır?',
+    a: 'Stopaj KDV hariç brüt ücret üzerinden hesaplanır. KDV de aynı brüt ücretin üzerine eklenir; stopaj KDV’ye uygulanmaz. Dolayısıyla müşteri size “brüt − stopaj + KDV” kadar öder.',
+  },
+  {
+    q: 'Serbest meslek makbuzunda KDV tevkifatı ne zaman uygulanır?',
+    a: `KDV tevkifatı, hizmetin türüne ve alıcıya bağlıdır. Danışmanlık, etüt, plan-proje, denetim gibi hizmetlerde <strong>9/10</strong>; yapım işiyle birlikte verilen mühendislik-mimarlık hizmetlerinde <strong>4/10</strong>; ticari reklam hizmetlerinde <strong>3/10</strong>; Tebliğde ayrıca sayılmayan diğer hizmetlerde ise kamu kurumu, banka, sigorta şirketi gibi alıcılara karşı <strong>5/10</strong> oranı uygulanır. Bireysel müşteriler ve KDV mükellefi olmayanlar tevkifat yapmaz. Kısmi tevkifatta ayrıca KDV dahil bedelin fatura düzenleme sınırını (2026’da ${formatTL(sinir2026, 0)}) aşması gerekir.`,
+  },
+  {
+    q: 'Avukatın dava vekâleti için kesilen makbuzda KDV tevkifatı var mı?',
+    a: 'KDV Genel Uygulama Tebliği’ne göre avukatların yargı mercileri nezdinde ve yargı kararlarının sonuçlarıyla (icra vb.) ilgili vekâlet akdi çerçevesinde verdikleri hizmetler 9/10 tevkifat kapsamında değildir. Avukatların verdiği danışmanlık hizmetleri ise tevkifata tabidir. Sözleşmede ikisi birlikte yer alıp ayrı ücretlendirilmemişse toplam bedel üzerinden tevkifat yapılır. Stopaj ise her iki durumda da (alıcı stopaj sorumlusuysa) kesilir.',
+  },
+  {
+    q: 'Stopaj kesildi, artık vergi ödemem gerekmez mi?',
+    a: 'Stopaj bir ön vergidir. Yıl içinde kesilen tutarlar, yıllık gelir vergisi beyannamesinde hesaplanan vergiden mahsup edilir; stopaj fazlaysa iade alınabilir, azsa aradaki fark ödenir. Arızi (sürekli olmayan) serbest meslek kazançlarında yıllık istisna haddinin altında kalan tutarlarda ve GVK md. 18 kapsamında istisnaya giren, gelir vergisi tarifesinin dördüncü diliminin üst sınırını (2026’da 5.300.000 TL) aşmayan kazançlarda ise yapılan stopaj nihai vergi sayılır. Güncel hadleri GİB duyurularından kontrol edin.',
+  },
+  {
+    q: 'Serbest meslek makbuzu elektronik mi düzenlenmeli?',
+    a: 'Vergiden muaf olmayan serbest meslek erbapları, 1 Haziran 2020’den itibaren serbest meslek makbuzlarını elektronik ortamda (e-SMM) düzenlemek zorundadır; yeni iş başlayanlar işe başladıkları ayı izleyen 3. ayın sonuna kadar e-SMM’ye geçer. Her tahsilat için iki nüsha makbuz düzenlenir, bir nüshası müşteriye verilir. (Kaynak: GİB Serbest Meslek Kazancı Vergi Rehberi)',
+  },
+];
+
+// Sayfadaki örnekler hesaplayıcıyla aynı fonksiyondan gelir.
+const ayar = { stopajOrani: genelOran, tevkifatPayi: 0, alici: 'mukellef' as const, tevkifatSiniri: sinir2026 };
+const ornek1 = hesaplaSmm({ ...ayar, yon: 'brut', kalemler: [{ tutar: 10000, kdvOrani: 20 }] });
+const ornek2 = hesaplaSmm({ ...ayar, yon: 'net', kalemler: [{ tutar: 8000, kdvOrani: 20 }] });
+const ornek3 = hesaplaSmm({ ...ayar, stopajOrani: md18Oran, yon: 'brut', kalemler: [{ tutar: 5000, kdvOrani: 20 }] });
+const ornek4 = hesaplaSmm({
+  ...ayar,
+  tevkifatPayi: 9,
+  alici: 'kamu',
+  yon: 'brut',
+  kalemler: [{ tutar: 20000, kdvOrani: 20 }],
+});
+const ornek5 = hesaplaSmm({
+  ...ayar,
+  stopajOrani: 0,
+  alici: 'tuketici',
+  yon: 'brut',
+  kalemler: [{ tutar: 2500, kdvOrani: 20 }],
+});
+const ornek6 = hesaplaSmm({
+  ...ayar,
+  tevkifatPayi: 9,
+  alici: 'kamu',
+  yon: 'brut',
+  kalemler: [{ tutar: 8000, kdvOrani: 20 }],
+});
+
+const kurallar = smmKdvTevkifati.values.kurallar;
+const aliciAdlari = {
+  tuketici: 'Bireysel müşteri / KDV mükellefi olmayan',
+  mukellef: 'Şirket veya KDV mükellefi işletme',
+  kamu: 'Kamu kurumu, banka, sigorta şirketi vb.',
+  belirlenmis: 'Borsada işlem gören şirket, vakıf üniversitesi, sendika vb.',
+} as const;
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Serbest meslek makbuzu nasıl hesaplanır?</h2>
+  <p>
+    Serbest meslek makbuzunda (SMM) üç büyüklük birbirinden ayrılır: makbuza yazılan <strong>brüt ücret</strong>,
+    müşterinin brüt ücretten keserek vergi dairesine yatırdığı <strong>gelir vergisi stopajı</strong> ve brüt ücretin
+    üzerine eklenen <strong>KDV</strong>. Stopaj da KDV de aynı KDV hariç brüt ücretten hesaplanır; biri diğerinin
+    matrahı değildir.
+  </p>
+  <div class="formula">Stopaj          = Brüt ücret × stopaj oranı   (genel {formatPercent(genelOran)}, GVK md. 18 kapsamında {formatPercent(md18Oran)})
+Net ücret       = Brüt ücret − Stopaj
+KDV             = Brüt ücret × KDV oranı
+Tahsil edilecek = Net ücret + KDV − KDV tevkifatı
+
+Netten brüte    : Brüt = Net ÷ (1 − stopaj oranı)
+KDV dahilden    : Brüt = KDV dahil fiyat ÷ (1 + KDV oranı)</div>
+  <p>
+    Hesaplayıcıda elinizdeki tutarı seçersiniz: brüt ücret, istediğiniz net ücret, müşteriye söylediğiniz KDV dahil fiyat
+    ya da hesabınıza yatan tutar. Diğer tüm kalemler buna göre bulunur. Makbuzda birden fazla hizmet kalemi varsa “Kalem
+    ekle” ile hepsini girebilir, her kaleme ayrı KDV oranı verebilirsiniz.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>Brüt 10.000 TL, %20 stopaj, %20 KDV:</strong> Stopaj {formatTL(ornek1.stopaj)}, net ücret {formatTL(ornek1.net)},
+      KDV {formatTL(ornek1.kdv)}. Hesabınıza {formatTL(ornek1.tahsilat)} yatar; müşteri ayrıca {formatTL(ornek1.musteriVergiOdemesi)}
+      stopajı vergi dairesine yatırır. Müşterinin toplam maliyeti {formatTL(ornek1.kdvDahil)}’dir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Eline 8.000 TL net geçsin:</strong> Brüt ücret 8.000 ÷ 0,80 = {formatTL(ornek2.brut)} olmalıdır. Makbuza
+      {formatTL(ornek2.brut)} yazarsanız stopaj {formatTL(ornek2.stopaj)}, net {formatTL(ornek2.net)}, KDV
+      {formatTL(ornek2.kdv)} olur; müşteri size {formatTL(ornek2.tahsilat)} öder.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Telif niteliğinde iş (GVK md. 18), brüt 5.000 TL:</strong> %17 stopaj {formatTL(ornek3.stopaj)} tutar; net
+      ücret {formatTL(ornek3.net)}. %20 KDV {formatTL(ornek3.kdv)} eklenince tahsilat {formatTL(ornek3.tahsilat)} olur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Bireysel müşteriye 2.500 TL + KDV:</strong> Müşteri stopaj sorumlusu olmadığı için kesinti yapılmaz.
+      KDV {formatTL(ornek5.kdv)}; müşteri {formatTL(ornek5.tahsilat)} öder. Gelir vergisini yıllık beyannamede
+      kendiniz hesaplarsınız.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Kamu kurumuna 20.000 TL’lik danışmanlık (9/10 tevkifat):</strong> KDV {formatTL(ornek4.kdv)}; KDV dahil bedel
+      {formatTL(ornek4.kdvDahil)} sınırı aştığı için {formatTL(ornek4.tevkifEdilenKdv)} KDV’yi kurum kendisi öder. Siz
+      net ücret {formatTL(ornek4.net)} ile yalnızca {formatTL(ornek4.tahsilEdilecekKdv)} KDV tahsil edersiniz;
+      hesabınıza {formatTL(ornek4.tahsilat)} yatar.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Sınırın altında kalan tevkifatlı iş:</strong> Aynı kuruma 8.000 TL + KDV ({formatTL(ornek6.kdvDahil)}) tutarında
+      hizmet verirseniz, KDV dahil bedel {formatTL(sinir2026, 0)} sınırını aşmadığı için 9/10 tevkifat uygulanmaz. KDV’nin
+      tamamı size ödenir: tahsilat {formatTL(ornek6.tahsilat)}.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <h3>Stopaj oranı ve kapsamı</h3>
+  <p>
+    Serbest meslek faaliyetinde bulunanlara yapılan ödemelerden, ödemeyi yapan Gelir Vergisi Kanunu md. 94’te sayılanlardan
+    biriyse stopaj kesilir. Genel oran %20’dir (md. 94/2-b). Müellif, mütercim, ressam, heykeltıraş, bestekâr, bilgisayar
+    programcısı ve mucitlerin md. 18 kapsamındaki eser ve hak gelirlerinde ise oran %17’dir (md. 94/2-a). İşinizin hangi
+    gruba girdiği tereddüt yaratıyorsa mali müşavirinize danışın; hesaplayıcıda her iki oranı da seçebilirsiniz. Arızi
+    olarak serbest meslek faaliyetinde bulunanların ödemeleri de stopaja tabidir.
+  </p>
+  <h3>Stopaj nihai vergi değil, ön vergidir</h3>
+  <p>
+    Kesilen stopaj yıl sonunda verilecek gelir vergisi beyannamesindeki vergiden mahsup edilir. Bu yüzden “net ücret”,
+    cebinize kalan gerçek kazanç değil, vergi öncesi nakit akışınızdır; yıllık beyannamede gider ve vergi dilimi hesabı
+    yapıldıktan sonra ödeme ya da iade çıkabilir. İstisnalar vardır: arızi serbest meslek kazançlarında yıllık istisna
+    haddinin altında kalan tutarlardan ve md. 18 kapsamında istisnaya giren, tarifenin dördüncü diliminin üst sınırını
+    aşmayan kazançlardan yapılan stopaj nihai vergi sayılır (GİB Serbest Meslek Kazancı Vergi Rehberi, bölüm 6).
+  </p>
+  <h3>KDV tevkifatı: hangi hizmette, kime karşı, hangi oranda?</h3>
+  <p>
+    Kısmi KDV tevkifatı, KDV Genel Uygulama Tebliği’nde sayılan işlemlerle sınırlıdır. Aşağıdaki tablo serbest meslek
+    hizmetlerinde en sık karşılaşılan durumları özetler; hesaplayıcı seçtiğiniz müşteri türüne göre bu koşulları kendisi
+    kontrol eder.
+  </p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr><th>Oran</th><th>Hizmet</th><th>Hangi alıcıya karşı?</th></tr>
+      </thead>
+      <tbody>
+        {
+          kurallar.map((k) => (
+            <tr>
+              <td>{k.pay}/10</td>
+              <td>
+                <strong>{k.ad}</strong> – {k.kapsam} <em>(KDV GUT {k.bolum})</em>
+              </td>
+              <td>{k.alicilar.map((a) => aliciAdlari[a]).join('; ')}</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p>
+    Kısmi tevkifatın uygulanması için ayrıca işlemin KDV dahil bedelinin, o yıl geçerli fatura düzenleme sınırını
+    <strong>aşması</strong> gerekir: 2025’te {formatTL(sinir2025, 0)}, 2026’da {formatTL(sinir2026, 0)}. Sınırı aştığında
+    tevkifat tutarın tamamı üzerinden yapılır; sınır aşılmazsa hiç uygulanmaz. Bedeli tevkifattan kaçınmak için birden
+    çok makbuza bölmek mümkün değildir, aynı işe ait bedellerin toplamına bakılır.
+  </p>
+  <h3>Sık yapılan hatalar</h3>
+  <ul>
+    <li>Net ücreti 1,20 ile çarpıp brüt bulmak (doğrusu net ÷ 0,80).</li>
+    <li>Stopajı KDV dahil tutardan hesaplamak (stopaj KDV hariç brüt üzerindendir).</li>
+    <li>Bireysel müşteriye kesilen makbuzda stopaj düşmek (ödeyen stopaj sorumlusu değilse kesinti olmaz).</li>
+    <li>Her danışmanlık makbuzunda tevkifat beklemek (alıcı türü ve tutar sınırı koşulları vardır).</li>
+    <li>Masraf yansıtmasını da tevkifat kapsamında saymak (kalem bazında işaretini kaldırabilirsiniz).</li>
+  </ul>
+  <p>
+    Kaynaklar: GİB’in Gelir Vergisi Kanunu md. 94 kesinti oranları tablosu, 2026 Serbest Meslek Kazancı Vergi Rehberi ve KDV
+    Genel Uygulama Tebliği (bölüm I/C-2.1.3). Sayfanın altındaki “Kullanılan oranlar” kutusunda bağlantılar bulunur.
+  </p>
+</ToolLayout>
