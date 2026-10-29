@@ -1,0 +1,45 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/finansal-ozgurluk-hesaplama/Calculator';
+import { meta } from '../tools/finansal-ozgurluk-hesaplama/meta';
+import { hesaplaOzgurluk } from '../tools/finansal-ozgurluk-hesaplama/calc';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const o = hesaplaOzgurluk({ aylikHarcama: 30000, mevcutBirikim: 1_000_000, aylikBirikim: 20000, reelGetiri: 4, cekimOrani: 4, birikimArtisi: 0, yas: 32 });
+
+const faq: FaqItem[] = [
+  {
+    q: 'Finansal özgürlük için ne kadar para gerekir?',
+    a: 'Yaygın bir kural, yıllık harcamanızın 25 katı birikimdir. Bu, birikimin her yıl %4’ünü çekmeye karşılık gelir (“%4 kuralı”). Aylık 30.000 TL harcayan biri için 30.000 × 12 × 25 = 9.000.000 TL eder.',
+  },
+  {
+    q: '%4 kuralı Türkiye için geçerli mi?',
+    a: '%4 kuralı uzun vadeli geçmiş getirilere dayanan bir varsayımdır ve enflasyon üstü getiriyi esas alır. Türkiye’de enflasyon ve getiri oynaklığı yüksek olduğu için daha düşük bir çekim oranı (ör. %3) seçmek daha temkinli bir plandır.',
+  },
+  {
+    q: 'Neden enflasyon üstü (reel) getiri kullanılıyor?',
+    a: 'Hedef ve harcamalar bugünkü fiyatlarla yazıldığı için getirinin de enflasyondan arındırılmış olması gerekir. Böylece sonuç, ileride fiyatlar arttığında da aynı yaşam standardını temsil eder.',
+  },
+  {
+    q: 'BES ve SGK emekliliği hesaba dahil mi?',
+    a: 'Hayır. Emekli aylığı ya da BES birikimi alacaksanız, bunların karşılayacağı kısmı aylık harcamanızdan düşerek hedefinizi küçültebilirsiniz.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Nasıl hesaplanır?</h2>
+  <div class="formula">Hedef birikim = Yıllık harcama ÷ Yıllık çekim oranı
+Her ay: Birikim = Birikim × (1 + aylık reel getiri) + Aylık birikim</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      Aylık 30.000 TL harcayan, 1.000.000 TL birikimi olan ve ayda 20.000 TL biriktiren 32 yaşındaki biri, %4 reel getiri ve %4
+      çekim oranıyla {formatTL(o.hedef, 0)} hedefine yaklaşık {o.yasinda} yaşında ulaşır.
+    </p>
+  </div>
+</ToolLayout>
