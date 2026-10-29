@@ -1,0 +1,219 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kredi-hesaplama/Calculator';
+import { meta } from '../tools/kredi-hesaplama/meta';
+import { hesaplaKredi, tersHesap, yasalSinirUygula } from '../tools/kredi-hesaplama/calc';
+import { krediSinirlari, krediVergileri } from '../data/params/kredi';
+import { formatNumber, formatPercent, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const s = krediSinirlari.values;
+const v = krediVergileri.values.turler;
+const dilimMetni = (ust: number | null, onceki: number | null) =>
+  ust === null ? `${formatTL(onceki ?? 0, 0)} üzeri` : onceki === null ? `${formatTL(ust, 0)} ve altı` : `${formatTL(onceki, 0)} – ${formatTL(ust, 0)}`;
+
+const faq: FaqItem[] = [
+  {
+    q: 'KKDF ve BSMV nedir, krediye nasıl yansır?',
+    a: `KKDF (Kaynak Kullanımını Destekleme Fonu) ve BSMV (Banka ve Sigorta Muameleleri Vergisi), kredinin anaparasına değil <strong>her ay ödediğiniz faize</strong> eklenir. İhtiyaç ve taşıt kredisinde KKDF oranı %${v.ihtiyac.kkdf}, BSMV oranı %${v.ihtiyac.bsmv}; bu yüzden aylık %3 faizli bir kredide taksit, aylık %3 × 1,30 = %3,9 oranıyla hesaplanır. Ödeme planındaki her taksit faiz, KKDF, BSMV ve anapara olarak dörde ayrılır.`,
+  },
+  {
+    q: 'Konut kredisinde KKDF ve BSMV var mı?',
+    a: 'Konut edinmek için kullanılan konut kredisinde (konut finansmanı) KKDF ve BSMV uygulanmaz; BSMV istisnası 6802 sayılı Gider Vergileri Kanunu’nun 29. maddesinde yer alır. Elinizdeki konutu ipotek ettirip aldığınız <strong>konut teminatlı ihtiyaç kredisi</strong> ise konut finansmanı sayılmaz ve vergiye tabidir. Kredi kullanılarak alınan konut başkasına satılırsa sonraki taksitlerin faizine vergi uygulanabilir.',
+  },
+  {
+    q: 'İhtiyaç kredisinde en fazla kaç ay vade alınabilir?',
+    a: `BDDK’nın 13.02.2025 tarihli ve 11152 sayılı kararına göre tüketici kredilerinde azami vade kredi tutarına bağlıdır: ${formatTL(s.genelVade[0].ust!, 0)} ve altı ${s.genelVade[0].vade} ay, ${formatTL(s.genelVade[1].ust!, 0)}’ye kadar ${s.genelVade[1].vade} ay, daha yüksek tutarlarda ${s.genelVade[2].vade} ay. Sınır yeniden yapılandırmada da geçerlidir; konut, eğitim ve kamu borcu kredileri bu sınırın dışındadır.`,
+  },
+  {
+    q: 'Taşıt kredisinde ne kadar kredi çekebilirim?',
+    a: `Binek araçta kredi tutarı ve vade, aracın nihai fatura değerine (ikinci elde kasko değerine) göre sınırlıdır: ${formatTL(s.tasit[0].ust!, 0)}’ye kadar olan araçta kredi/değer oranı en fazla %${s.tasit[0].kdo}, vade en fazla ${s.tasit[0].vade} ay; değer arttıkça oran ve vade düşer, ${formatTL(s.tasit[3].ust!, 0)} üzerindeki araçlara taşıt kredisi verilmez. Yerli üretim elektrikli araçlarda sınırlar daha geniştir (${formatTL(s.tasitYerliElektrikli[0].ust!, 0)}’ye kadar %${s.tasitYerliElektrikli[0].kdo}, ${s.tasitYerliElektrikli[0].vade} ay).`,
+  },
+  {
+    q: 'Yıllık maliyet oranı nedir, faiz oranından farkı ne?',
+    a: 'Yıllık maliyet oranı (yönetmelikteki adıyla efektif yıllık faiz oranı) faize ek olarak KKDF, BSMV ve tahsis ücreti, sigorta gibi masrafları da içerir ve bileşik olarak yıllığa çevrilir. Tüketici Kredisi Sözleşmeleri Yönetmeliği’nin 14. maddesi bu oranın sözleşmede yer almasını zorunlu tutar. Farklı faiz ve masraflı teklifleri karşılaştırırken tek başına faiz oranı yerine bu oranı kullanmak daha doğru sonuç verir.',
+  },
+  {
+    q: 'Kredi tahsis ücreti ne kadar olabilir, başka ücret alınabilir mi?',
+    a: 'Tüketici ve konut kredilerinde tahsis ücreti, kullandırılan anaparanın <strong>binde 5’ini</strong> geçemez; istihbarat, dosya, işlem fişi gibi adlarla ayrıca ücret alınamaz. Ekspertiz, ipotek ve rehin işlemlerinde yalnızca üçüncü kişilere ödenen tutarlar size yansıtılabilir (TCMB 2020/7 sayılı Tebliğ ve Uygulama Talimatı). Ticari kredilerde farklı kurallar uygulanır.',
+  },
+  {
+    q: 'Kredi için sigorta yaptırmak zorunlu mu?',
+    a: 'Konut finansmanında açık talebiniz olmadan krediye bağlı sigorta yaptırılamaz (6502 sayılı Kanun md. 38). Tüketici kredisinde de istediğiniz sigorta şirketinden aldığınız, kalan borç ve vadeyle uyumlu teminat banka tarafından kabul edilmek zorundadır (Tüketici Kredisi Sözleşmeleri Yönetmeliği md. 26). Sigorta primini hesaplayıcıya masraf olarak eklerseniz maliyet oranına dahil edilir.',
+  },
+];
+
+// Örnek 1: ihtiyaç kredisi
+const ornek1 = hesaplaKredi({
+  anapara: 100_000,
+  vade: 24,
+  aylikFaiz: 3,
+  kkdf: v.ihtiyac.kkdf,
+  bsmv: v.ihtiyac.bsmv,
+  masraflar: [{ tur: 'tahsis', tutar: 500, zaman: 'pesin' }],
+});
+const ilkAy = ornek1.plan.satirlar[0];
+
+// Örnek 2: konut kredisi (vergisiz) ve aynı kredinin vergili hâli
+const ornek2 = hesaplaKredi({ anapara: 3_000_000, vade: 120, aylikFaiz: 2.5, kkdf: v.konut.kkdf, bsmv: v.konut.bsmv, masraflar: [] });
+const ornek2Vergili = hesaplaKredi({ anapara: 3_000_000, vade: 120, aylikFaiz: 2.5, kkdf: 15, bsmv: 15, masraflar: [] });
+
+// Örnek 3: taşıt kredisinde yasal sınır
+const ornek3 = yasalSinirUygula({ tur: 'tasit', tutar: 600_000, vade: 48, deger: 1_000_000 });
+
+// Örnek 4: ters hesap
+const ornek4 = tersHesap({ taksit: 10_000, vade: 36, aylikFaiz: 3, kkdf: 15, bsmv: 15, sinir: { tur: 'ihtiyac' } });
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Kredi taksiti nasıl hesaplanır?</h2>
+  <p>
+    Türkiye’de bankalar eşit taksitli kredilerde taksiti, faize eklenen vergileri de içeren bir oranla hesaplar. Aylık akdi faiz
+    <em>r</em>, KKDF <em>k</em> ve BSMV <em>b</em> ise taksit, <em>r × (1 + k + b)</em> oranıyla bulunan annüitedir. Her ay önce kalan
+    anaparanın faizi, sonra bu faizin KKDF ve BSMV’si ayrılır; taksitten geri kalanı anaparayı azaltır.
+  </p>
+  <div class="formula">Vergili aylık oran  rₑ = r × (1 + KKDF + BSMV)
+Aylık taksit         T = Anapara × rₑ ÷ (1 − (1 + rₑ)^−n)
+Her ay:  Faiz = Kalan anapara × r
+         KKDF = Faiz × KKDF oranı,  BSMV = Faiz × BSMV oranı
+         Anapara payı = T − Faiz − KKDF − BSMV</div>
+  <p>
+    Yıllık maliyet oranı ise krediyle elinize geçen net tutarı (peşin masraflar düşülmüş hâliyle), ödeyeceğiniz bütün taksit ve
+    masraflara eşitleyen aylık oranın bileşik yıllık karşılığıdır. Yönetmelik bir yılı 12 eşit ay kabul eder; noter masrafları ve
+    gecikme hâlinde ödenecek tutarlar bu orana girmez.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>100.000 TL ihtiyaç kredisi, 24 ay, aylık %3 faiz, 500 TL tahsis ücreti:</strong> Vergili aylık oran %3 × 1,30 = %3,9 olur
+      ve aylık taksit {formatTL(ornek1.plan.taksit)} çıkar. İlk taksitte {formatTL(ilkAy.faiz)} faiz, {formatTL(ilkAy.kkdf)} KKDF ve
+      {formatTL(ilkAy.bsmv)} BSMV ödersiniz; anaparaya {formatTL(ilkAy.anapara)} kalır. 24 ayda toplam {formatTL(ornek1.plan.toplamFaiz)}
+      faiz, {formatTL(ornek1.plan.toplamKkdf + ornek1.plan.toplamBsmv)} vergi ödenir; masrafla birlikte kredinin maliyeti
+      {formatTL(ornek1.toplamMaliyet)}, yıllık maliyet oranı {formatPercent((ornek1.ymoYillik ?? 0) * 100)} olur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>3.000.000 TL konut kredisi, 120 ay, aylık %2,5:</strong> Konut kredisinde KKDF ve BSMV olmadığı için taksit
+      {formatTL(ornek2.plan.taksit)}, toplam faiz {formatTL(ornek2.plan.toplamFaiz)} olur. Aynı kredi %15 KKDF ve %15 BSMV’ye tabi
+      olsaydı taksit {formatTL(ornek2Vergili.plan.taksit)}’ye, toplam geri ödeme {formatTL(ornek2.plan.toplamOdeme)} yerine
+      {formatTL(ornek2Vergili.plan.toplamOdeme)}’ye çıkardı.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>1.000.000 TL’lik araca 600.000 TL, 48 ay taşıt kredisi:</strong> Bu değerdeki araçta kredi/değer oranı en fazla
+      %{ornek3.kdo} ve vade en fazla {ornek3.azamiVade} aydır. Bu nedenle çekilebilecek kredi {formatTL(ornek3.tutar, 0)}, vade
+      {ornek3.vade} ay ile sınırlıdır; aradaki farkı peşin ödemeniz gerekir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Ayda 10.000 TL taksitle 36 ay vadeli ihtiyaç kredisi:</strong> Vade sınırı olmasaydı aylık %3 faizle
+      {formatTL(ornek4.sinirsizTutar, 0)} kredi çekilebilirdi; ancak 36 ay vade yalnızca {formatTL(s.genelVade[0].ust!, 0)}’ye kadar
+      verilebildiği için en yüksek tutar {formatTL(ornek4.tutar, 0)} ({ornek4.vade} ay vadeyle) olur.
+    </p>
+  </div>
+
+  <h2>Kredi türlerine göre vergiler</h2>
+  <table>
+    <thead>
+      <tr><th>Kredi türü</th><th>KKDF</th><th>BSMV</th><th>Not</th></tr>
+    </thead>
+    <tbody>
+      {
+        (['ihtiyac', 'tasit', 'konut', 'konut-teminatli', 'telefon', 'ticari'] as const).map((t) => (
+          <tr>
+            <td>{v[t].ad}</td>
+            <td>{formatPercent(v[t].kkdf)}</td>
+            <td>{formatPercent(v[t].bsmv)}</td>
+            <td>{v[t].aciklama}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p>
+    Tüketici kredilerinde BSMV, kredinin kullandırıldığı tarihe göre belirlenir: 11 Haziran 2022’den önce kullanılan kredilerde %5,
+    11 Haziran 2022 – 6 Temmuz 2023 arasında %10, 7 Temmuz 2023’ten itibaren %15. Eski bir krediyi kontrol ediyorsanız BSMV alanını
+    sözleşmenizdeki oranla değiştirin.
+  </p>
+
+  <h2>BDDK sınırları</h2>
+  <h3>Tüketici kredisi azami vadesi</h3>
+  <table>
+    <thead>
+      <tr><th>Kredi tutarı</th><th>Azami vade</th></tr>
+    </thead>
+    <tbody>
+      {s.genelVade.map((d, i) => (
+        <tr>
+          <td>{dilimMetni(d.ust, i === 0 ? null : s.genelVade[i - 1].ust)}</td>
+          <td>{d.vade} ay</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <h3>Taşıt kredisi (binek araç)</h3>
+  <table>
+    <thead>
+      <tr><th>Araç değeri</th><th>Kredi/değer oranı</th><th>Azami vade</th></tr>
+    </thead>
+    <tbody>
+      {s.tasit.map((d, i) => (
+        <tr>
+          <td>{dilimMetni(d.ust, i === 0 ? null : s.tasit[i - 1].ust)}</td>
+          <td>{d.kdo === 0 ? 'Kredi verilmez' : formatPercent(d.kdo)}</td>
+          <td>{d.vade === 0 ? '–' : `${d.vade} ay`}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <h3>Konut kredisi kredi/değer oranı</h3>
+  <table>
+    <thead>
+      <tr><th>Konut değeri</th><th>A–B sınıfı</th><th>C sınıfı</th><th>Diğer</th></tr>
+    </thead>
+    <tbody>
+      {s.konut.map((d, i) => (
+        <tr>
+          <td>{dilimMetni(d.ust, i === 0 ? null : s.konut[i - 1].ust)}</td>
+          <td>{formatPercent(d.ab)}</td>
+          <td>{formatPercent(d.c)}</td>
+          <td>{formatPercent(d.diger)}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <p>
+    Sizin, eşinizin veya 18 yaş altındaki çocuğunuzun en az bir konutu varsa bu oranlar %{s.konutSahibiIndirimi} azaltılarak
+    uygulanır; örneğin %{s.konut[0].c} yerine %{formatNumber((s.konut[0].c * (100 - s.konutSahibiIndirimi)) / 100, 2)}. Cep telefonu
+    kredisinde vade, fiyatı {formatTL(s.telefon.sinir, 0)} ve altındaki telefonlarda {s.telefon.altVade} ay, üzerindekilerde
+    {s.telefon.ustVade} aydır (yenilenmiş telefonda sınır {formatTL(s.telefon.yenilenmisSinir, 0)}).
+  </p>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Yıllık faiz nasıl yazılır?</strong> Kredi sözleşmelerinde yıllık akdi faiz genellikle aylık oranın 12 katıdır (aylık %2,49
+      → yıllık %29,88). Bileşik etkisiyle gerçek yıllık maliyet bundan yüksektir.
+    </li>
+    <li>
+      <strong>Erken ödeme hakkınız var:</strong> Tüketici kredisini dilediğiniz zaman kısmen ya da tamamen erken kapatabilirsiniz;
+      banka kalan faizden indirim yapmak zorundadır (6502 sayılı Kanun md. 27). Sabit faizli konut kredisinde en fazla %1 veya %2
+      erken ödeme tazminatı alınabilir.
+    </li>
+    <li>
+      <strong>Gecikme faizi:</strong> Taksiti geciktirirseniz uygulanacak gecikme faizi, tüketici kredisinde akdi faizin en fazla %30
+      fazlası olabilir.
+    </li>
+    <li>
+      <strong>Teklifleri karşılaştırırken</strong> yalnızca faiz oranına bakmak yanıltıcı olabilir: düşük faizli bir teklif yüksek
+      tahsis ücreti veya sigorta primiyle daha pahalıya gelebilir. Hesaplayıcının karşılaştırma bölümü bunu toplam maliyet ve yıllık
+      maliyet oranıyla gösterir.
+    </li>
+  </ul>
+</ToolLayout>

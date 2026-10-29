@@ -1,0 +1,144 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/taksit-mi-pesin-mi/Calculator';
+import { meta } from '../tools/taksit-mi-pesin-mi/meta';
+import { karsilastir, pesinFiyatHesapla } from '../tools/taksit-mi-pesin-mi/calc';
+import { kartTaksitSinirlari } from '../data/params/kredi';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const gruplar = kartTaksitSinirlari.values.gruplar;
+
+const etiket = 30_000;
+const pesin = pesinFiyatHesapla(etiket, 10);
+const ornek = karsilastir({
+  etiket,
+  pesin,
+  aylikOran: 2.5,
+  ilkGun: 30,
+  secenekler: [
+    { sayi: 6, giris: 'vadeFarki', deger: 0 },
+    { sayi: 12, giris: 'vadeFarki', deger: 15 },
+  ],
+});
+const [alti, onIki] = ornek.secenekler;
+const indirimsiz = karsilastir({ etiket, pesin: etiket, aylikOran: 2.5, ilkGun: 30, secenekler: [{ sayi: 6, giris: 'vadeFarki', deger: 0 }] }).secenekler[0];
+const kartGec = karsilastir({ etiket, pesin, aylikOran: 2.5, ilkGun: 40, secenekler: [{ sayi: 6, giris: 'vadeFarki', deger: 0 }] }).secenekler[0];
+const kartErken = karsilastir({ etiket, pesin, aylikOran: 2.5, ilkGun: 10, secenekler: [{ sayi: 6, giris: 'vadeFarki', deger: 0 }] }).secenekler[0];
+
+const faq: FaqItem[] = [
+  {
+    q: 'Vade farksız taksit gerçekten bedava mı?',
+    a: 'Taksitlerin toplamı etiket fiyatına eşitse ek faiz ödemezsiniz; üstelik parayı aylara yayarak ödediğiniz için bugünkü değeri etiket fiyatından düşüktür. Ancak satıcı peşin ödemeye indirim yapıyorsa “vade farksız” taksitin içinde gizli bir vade farkı vardır: peşin fiyata göre ne kadar fazla ödediğinizi ve bunun hangi faiz oranına denk geldiğini hesaplayıcı “başa baş oranı” olarak gösterir.',
+  },
+  {
+    q: 'Peşin indirimi ne kadar olursa peşin ödemek daha ucuza gelir?',
+    a: `Bu, taksit sayısına, ilk taksitin ne zaman ödendiğine ve paranızın aylık getirisine bağlıdır. Hesaplayıcı her taksit seçeneği için başa baş oranını bulur: aylık getiri veya enflasyon bu oranın altındaysa peşin, üstündeyse taksit bugünkü değerle daha ucuzdur. Örneğin ilk taksiti bir ay sonra ödenen vade farksız 6 taksite karşı %10 peşin indirimi, aylık %${formatNumber(alti.basabasAylik ?? 0, 2)} getiriye denk gelir.`,
+  },
+  {
+    q: 'Kredi kartıyla en fazla kaç taksit yapılabilir?',
+    a: `Genel sınır ${gruplar.find((g) => g.id === 'genel')!.azami} taksittir; ancak BDDK bazı harcama gruplarında daha düşük sınır koymuştur: elektronik eşyada ${gruplar.find((g) => g.id === 'elektronik')!.azami}, mobilya ve elektrikli eşyada ${gruplar.find((g) => g.id === 'mobilya')!.azami}, takı gibi kuyumda ${gruplar.find((g) => g.id === 'kuyum')!.azami} taksit. Akaryakıt, gıda, yemek, kozmetik, telekomünikasyon, külçe altın ve yurt dışı harcamalarda taksit yapılamaz. Yurt içi uçak, tur ve otel harcamalarında sınır ${gruplar.find((g) => g.id === 'seyahat-yurtici')!.azami} aydır.`,
+  },
+  {
+    q: 'Hesap kesim tarihi taksitli alışverişi nasıl etkiler?',
+    a: 'Kartla yapılan alışverişin ilk taksiti, alışverişten sonraki ilk hesap kesiminde ekstreye yansır ve o ekstrenin son ödeme gününde ödenir. Hesap kesiminden hemen sonra yapılan alışverişte ilk ödemeye kadar yaklaşık 40 gün, hemen önce yapılanda yaklaşık 10 gün geçer. Bu süre uzadıkça taksitlerin bugünkü değeri düşer; hesaplayıcıda “İlk taksit ne zaman ödenir?” seçeneğiyle bu farkı görebilirsiniz.',
+  },
+  {
+    q: 'Hesaplamaya hangi oranı yazmalıyım: enflasyon mu, mevduat faizi mi?',
+    a: 'İkisi farklı soruları yanıtlar. Peşin ödeyeceğiniz parayı vadeli mevduatta tutabiliyorsanız vergi sonrası net aylık getiriyi yazmak “parayı bekletmek mi, harcamak mı?” sorusunu yanıtlar. Enflasyonu yazmak ise taksitlerin bugünkü alım gücüyle ne kadar ettiğini gösterir. Sonuçlar bu varsayıma bağlı olduğu için alttaki senaryo tablosu %0–%5 arası oranları birlikte gösterir.',
+  },
+  {
+    q: 'Vade farkı nasıl hesaplanır?',
+    a: 'Vade farkı, taksitli toplam fiyatın peşin (ya da etiket) fiyata göre ne kadar yüksek olduğudur: (taksitli toplam ÷ peşin fiyat − 1) × 100. Örneğin peşin 27.000 TL, 12 taksitte toplam 34.500 TL olan bir üründe vade farkı %27,8’dir. Bu oran taksit süresini hesaba katmadığı için farklı vadeleri karşılaştırırken başa baş (aylık) oranına bakmak daha doğrudur.',
+  },
+];
+
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Taksit mi peşin mi nasıl hesaplanır?</h2>
+  <p>
+    Bugün ödenen 1 lira ile altı ay sonra ödenen 1 lira aynı değerde değildir: Parayı bekletirken faiz kazanabilir, fiyatlar artarken
+    de gelecekteki ödemenin alım gücü düşer. Bu yüzden taksitleri doğrudan toplamak yerine, her taksit bugüne indirgenir ve bu
+    <strong>bugünkü değer</strong> peşin fiyatla karşılaştırılır.
+  </p>
+  <div class="formula">Bugünkü değer = Σ  Taksit ÷ (1 + i)^(t₀ + k)     k = 0, 1, …, n−1
+  i  : aylık getiri veya enflasyon varsayımı
+  t₀ : ilk taksite kalan süre (ay; 30 gün = 1 ay)
+
+Başa baş oranı: bugünkü değeri peşin fiyata eşitleyen aylık i</div>
+  <p>
+    Bugünkü değer peşin fiyattan düşükse taksit, yüksekse peşin daha ucuza gelir. Başa baş oranı ise taksitli ödemenin size kaça
+    mal olduğunu bir faiz oranı gibi gösterir: aylık getiri veya enflasyon bu oranın üzerindeyse taksit avantajlıdır.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>Etiketi {formatTL(etiket, 0)} olan ürün, peşine %10 indirim ({formatTL(pesin, 0)}) ya da vade farksız 6 taksit:</strong>
+      Taksitlerin toplamı {formatTL(alti.toplam, 0)}, yani peşine göre {formatTL(alti.pesineGoreFark, 0)} fazla. Aylık %2,5 getiri
+      varsayımıyla taksitlerin bugünkü değeri {formatTL(alti.bugunkuDeger)}; bu durumda peşin {formatTL(alti.bdFark)} daha ucuzdur.
+      Başa baş oranı aylık %{formatNumber(alti.basabasAylik ?? 0, 2)}: paranızın aylık getirisi bunun üzerindeyse taksit daha ucuza
+      gelir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Aynı ürün %15 vade farkıyla 12 taksit:</strong> Toplam {formatTL(onIki.toplam, 0)} ödenir (aylık
+      {formatTL(onIki.taksit, 0)}). Bugünkü değeri {formatTL(onIki.bugunkuDeger)} olur; başa baş oranı aylık
+      %{formatNumber(onIki.basabasAylik ?? 0, 2)}, yıllık bileşik karşılığı %{formatNumber(onIki.basabasYillik ?? 0, 1)} olur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Peşin indirimi yoksa:</strong> Vade farksız 6 taksitin bugünkü değeri {formatTL(indirimsiz.bugunkuDeger)}, yani etiket
+      fiyatından {formatTL(-indirimsiz.bdFark)} düşüktür. Peşin indirimi olmadığında vade farksız taksit, paranız sıfırın üzerinde
+      getiri sağladığı sürece daha ucuza gelir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Hesap kesim tarihinin etkisi:</strong> İlk örnekteki 6 taksitin bugünkü değeri, alışveriş hesap kesiminden hemen sonra
+      yapılırsa (ilk ödeme ~40 gün sonra) {formatTL(kartGec.bugunkuDeger)}, hemen önce yapılırsa (~10 gün sonra)
+      {formatTL(kartErken.bugunkuDeger)} olur.
+    </p>
+  </div>
+
+  <h2>Kredi kartı taksit sınırları</h2>
+  <table>
+    <thead>
+      <tr><th>Harcama grubu</th><th>En fazla taksit</th></tr>
+    </thead>
+    <tbody>
+      {gruplar.map((g) => (
+        <tr>
+          <td>{g.ad}</td>
+          <td>{g.azami === 0 ? 'Taksit yapılamaz' : `${g.azami} ay`}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <p>
+    Sınırlar, alışverişten sonra borcun taksitlendirilmesi ve ödeme erteleme dönemleri dahil uygulanır. Bir harcamanın hangi gruba
+    girdiğini işyerinin kategorisi belirler. Mağazanın kendi kredisi veya bankanın alışveriş kredisi ise tüketici kredisi
+    sayılır ve kart sınırlarına değil kredi vade sınırlarına tabidir.
+  </p>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Kart limiti:</strong> Taksitli alışverişin tamamı ilk günden kart limitinizden düşülür; limit, taksitler ödendikçe
+      açılır.
+    </li>
+    <li>
+      <strong>Asgari ödeme ve taksit:</strong> Ekstredeki taksit tutarını ödemezseniz kalan borca kart faizi işler; bu durumda
+      taksitin avantajı kaybolur. Kart borcunuzun maliyetini Kredi Kartı Asgari Ödeme robotuyla görebilirsiniz.
+    </li>
+    <li>
+      <strong>Varsayım önemlidir:</strong> Sonuç, girdiğiniz aylık getiri veya enflasyon oranına bağlıdır. Tek bir orana güvenmek
+      yerine senaryo tablosundaki farklı oranlara da bakın.
+    </li>
+  </ul>
+</ToolLayout>

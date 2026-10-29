@@ -1,0 +1,126 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kredi-karti-asgari-odeme/Calculator';
+import { meta } from '../tools/kredi-karti-asgari-odeme/meta';
+import { simuleEt, type OranAyari } from '../tools/kredi-karti-asgari-odeme/calc';
+import { asgariOdemeOranlari, kartFaizDonemiOn, krediKartiFaizleri } from '../data/params/kredi';
+import { formatDateTR, formatNumber, formatPercent, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const donem = kartFaizDonemiOn(krediKartiFaizleri.lastReviewed);
+const asgari = asgariOdemeOranlari.values.donemler[asgariOdemeOranlari.values.donemler.length - 1];
+const vergi = krediKartiFaizleri.values.vergiler;
+const d = donem.dilimler;
+
+const ayar: OranAyari = { mod: 'azami', donem, borcTuru: 'alisveris', kurumsal: false };
+const ortak = { borc: 25_000, asgariOran: asgari.altOran, oran: ayar, kkdf: vergi.kkdf, bsmv: vergi.bsmv, kucukBakiye: 100 };
+const sadeceAsgari = simuleEt({ ...ortak, strateji: { tur: 'asgari' } });
+const sabit = simuleEt({ ...ortak, strateji: { tur: 'sabit', tutar: 5_000 } });
+const ilk = sadeceAsgari.satirlar[0];
+const asgariAlti = simuleEt({ ...ortak, strateji: { tur: 'sabit', tutar: 3_000 }, azamiAy: 1 }).satirlar[0];
+
+const faq: FaqItem[] = [
+  {
+    q: 'Kredi kartı asgari ödeme tutarı nasıl hesaplanır?',
+    a: `Asgari ödeme, dönem borcunun belirli bir yüzdesidir ve oran kart limitine göre değişir. BDDK’nın 01.10.2026 tarihli ve 11581 sayılı kararına göre limiti ${formatTL(asgari.limitEsigi, 0)} ve altında olan kartlarda dönem borcunun %${asgari.altOran} kadarı, üzerindeki kartlarda %${asgari.ustOran} kadarı asgari tutardır. Bu tarihten önce eşik ${formatTL(50_000, 0)} idi.`,
+  },
+  {
+    q: 'Asgari ödemeyi yaparsam faiz işler mi?',
+    a: 'Evet. Asgari tutarı ödemek gecikmeye düşmenizi önler, ancak ödenmeyen kalan borca hesap kesim tarihinden itibaren akdi faiz işler ve bu faize KKDF ile BSMV eklenir. Faiz ödememenin tek yolu dönem borcunun tamamını son ödeme gününe kadar ödemektir.',
+  },
+  {
+    q: 'Asgari ödemenin altında ödeme yaparsam ne olur?',
+    a: 'Asgari tutarın ödenmeyen kısmına akdi faizden yüksek olan gecikme faizi, kalan borcun geri kalanına akdi faiz uygulanır. Banka Kartları ve Kredi Kartları Hakkında Yönetmelik’in 22. maddesine göre bir takvim yılında asgari tutar toplam üç kez ödenmezse kart nakit kullanımına, üst üste üç kez ödenmezse alışverişe de kapatılır ve limit, borcun tamamı ödenene kadar artırılamaz.',
+  },
+  {
+    q: 'Güncel kredi kartı faiz oranları ne kadar?',
+    a: `TCMB’nin ilan ettiği aylık azami akdi faiz, dönem borcu ${formatTL(d[0].ust!, 0)} altındaysa %${formatNumber(d[0].akdi)}, ${formatTL(d[0].ust!, 0)} – ${formatTL(d[1].ust!, 0)} arasındaysa %${formatNumber(d[1].akdi)}, ${formatTL(d[1].ust!, 0)} üzerindeyse %${formatNumber(d[2].akdi)}; gecikme faizi sırasıyla %${formatNumber(d[0].gecikme)}, %${formatNumber(d[1].gecikme)} ve %${formatNumber(d[2].gecikme)}. Nakit çekimde akdi faiz %${formatNumber(donem.nakit.akdi)}, gecikme faizi %${formatNumber(donem.nakit.gecikme)}. Oranlar her ay yeniden ilan edilir; bankalar bu oranların altında faiz uygulayabilir.`,
+  },
+  {
+    q: 'Kart faizine KKDF ve BSMV ekleniyor mu?',
+    a: `Evet. Bankalar kart faizine %${vergi.kkdf} KKDF ve %${vergi.bsmv} BSMV ekler; yani aylık %${formatNumber(d[0].akdi)} faizin size maliyeti vergilerle birlikte aylık %${formatNumber(d[0].akdi * (1 + (vergi.kkdf + vergi.bsmv) / 100), 4)} olur. Ücret ve komisyonlara da BSMV eklenir. TCMB’nin ilan ettiği azami oranlar vergiler hariçtir.`,
+  },
+  {
+    q: 'Kredi kartı borcu yapılandırılabilir mi?',
+    a: `BDDK zaman zaman kart borçlarının taksitli krediye çevrilmesine izin veren kararlar alır; en son 29.01.2026 tarihli ve 11366 sayılı karar, karar tarihinden itibaren 3 ay içinde başvurulması koşuluyla 48 aya kadar yapılandırma imkânı tanıdı. Yapılandırmada aylık akdi faiz, TCMB’nin ilan ettiği referans oranı (%${formatNumber(donem.referans)}) aşamaz ve yapılandırma taksiti asgari ödeme tutarına eklenir. Güncel imkânlar için bankanıza danışın.`,
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Kredi kartı asgari ödeme ve faiz nasıl hesaplanır?</h2>
+  <p>
+    Her hesap kesiminde ekstrenize dönem borcu ve asgari ödeme tutarı yazılır. Borcun tamamını son ödeme gününe kadar öderseniz
+    faiz çıkmaz. Bir kısmını öderseniz kalan borca bir sonraki hesap kesimine kadar akdi faiz işler; faize KKDF ve BSMV eklenir ve
+    bunların toplamı bir sonraki ekstrenin dönem borcuna yansır.
+  </p>
+  <div class="formula">Asgari ödeme   = Dönem borcu × (limit ≤ {formatTL(asgari.limitEsigi, 0)} ise %{asgari.altOran}, değilse %{asgari.ustOran})
+Kalan borç     = Dönem borcu − Ödeme
+Faiz           = Kalan borç × aylık akdi faiz
+               (asgarinin altında ödemede: ödenmeyen asgari kısım × gecikme faizi
+                + kalanın geri kalanı × akdi faiz)
+Sonraki borç   = Kalan borç + Faiz × (1 + KKDF + BSMV)</div>
+  <p>
+    TCMB, azami akdi ve gecikme faizini her ayın sondan beşinci iş günü bir sonraki ay için ilan eder. Alışverişlerde oran dönem
+    borcuna göre üç dilime ayrılır; borç azaldıkça daha düşük dilime geçilir. Hesaplayıcı bu değişimi her ekstrede kendiliğinden
+    uygular.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>25.000 TL dönem borcu, 60.000 TL limit, yalnızca asgari ödeme:</strong> Asgari tutar %{asgari.altOran} ile
+      {formatTL(ilk.asgari)} olur. Bunu ödediğinizde kalan {formatTL(ilk.kalan)} için %{formatNumber(ilk.akdiOran)} akdi faizle
+      {formatTL(ilk.akdiFaiz)} faiz, {formatTL(ilk.kkdf + ilk.bsmv)} KKDF ve BSMV işler; bir sonraki dönem borcu {formatTL(ilk.sonraki)}
+      olur. Her ay yalnızca asgari ödenirse borç {sadeceAsgari.ay} ayda kapanır ve toplam {formatTL(sadeceAsgari.toplamMaliyet)} faiz
+      ve vergi ödenir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Aynı borç için her ay 5.000 TL ödeme:</strong> Borç {sabit.ay} ayda kapanır, faiz ve vergi toplamı
+      {formatTL(sabit.toplamMaliyet)} olur; yalnızca asgari ödemeye göre {formatTL(sadeceAsgari.toplamMaliyet - sabit.toplamMaliyet)}
+      daha az.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Asgarinin altında ödeme (3.000 TL):</strong> Ödenmeyen {formatTL(ilk.asgari - 3_000)} asgari kısma %{formatNumber(d[0].gecikme)}
+      gecikme faiziyle {formatTL(asgariAlti.gecikmeFaizi)}, kalanına akdi faizle {formatTL(asgariAlti.akdiFaiz)} işler; sonraki borç
+      {formatTL(asgariAlti.sonraki)} olur.
+    </p>
+  </div>
+
+  <h2>Güncel azami faiz oranları ({formatDateTR(donem.from)} – {formatDateTR(donem.to)})</h2>
+  <table>
+    <thead>
+      <tr><th>İşlem / dönem borcu</th><th>Aylık akdi faiz</th><th>Aylık gecikme faizi</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Alışveriş – {formatTL(d[0].ust!, 0)} altı</td><td>{formatPercent(d[0].akdi)}</td><td>{formatPercent(d[0].gecikme)}</td></tr>
+      <tr><td>Alışveriş – {formatTL(d[0].ust!, 0)} – {formatTL(d[1].ust!, 0)}</td><td>{formatPercent(d[1].akdi)}</td><td>{formatPercent(d[1].gecikme)}</td></tr>
+      <tr><td>Alışveriş – {formatTL(d[1].ust!, 0)} üzeri ve kurumsal kartlar</td><td>{formatPercent(d[2].akdi)}</td><td>{formatPercent(d[2].gecikme)}</td></tr>
+      <tr><td>Nakit çekim ve kredili mevduat hesabı</td><td>{formatPercent(donem.nakit.akdi)}</td><td>{formatPercent(donem.nakit.gecikme)}</td></tr>
+      <tr><td>Yabancı para</td><td>{formatPercent(donem.yabanciPara.akdi)}</td><td>{formatPercent(donem.yabanciPara.gecikme)}</td></tr>
+    </tbody>
+  </table>
+  <p>Oranlar vergiler hariçtir. Kaynak: TCMB, Kredi Kartı İşlemlerinde Uygulanacak Azami Faiz Oranları.</p>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Nakit avans:</strong> Nakit çekimde faiz işlem gününden itibaren işler ve dönem borcundan bağımsız tek oran uygulanır;
+      nakit avans ücreti çekilen tutarın %1’ini geçemez.
+    </li>
+    <li>
+      <strong>Yeni harcama:</strong> Hesaplayıcı yeni harcama yapılmadığını varsayar. Borç öderken kartla harcamaya devam ederseniz
+      kapanma süresi uzar.
+    </li>
+    <li>
+      <strong>Taksitli alışverişler:</strong> Ekstredeki taksit tutarları dönem borcunun parçasıdır; asgari ödeme bu toplam üzerinden
+      hesaplanır.
+    </li>
+  </ul>
+</ToolLayout>
