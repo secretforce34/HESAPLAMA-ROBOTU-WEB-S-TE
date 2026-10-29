@@ -1,0 +1,48 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kisisel-enflasyon-hesaplama/Calculator';
+import { meta } from '../tools/kisisel-enflasyon-hesaplama/meta';
+import { resmi } from '../tools/kisisel-enflasyon-hesaplama/calc';
+import { formatMonthTR, formatPercent } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Kişisel enflasyon nedir?',
+    a: 'Resmi enflasyon, Türkiye ortalamasındaki bir hanenin harcama sepetinin fiyat değişimidir. Kişisel enflasyon ise sizin kendi sepetinizin, yani gerçekten ödediğiniz kira, market, fatura ve ulaşım gibi kalemlerin bir yılda ne kadar pahalandığıdır.',
+  },
+  {
+    q: 'Neden benim enflasyonum resmi rakamdan yüksek çıkıyor?',
+    a: 'En sık nedeni kiradır: kirada oturanlarda kira bütçenin büyük kısmını oluşturur ve kira artışı genel enflasyondan hızlı olabilir. Gıdaya çok harcayanlar ve büyükşehirde yaşayanlarda da fark büyüyebilir. Tersine, ev sahibi olanlarda kişisel enflasyon daha düşük çıkabilir.',
+  },
+  {
+    q: 'Daha çok harcadıysam bu enflasyon mu?',
+    a: 'Hayır. Enflasyon aynı şeylerin fiyatındaki artıştır. Geçen yıl ayda 4 kez dışarıda yemek yiyip bu yıl 8 kez yiyorsanız harcamanızın artması enflasyon değildir. Doğru sonuç için “aynı şeyleri bugün alsaydım ne öderdim” diye düşünün.',
+  },
+  {
+    q: 'Maaşım enflasyona yetişti mi, nasıl anlarım?',
+    a: '“Gelirim enflasyona yetişti mi?” bölümüne bir yıl önceki ve bugünkü gelirinizi yazın. Araç, kişisel enflasyonunuza göre alım gücünüzün arttığını mı azaldığını mı ve aynı alım gücü için ne kadar gelir gerektiğini gösterir.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Nasıl hesaplanır?</h2>
+  <p>
+    Her harcama kalemi, bir yıl önceki bütçenizdeki payı kadar ağırlık alır. TÜİK de resmi enflasyonu aynı mantıkla hesaplar; fark, sepetin
+    sizin sepetiniz olmasıdır.
+  </p>
+  <div class="formula">Kişisel enflasyon = (Bugünkü toplam ÷ 1 yıl önceki toplam − 1) × 100
+Kalemin katkısı = (Bugünkü − 1 yıl önceki) ÷ 1 yıl önceki toplam × 100</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      Bir yıl önce ayda 10.000 TL kira, 8.000 TL market ve 2.000 TL ulaşım (toplam 20.000 TL) ödeyen biri bugün aynı şeyler için 15.000 TL,
+      10.000 TL ve 2.000 TL (toplam 27.000 TL) ödüyorsa kişisel enflasyonu %35’tir. Bunun 25 puanı kiradan, 10 puanı marketten gelir.
+    </p>
+    <p>Karşılaştırma için: TÜİK’in açıkladığı son yıllık TÜFE ({formatMonthTR(resmi.ay)}) {formatPercent(resmi.yillik, 2)}.</p>
+  </div>
+</ToolLayout>
