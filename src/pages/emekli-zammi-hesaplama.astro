@@ -1,0 +1,47 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/emekli-zammi-hesaplama/Calculator';
+import { meta } from '../tools/emekli-zammi-hesaplama/meta';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'SSK ve Bağ-Kur emeklisine ne kadar zam yapılır?',
+    a: '5510 sayılı Kanun md. 55’e göre SSK ve Bağ-Kur emekli aylıkları her yıl Ocak ve Temmuz’da, önceki 6 ayın tüketici fiyat endeksi (TÜFE) artışı oranında artırılır. Ocak 2026’da %12,19, Temmuz 2026’da %17,76 zam yapıldı.',
+  },
+  {
+    q: 'Memur ve memur emeklisi zammı nasıl hesaplanır?',
+    a: 'Memur maaşları toplu sözleşme oranında artırılır; önceki 6 ayın enflasyonu toplu sözleşme oranını geçerse aradaki fark “enflasyon farkı” olarak eklenir. Zam = (1 + enflasyon farkı) × (1 + yeni dönem toplu sözleşme oranı) − 1. 2026 için oranlar %11 ve %7, 2027 için %5 ve %4’tür.',
+  },
+  {
+    q: 'Ocak 2027 zammı ne zaman kesinleşir?',
+    a: 'Temmuz–Aralık 2026 enflasyonunun sonuncusu olan Aralık verisi, TÜİK tarafından Ocak 2027’nin ilk günlerinde (genellikle 3’ünde) açıklanır. O zamana kadar hesaplanan oranlar tahmindir.',
+  },
+  {
+    q: 'Refah payı veya en düşük emekli aylığı hesaba dahil mi?',
+    a: 'Hayır. Refah payı ve en düşük emekli aylığı tutarı ayrıca yasa ile belirlenir. Robot yalnızca kanundaki enflasyon ve toplu sözleşme formülünü uygular.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Zam nasıl hesaplanır?</h2>
+  <div class="formula">SSK / Bağ-Kur emeklisi:
+  Zam = Önceki 6 ayın kümülatif TÜFE artışı
+
+Memur ve memur emeklisi:
+  Enflasyon farkı = (1 + 6 aylık TÜFE) ÷ (1 + önceki dönem toplu sözleşme oranı) − 1
+  Zam             = (1 + enflasyon farkı) × (1 + yeni dönem toplu sözleşme oranı) − 1</div>
+
+  <h2>Açıklanan zamlar</h2>
+  <table>
+    <thead><tr><th>Dönem</th><th>SSK / Bağ-Kur</th><th>Memur ve memur emeklisi</th></tr></thead>
+    <tbody>
+      <tr><td>Ocak 2026</td><td>%12,19</td><td>%18,60</td></tr>
+      <tr><td>Temmuz 2026</td><td>%17,76</td><td>%13,52</td></tr>
+    </tbody>
+  </table>
+  <p>Toplu sözleşme (8. Dönem) oranları: 2026’nın ilk yarısı %11, ikinci yarısı %7; 2027’nin ilk yarısı %5, ikinci yarısı %4.</p>
+</ToolLayout>
