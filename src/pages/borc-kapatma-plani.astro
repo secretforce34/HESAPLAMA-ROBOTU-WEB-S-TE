@@ -1,0 +1,57 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/borc-kapatma-plani/Calculator';
+import { meta } from '../tools/borc-kapatma-plani/meta';
+import { asgariOdemeDonemiOn, kartFaizDonemiOn } from '../data/params/kredi';
+import { planla, type Borc } from '../tools/borc-kapatma-plani/calc';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const o = { faizDonemi: kartFaizDonemiOn(meta.lastReviewed), asgariDonemi: asgariOdemeDonemiOn(meta.lastReviewed) };
+const ornekBorclar: Borc[] = [
+  { ad: 'Büyük kart', tur: 'kart', bakiye: 60_000, aylikFaiz: null, limit: 80_000 },
+  { ad: 'Küçük kart', tur: 'kart', bakiye: 10_000, aylikFaiz: null, limit: 20_000 },
+];
+const cig = planla(ornekBorclar, 20_000, 'cig', o);
+const asgari = planla(ornekBorclar, 0, 'asgari', o);
+
+const faq: FaqItem[] = [
+  {
+    q: 'Birden çok kredi kartı borcu varsa hangisini önce kapatmalıyım?',
+    a: 'Her ay tüm kartların asgari tutarını ödeyin, artan parayı tek bir karta yığın. En az faizi ödemek için en yüksek faizli borçtan başlayın (çığ yöntemi). Küçük borçları hızla bitirip motivasyon kazanmak isterseniz en küçük borçtan başlayın (kartopu yöntemi). Biten borcun ödemesi sıradakine aktarılır.',
+  },
+  {
+    q: 'Kredi kartı borcunu ihtiyaç kredisiyle kapatmak mantıklı mı?',
+    a: 'Kredinin faizi kart faizinden düşükse ve taksiti bütçenize uyuyorsa mantıklı olabilir. Ancak ihtiyaç kredisinde de faize %15 KKDF ve %15 BSMV eklenir, tahsis ücreti alınabilir ve BDDK tutara göre vade sınırı koyar. Kartı kapattıktan sonra yeniden harcama yapılırsa borç ikiye katlanır.',
+  },
+  {
+    q: 'KMH (eksi hesap) borcu neden bitmiyor?',
+    a: 'Kredili mevduat hesabında yasal bir asgari ödeme oranı yoktur; banka her ay işleyen faizi ve vergisini tahsil eder. Yalnızca faiz ödenirse ana borç hiç azalmaz. Borcun bitmesi için faizden fazlasını ödemek gerekir.',
+  },
+  {
+    q: 'Kart faiz oranları ne kadar?',
+    a: 'TCMB her ay kredi kartı ve KMH için azami faiz oranlarını ilan eder. Alışveriş borcunda oran dönem borcunun büyüklüğüne göre değişir; nakit avans ve KMH’de tek oran vardır. Faiz alanını boş bırakırsanız araç bu azami oranları kullanır; bankanız daha düşük oran uyguluyorsa kendi oranınızı yazın.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Nasıl hesaplanır?</h2>
+  <p>
+    Her ay her borcun asgari tutarı ödenir; bütçeden artan para seçtiğiniz yönteme göre tek bir borca eklenir. Ödenmeyen kalan üzerine aylık akdi
+    faiz, faizin üzerine de KKDF ve BSMV işler. Bir borç bitince onun ödemesi sıradaki borca geçer.
+  </p>
+  <div class="formula">Sonraki dönem borcu = (Dönem borcu − Ödeme) × (1 + Aylık faiz × 1,30)
+Kart asgari tutarı = Dönem borcu × %20 veya %40 (kart limitine göre)</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      60.000 TL ve 10.000 TL borcu olan iki kart, TCMB azami faiziyle ayda 20.000 TL ödenirse {cig.ay} ayda kapanır; faiz ve vergi toplamı
+      {` ${formatTL(cig.toplamFaiz, 0)}`} olur. Yalnızca asgari ödenirse borç {asgari.ay} ayda biter ve {formatTL(asgari.toplamFaiz, 0)} faiz ve
+      vergi ödenir.
+    </p>
+  </div>
+</ToolLayout>
