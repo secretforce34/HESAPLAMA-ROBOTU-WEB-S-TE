@@ -1,4 +1,5 @@
-# Siteyi GitHub Pages'te yayınlar.
+# Her yüklemede testleri çalıştırıp siteyi derler; yayın açıksa GitHub Pages'te yayınlar.
+# Yayını açmak için depo ayarlarında YAYIN_ACIK=true değişkeni tanımlanır (bkz. docs/YAYINLAMA.md).
 # Tetikleyiciler: main'e her yükleme, elle çalıştırma ve aylık "Veri güncelle" görevinin bitişi
 # (iş akışlarının GITHUB_TOKEN ile yaptığı commit'ler push tetiklemediği için ayrıca dinlenir).
 name: Siteyi yayınla
@@ -44,11 +45,13 @@ jobs:
           SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
 
       - uses: actions/upload-pages-artifact@v3
+        if: vars.YAYIN_ACIK == 'true'
         with:
           path: dist
 
   deploy:
     needs: build
+    if: vars.YAYIN_ACIK == 'true'
     runs-on: ubuntu-latest
     environment:
       name: github-pages

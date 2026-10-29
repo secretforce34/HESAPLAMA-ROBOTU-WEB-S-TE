@@ -14,6 +14,12 @@ Bilinmesi gerekenler:
 - Site, adresin **kökünde** çalışacak şekilde yazıldı. Bu yüzden ya kendi alan adınız olmalı ya da depo adı `kullaniciadi.github.io` olmalı. (`kullaniciadi.github.io/hesap-robotu` gibi alt klasör adresi linkleri bozar.)
 - GitHub Pages'in esnek aylık trafik sınırı ~100 GB'tır; bu, yüz binlerce ziyarete yeter. Aşılırsa site Cloudflare Pages'e (yine ücretsiz) kod değişikliği olmadan taşınabilir.
 
+## Şu anki durum
+
+- Depo: https://github.com/secretforce34/HESAPLAMA-ROBOTU-WEB-S-TE (herkese açık)
+- Her yüklemede **testler ve derleme** çalışır (Actions sekmesi), ama **yayın kapalıdır**.
+- Alan adı alındığında yayını açmak için aşağıdaki **3. ve 4. adımlar** yeterli. Depo adı değiştirilmez; alan adı olduğu için site kökte çalışır.
+
 ## 1. Depoyu oluşturun (bir kez, ~3 dk)
 
 1. https://github.com/new adresine gidin.
@@ -38,8 +44,10 @@ Birkaç dakika içinde **Actions** sekmesinde "Siteyi yayınla" görevi yeşile 
 
 1. Alan adını herhangi bir firmadan alın.
 2. Depoda **Settings → Pages → Custom domain** kutusuna alan adını yazın; GitHub'ın gösterdiği DNS kayıtlarını alan adı firmanızın panelinde ekleyin. **Enforce HTTPS** kutusunu işaretleyin.
-3. Depoda **Settings → Secrets and variables → Actions → Variables → New repository variable**: ad `SITE_URL`, değer `https://alanadiniz.com`. (Site haritası, paylaşım linkleri ve gömme kodu bu adresi kullanır.)
-4. **Actions → Siteyi yayınla → Run workflow** ile yeniden yayınlayın.
+3. Depoda **Settings → Secrets and variables → Actions → Variables → New repository variable** ile iki değişken ekleyin:
+   - `SITE_URL` = `https://alanadiniz.com` (site haritası, paylaşım linkleri ve gömme kodu bu adresi kullanır)
+   - `YAYIN_ACIK` = `true` (yayın adımını açar; bu değişken yokken yalnızca test ve derleme yapılır)
+4. **Actions → Siteyi yayınla → Run workflow** ile yayınlayın.
 
 ## 5. Google'a tanıtma
 
