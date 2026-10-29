@@ -1,0 +1,65 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/ya-o-gun-alsaydim/Calculator';
+import { meta } from '../tools/ya-o-gun-alsaydim/meta';
+import { karsilastir, SON_AY, VARLIK_ADI } from '../tools/ya-o-gun-alsaydim/calc';
+import { formatMonthTR, formatPercent, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const o = karsilastir(10000, '2015-01', SON_AY, 'tek')!;
+const d = karsilastir(1000, '2021-01', SON_AY, 'duzenli')!;
+
+const faq: FaqItem[] = [
+  {
+    q: 'Reel getiri nedir?',
+    a: 'Enflasyondan arındırılmış getiridir. Yatırımınızın bugünkü değeri, yatırdığınız paranın enflasyona göre bugünkü karşılığından fazlaysa reel getiriniz pozitiftir; yani alım gücünüz artmıştır.',
+  },
+  {
+    q: 'Veriler nereden geliyor?',
+    a: 'Dolar ve euro için TCMB’nin her ayın son iş günü açıkladığı döviz alış kuru, altın için Dünya Bankası’nın aylık ortalama ons fiyatının TL’ye çevrilmiş hali, enflasyon için TÜİK’in TÜFE verisi kullanılır. Veriler her ay kendiliğinden güncellenir.',
+  },
+  {
+    q: 'Gram altın fiyatı neden kuyumcudakinden farklı?',
+    a: 'Robot uluslararası ons fiyatından has (24 ayar) gram altın değerini hesaplar. Kuyumcu fiyatlarında alış-satış farkı ve işçilik bulunur; Kapalıçarşı fiyatı da zaman zaman uluslararası fiyattan farklılaşır.',
+  },
+  {
+    q: 'Her ay düzenli alım ne işe yarar?',
+    a: 'Birikimini tek seferde değil, her ay belli bir tutarla yapanların sonucunu gösterir. Farklı fiyatlardan alım yapıldığı için ortalama maliyet oluşur.',
+  },
+  {
+    q: 'Bu sonuçlar gelecekte de geçerli olur mu?',
+    a: 'Hayır. Geçmiş getiriler geleceğin göstergesi değildir. Bu hesaplama yatırım tavsiyesi değildir; yalnızca geçmişte ne olduğunu gösterir.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Nasıl hesaplanır?</h2>
+  <div class="formula">Alınan miktar    = Tutar ÷ Başlangıç ayı fiyatı
+Bugünkü değer    = Alınan miktar × Bitiş ayı fiyatı
+Enflasyon karşılığı = Tutar × (Bitiş TÜFE ÷ Başlangıç TÜFE)
+Reel getiri      = Bugünkü değer ÷ Enflasyon karşılığı − 1</div>
+
+  <h2>Örnek: Ocak 2015’te 10.000 TL</h2>
+  <div class="example">
+    <ul>
+      {o.sonuclar.map((s) => <li><strong>{VARLIK_ADI[s.varlik]}:</strong> {formatTL(s.deger, 0)} (reel getiri {formatPercent(s.reelGetiri, 1)})</li>)}
+    </ul>
+    <p>Aynı alım gücünü korumak için {formatMonthTR(SON_AY)} itibarıyla {formatTL(o.enflasyonKarsiligi, 0)} gerekirdi.</p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Ocak 2021’den beri her ay 1.000 TL:</strong> toplam {formatTL(d.sonuclar[0].yatirilan, 0)} yatırımla en yüksek değer
+      {formatTL(d.sonuclar[0].deger, 0)} ({VARLIK_ADI[d.sonuclar[0].varlik]}) oldu.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Mevduat faizi, hisse senedi ve fon getirileri bu karşılaştırmaya dahil değildir.</li>
+    <li>Alış-satış farkı, komisyon ve vergiler gerçek getiriyi düşürür.</li>
+    <li>Geçmiş getiriler geleceğin göstergesi değildir; bu sayfa yatırım tavsiyesi içermez.</li>
+  </ul>
+</ToolLayout>

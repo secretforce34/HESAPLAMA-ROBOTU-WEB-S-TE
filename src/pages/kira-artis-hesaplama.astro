@@ -1,0 +1,66 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kira-artis-hesaplama/Calculator';
+import { meta } from '../tools/kira-artis-hesaplama/meta';
+import { onIkiAylikOrtalama, SON_VERI_AYI, yeniKira } from '../tools/kira-artis-hesaplama/calc';
+import { formatMonthTR, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const sonOran = onIkiAylikOrtalama(SON_VERI_AYI)!;
+const [y, m] = SON_VERI_AYI.split('-').map(Number);
+const yenilemeAyi = formatMonthTR(m === 12 ? `${y + 1}-01` : `${y}-${String(m + 1).padStart(2, '0')}`);
+
+const faq: FaqItem[] = [
+  {
+    q: `${yenilemeAyi} kira artış oranı ne kadar?`,
+    a: `${yenilemeAyi} ayında yenilenen konut ve işyeri kiralarında uygulanabilecek azami artış, ${formatMonthTR(SON_VERI_AYI)} ayının 12 aylık ortalama TÜFE değişimi olan <strong>%${sonOran.toLocaleString('tr-TR')}</strong>’dir.`,
+  },
+  {
+    q: 'Kira artış oranı nasıl belirlenir?',
+    a: 'Türk Borçlar Kanunu md. 344’e göre konut ve çatılı işyeri kiralarında yenilenen kira yılındaki artış, bir önceki kira yılında TÜFE’nin 12 aylık ortalamalara göre değişim oranını geçemez. Bu oranı TÜİK her ay enflasyonla birlikte açıklar.',
+  },
+  {
+    q: 'Hangi ayın oranı kullanılır?',
+    a: 'Uygulamada kira yenileme ayından bir önceki ayın oranı esas alınır. Örneğin Kasım’da yenilenen bir kirada Ekim ayının 12 aylık ortalama değişimi kullanılır; TÜİK bu oranı Kasım’ın 3’ünde açıklar.',
+  },
+  {
+    q: '%25 kira artış sınırı hâlâ geçerli mi?',
+    a: 'Hayır. %25 sınırı yalnızca 11 Haziran 2022 ile 1 Temmuz 2024 arasında yenilenen konut kiraları için geçerliydi. Bu tarihten sonraki yenilemelerde TÜFE 12 aylık ortalama oranı uygulanır.',
+  },
+  {
+    q: '5 yılı dolduran kiracıya ne kadar zam yapılabilir?',
+    a: 'Beş yıldan uzun süren ya da beş yıldan sonra yenilenen kira sözleşmelerinde yeni kira, hâkim tarafından TÜFE oranı, kiralananın durumu ve emsal kira bedelleri dikkate alınarak hakkaniyete göre belirlenebilir (TBK md. 344/3). Bunun için kira tespit davası açılması gerekir.',
+  },
+  {
+    q: 'Daha düşük bir artışta anlaşabilir miyiz?',
+    a: 'Evet. Yasal oran bir üst sınırdır; taraflar daha düşük bir artış ya da hiç artış yapılmaması konusunda serbestçe anlaşabilir.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Kira artışı nasıl hesaplanır?</h2>
+  <div class="formula">Azami yeni kira = Mevcut kira × (1 + 12 aylık ortalama TÜFE değişimi)
+12 aylık ortalama değişim = (Son 12 ayın endeks ortalaması ÷ Önceki 12 ayın ortalaması − 1) × 100</div>
+  <p>
+    Robot bu oranı TÜİK’in açıkladığı aylık TÜFE verileriyle aynı yöntemle hesaplar; 2026’da açıklanan bütün oranlarla
+    birebir aynı sonucu verdiği otomatik testlerle doğrulanır.
+  </p>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      {yenilemeAyi} ayında yenilenen 20.000 TL’lik bir kira en fazla %{sonOran.toLocaleString('tr-TR')} artırılabilir; yeni kira
+      en fazla {formatTL(yeniKira(20000, sonOran))} olur.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Kural hem konut hem de çatılı işyeri kiralarında geçerlidir.</li>
+    <li>Sözleşmede daha yüksek bir artış yazsa bile yasal sınırın üzerindeki kısım geçersizdir.</li>
+    <li>Yabancı para cinsinden kiralarda farklı kurallar uygulanır.</li>
+  </ul>
+</ToolLayout>

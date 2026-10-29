@@ -225,6 +225,70 @@ export function DateField({ id, label, value, onChange, min, max, hint, error }:
   );
 }
 
+const AY_ADLARI = ['Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık'];
+
+export interface MonthFieldProps extends BaseFieldProps {
+  /** "YYYY-AA" */
+  value: string;
+  onChange: (value: string) => void;
+  /** En erken seçilebilir ay ("YYYY-AA") */
+  min: string;
+  /** En geç seçilebilir ay ("YYYY-AA") */
+  max: string;
+}
+
+/** Ay + yıl seçimi (tüm tarayıcılarda çalışır; input type="month" Safari/Firefox'ta yok). */
+export function MonthField({ id, label, value, onChange, min, max, hint, error }: MonthFieldProps) {
+  const [yil, ay] = value.split('-');
+  const minY = Number(min.slice(0, 4));
+  const maxY = Number(max.slice(0, 4));
+  const yillar: string[] = [];
+  for (let y = maxY; y >= minY; y--) yillar.push(String(y));
+  const sinirla = (v: string) => (v < min ? min : v > max ? max : v);
+  return (
+    <fieldset class="field">
+      <legend class="field__label">{label}</legend>
+      <div class="row-2" style={{ gap: '8px' }}>
+        <div class="input-wrap" data-invalid={error ? '' : undefined}>
+          <select
+            id={`${id}-ay`}
+            class="input"
+            aria-label={`${label} – ay`}
+            value={ay}
+            onChange={(e) => onChange(sinirla(`${yil}-${e.currentTarget.value}`))}
+          >
+            {AY_ADLARI.map((ad, i) => {
+              const v = String(i + 1).padStart(2, '0');
+              const aday = `${yil}-${v}`;
+              return (
+                <option key={v} value={v} disabled={aday < min || aday > max}>
+                  {ad}
+                </option>
+              );
+            })}
+          </select>
+        </div>
+        <div class="input-wrap" data-invalid={error ? '' : undefined}>
+          <select
+            id={`${id}-yil`}
+            class="input"
+            aria-label={`${label} – yıl`}
+            value={yil}
+            onChange={(e) => onChange(sinirla(`${e.currentTarget.value}-${ay}`))}
+          >
+            {yillar.map((y) => (
+              <option key={y} value={y}>
+                {y}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+      <FieldMessages id={id} hint={hint} error={error} />
+    </fieldset>
+  );
+}
+
 export interface TextFieldProps extends BaseFieldProps {
   value: string;
   onChange: (value: string) => void;

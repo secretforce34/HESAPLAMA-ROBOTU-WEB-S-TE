@@ -1,0 +1,56 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/enflasyon-hesaplama/Calculator';
+import { meta } from '../tools/enflasyon-hesaplama/meta';
+import { enflasyonla, SON_AY } from '../tools/enflasyon-hesaplama/calc';
+import { formatMonthTR, formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const o1 = enflasyonla(1000, '2015-01', SON_AY)!;
+const o2 = enflasyonla(17002.12, '2024-01', SON_AY)!;
+
+const faq: FaqItem[] = [
+  {
+    q: 'Enflasyon hesaplaması nasıl yapılır?',
+    a: 'İki tarih arasındaki fiyat endeksi oranıyla: bugünkü karşılık = eski tutar × (bugünkü endeks ÷ eski endeks). Robot, TÜİK’in açıkladığı aylık TÜFE değişimlerini zincirleyerek bu oranı bulur.',
+  },
+  {
+    q: 'Yıllık ortalama enflasyon nedir?',
+    a: 'Birden fazla yılı kapsayan dönemlerde fiyatların her yıl ortalama ne kadar arttığını gösteren bileşik orandır. 3 yılda fiyatlar 2 katına çıktıysa yıllık ortalama enflasyon yaklaşık %26’dır.',
+  },
+  {
+    q: 'Alım gücü kaybı ne demek?',
+    a: 'Aynı paranın artık eskisine göre ne kadar az mal alabildiğini gösterir. Fiyatlar 2 katına çıktıysa paranızın alım gücü %50 azalmıştır.',
+  },
+  {
+    q: 'Veriler ne zaman güncellenir?',
+    a: 'TÜİK her ayın 3’ünde bir önceki ayın enflasyonunu açıklar. Site bu veriyi birkaç gün içinde kendiliğinden ekler; son veri ayı hesaplayıcının altında yazar.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Enflasyon nasıl hesaplanır?</h2>
+  <div class="formula">Bugünkü karşılık   = Eski tutar × (Hedef ay endeksi ÷ Başlangıç ayı endeksi)
+Toplam enflasyon  = (Endeks oranı − 1) × 100
+Yıllık ortalama   = (Endeks oranı ^ (12 ÷ ay sayısı) − 1) × 100</div>
+  <p>
+    Veriler TÜİK’in açıkladığı tüketici fiyat endeksi (TÜFE) aylık değişimleridir ve TCMB’nin enflasyon sayfasından alınır.
+    TÜİK 2026’da baz yılını 2025=100 olarak değiştirdi; aylık değişim oranları bu değişiklikten etkilenmez.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      Ocak 2015’teki 1.000 TL, {formatMonthTR(SON_AY)} fiyatlarıyla {formatTL(o1.karsilik)} eder. Fiyatlar bu dönemde
+      {formatNumber(o1.kat, 1)} katına çıkmıştır; yıllık ortalama enflasyon %{formatNumber(o1.yillikOrtalama, 1)}’dir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      Ocak 2024’teki net asgari ücret (17.002,12 TL), {formatMonthTR(SON_AY)} fiyatlarıyla {formatTL(o2.karsilik)} değerindedir.
+    </p>
+  </div>
+</ToolLayout>
