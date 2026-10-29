@@ -10,6 +10,8 @@ const SCAN_DIRS = ['src'];
 const EXT = /\.(ts|tsx|astro|md|mjs)$/;
 const URL_RE = /https?:\/\/[^\s'"`<>)\]}]+/g;
 const SKIP = [/^https?:\/\/(www\.)?hesaprobotu\.com/, /schema\.org/, /localhost/, /example\./, /w3\.org/];
+// Tarayıcı dışı istemcilerin bağlantısını kesen siteler: tarayıcıda elle doğrulanır, burada uyarı olarak raporlanır.
+const YALNIZ_TARAYICI = [/^https:\/\/kurul\.diyanet\.gov\.tr\//, /^https:\/\/goruntulufetva\.diyanet\.gov\.tr\//];
 
 async function walk(dir) {
   const out = [];
@@ -72,10 +74,13 @@ await Promise.all(
   }),
 );
 
-if (bad.length === 0) {
+const uyarilar = bad.filter((b) => YALNIZ_TARAYICI.some((r) => r.test(b.url)));
+const hatalar = bad.filter((b) => !uyarilar.includes(b));
+for (const u of uyarilar) console.log(`! [${u.status}] ${u.url}\n    (bu site yalnızca tarayıcıyla açılıyor; elle kontrol edin)`);
+if (hatalar.length === 0) {
   console.log('Tüm bağlantılar çalışıyor.');
 } else {
-  console.log(`${bad.length} sorunlu bağlantı:\n`);
-  for (const b of bad) console.log(`✗ [${b.status}] ${b.url}\n    ${b.files.join(', ')}`);
+  console.log(`${hatalar.length} sorunlu bağlantı:\n`);
+  for (const b of hatalar) console.log(`✗ [${b.status}] ${b.url}\n    ${b.files.join(', ')}`);
   process.exitCode = 1;
 }

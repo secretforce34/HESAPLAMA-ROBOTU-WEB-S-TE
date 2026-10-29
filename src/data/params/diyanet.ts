@@ -39,7 +39,7 @@ export const zekatNisap: ParamSet<{
     },
     {
       label: 'Din İşleri Yüksek Kurulu – Ticaret malının zekâtı nasıl hesaplanır? (24 ayar 80,18 g altın değeri)',
-      url: 'https://kurul.diyanet.gov.tr/Cevap-Ara/402/ticaret-malinin-zekati-nasil-hesaplanir',
+      url: 'https://kurul.diyanet.gov.tr/tr/fetva/ticaret-malinin-zekati-nasil-hesaplanir/0193c42d-65f7-72b4-634c-35750c38a3a9',
     },
     {
       label: 'Diyanet (müftülük yayını) – Zekâtın Topluma Kazandırdıkları, Cuma Vaazı (altın 80,18 g, gümüş 561 g, paranın ve ticaret malının nisabı)',
