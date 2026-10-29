@@ -1,0 +1,73 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kirada-mi-ev-mi/Calculator';
+import { meta } from '../tools/kirada-mi-ev-mi/meta';
+import { basabasKira, karsilastir } from '../tools/kirada-mi-ev-mi/calc';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const ornek = {
+  evFiyati: 5_000_000,
+  pesinat: 2_000_000,
+  aylikFaiz: 2.49,
+  vade: 120,
+  aylikKira: 25_000,
+  kiraArtisi: 30,
+  evDegerArtisi: 30,
+  getiri: 35,
+  emlakciYuzde: 2,
+  digerMasraf: 15_000,
+  sahiplikYuzde: 0.5,
+  yil: 10,
+};
+const r = karsilastir(ornek);
+const b = basabasKira(ornek);
+
+const faq: FaqItem[] = [
+  {
+    q: 'Kirada oturmak mı ev almak mı daha mantıklı?',
+    a: 'Tek bir doğru cevap yoktur. Kredi faizi yüksek, kira düşük ve paranızı iyi değerlendirebiliyorsanız kirada kalmak; ev fiyatları hızlı artıyor, kira yüksek ve krediyi uygun faizle buluyorsanız ev almak öne çıkar. Bu araç, kendi rakamlarınızla iki yolu aynı süre sonunda karşılaştırır.',
+  },
+  {
+    q: 'Başabaş kira ne demek?',
+    a: 'Girdiğiniz diğer varsayımlar aynı kalırken, iki seçeneğin süre sonunda eşit servet bıraktığı aylık kiradır. Bu evin bugünkü kirası başabaş kiradan yüksekse ev almak, düşükse kirada kalıp parayı değerlendirmek daha kazançlıdır.',
+  },
+  {
+    q: 'Ev kaç yılda kendini amorti eder?',
+    a: 'Kaba bir ölçü olarak ev fiyatı yıllık kiraya bölünür: 5.000.000 TL’lik ve aylık 25.000 TL kiralık bir ev 5.000.000 ÷ 300.000 ≈ 16,7 yılda kendini amorti eder. Bu ölçü kira artışını, ev fiyatı artışını ve kredi faizini hesaba katmaz; araç bunları da hesaplar.',
+  },
+  {
+    q: 'Konut kredisinde ne kadar kredi kullanabilirim?',
+    a: 'BDDK kuralına göre kredi tutarı konut değerinin belli bir yüzdesini aşamaz. Oran, konutun değerine ve enerji kimlik belgesi sınıfına göre değişir; başka konutu olanlarda daha da düşüktür. Araç, peşinatınız yetmiyorsa uyarır.',
+  },
+  {
+    q: 'Konut kredisinde KKDF ve BSMV var mı?',
+    a: 'Konut edinmek için kullanılan kredide KKDF ve BSMV alınmaz; taksit yalnızca akdi faizle hesaplanır.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Nasıl hesaplanır?</h2>
+  <p>
+    İki senaryo aynı süre boyunca ay ay izlenir ve her ay aynı parayı harcar. Ev alan, peşinatı ve alım masraflarını öder; her ay kredi taksidi
+    ile sahiplik masraflarını (emlak vergisi, bakım) karşılar. Kiracı ise peşinat ve masraf kadar parayı baştan yatırıma koyar ve her ay kira öder.
+    Hangi taraf o ay daha az ödüyorsa aradaki farkı yatırıma ekler.
+  </p>
+  <div class="formula">Ev alanın serveti = Ev değeri − Kalan kredi borcu + Yatırımı
+Kiracının serveti = Yatırımı</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      5.000.000 TL’lik ev için 2.000.000 TL peşinat ve aylık %2,49 faizle 120 ay vadeli kredi; aylık taksit {formatTL(r.taksit)}. Evin kirası
+      aylık 25.000 TL ve yılda %30 artıyor; ev fiyatı da yılda %30 artıyor, kenara konan para yılda %35 getiriyor.
+    </p>
+    <p>
+      10 yıl sonunda ev alanın serveti {formatTL(r.alanServet, 0)}, kiracınınki {formatTL(r.kiraciServet, 0)} olur; bu varsayımlarla
+      {`ev almak ${formatTL(Math.abs(r.fark), 0)} ${r.fark >= 0 ? 'önde' : 'geride'}`}. Başabaş kira yaklaşık {b !== null ? formatTL(b, 0) : '—'}.
+    </p>
+  </div>
+</ToolLayout>
