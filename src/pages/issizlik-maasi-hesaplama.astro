@@ -1,0 +1,71 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/issizlik-maasi-hesaplama/Calculator';
+import { meta } from '../tools/issizlik-maasi-hesaplama/meta';
+import { hesaplaIssizlik } from '../tools/issizlik-maasi-hesaplama/calc';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const ornekAsgari = hesaplaIssizlik({ son4Ay: [33030, 33030, 33030, 33030], primGun: 900, kesintisiz120: true, nedenUygun: true, tarih: '2026-10-29' });
+const ornekTavan = hesaplaIssizlik({ son4Ay: [100000, 100000, 100000, 100000], primGun: 1080, kesintisiz120: true, nedenUygun: true, tarih: '2026-10-29' });
+const ornekOrta = hesaplaIssizlik({ son4Ay: [50000, 50000, 50000, 50000], primGun: 600, kesintisiz120: true, nedenUygun: true, tarih: '2026-10-29' });
+
+const faq: FaqItem[] = [
+  {
+    q: 'İşsizlik maaşı almanın şartları nelerdir?',
+    a: 'İşten ayrılmadan önceki son 120 gün kesintisiz prim ödenmiş olması, son 3 yılda en az 600 gün işsizlik sigortası primi bulunması ve iş sözleşmesinin kendi isteğiniz ya da kusurunuz dışında sona ermesi gerekir. Ayrıca ayrılıştan sonra 30 gün içinde İŞKUR’a başvurmalısınız.',
+  },
+  {
+    q: 'İşsizlik maaşı kaç ay alınır?',
+    a: 'Son 3 yılda 600 gün prim ödeyenler 180 gün (6 ay), 900 gün ödeyenler 240 gün (8 ay), 1.080 gün ödeyenler 300 gün (10 ay) işsizlik ödeneği alır.',
+  },
+  {
+    q: `${meta.seoTitle.match(/\d{4}/)?.[0] ?? ''} en düşük ve en yüksek işsizlik maaşı ne kadar?`.trim(),
+    a: `Asgari ücretle çalışmış biri ayda ${formatTL(ornekAsgari.aylikNet)} net alır. Ödenek, brüt asgari ücretin %80’ini geçemediği için en yüksek işsizlik maaşı ${formatTL(ornekTavan.aylikNet)} nettir.`,
+  },
+  {
+    q: 'İstifa eden işsizlik maaşı alabilir mi?',
+    a: 'Kendi isteğiyle istifa eden alamaz. Ancak ücretin ödenmemesi, mobbing, sağlık gibi İş Kanunu md. 24’teki haklı nedenlerle sözleşmeyi siz feshettiyseniz işsizlik ödeneğine hak kazanırsınız.',
+  },
+  {
+    q: 'İşsizlik maaşından hangi kesintiler yapılır?',
+    a: 'Yalnızca damga vergisi (binde 7,59) kesilir. Gelir vergisi ve SGK primi kesilmez; ödenek aldığınız süre boyunca genel sağlık sigortası primleriniz İşsizlik Sigortası Fonu’ndan ödenir.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>İşsizlik maaşı nasıl hesaplanır?</h2>
+  <div class="formula">Aylık brüt ödenek = Son 4 ayın ortalama prime esas kazancı × %40
+Üst sınır        = Brüt asgari ücret × %80
+Net ödenek       = Brüt ödenek − damga vergisi (binde 7,59)</div>
+  <table>
+    <thead><tr><th>Son 3 yıldaki prim günü</th><th>Ödeme süresi</th></tr></thead>
+    <tbody>
+      <tr><td>600 gün</td><td>180 gün (6 ay)</td></tr>
+      <tr><td>900 gün</td><td>240 gün (8 ay)</td></tr>
+      <tr><td>1.080 gün</td><td>300 gün (10 ay)</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p><strong>Asgari ücretli, 900 gün prim:</strong> ayda {formatTL(ornekAsgari.aylikNet)} net, 8 ay boyunca toplam {formatTL(ornekAsgari.toplamNet)}.</p>
+  </div>
+  <div class="example">
+    <p><strong>50.000 TL brüt kazanç, 600 gün prim:</strong> %40’ı {formatTL(ornekOrta.hesaplananAylik)}; ayda {formatTL(ornekOrta.aylikNet)} net, 6 ay boyunca toplam {formatTL(ornekOrta.toplamNet)}.</p>
+  </div>
+  <div class="example">
+    <p><strong>100.000 TL brüt kazanç, 1.080 gün prim:</strong> %40’ı tavanı aştığı için ödenek {formatTL(ornekTavan.aylikBrut)} brüt ile sınırlanır; ayda {formatTL(ornekTavan.aylikNet)} net, 10 ay boyunca toplam {formatTL(ornekTavan.toplamNet)}.</p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Ödenek her ay sonunda, adınıza açılan banka hesabına yatırılır.</li>
+    <li>Ödenek alırken yeni bir işe girerseniz ya da emekli aylığı almaya başlarsanız ödeme kesilir.</li>
+    <li>İŞKUR’un önerdiği uygun işi ya da eğitimi gerekçesiz reddederseniz ödeme kesilebilir.</li>
+    <li>Asgari ücret değiştiğinde ödenek tavanı da değişir.</li>
+  </ul>
+</ToolLayout>

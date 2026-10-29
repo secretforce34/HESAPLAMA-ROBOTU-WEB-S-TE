@@ -1,0 +1,72 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/yillik-izin-hesaplama/Calculator';
+import { meta } from '../tools/yillik-izin-hesaplama/meta';
+import { hesaplaIzin } from '../tools/yillik-izin-hesaplama/calc';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Yıllık izin kaç gündür?',
+    a: 'İş Kanunu md. 53’e göre hizmet süresi 1–5 yıl (5 dahil) olanlara 14 gün, 5 yıldan fazla 15 yıldan az olanlara 20 gün, 15 yıl ve fazla olanlara 26 gün yıllık ücretli izin verilir. Bu süreler sözleşmeyle artırılabilir, azaltılamaz.',
+  },
+  {
+    q: '50 yaş üstü çalışanların izni kaç gün?',
+    a: '18 yaş ve altındaki ile 50 yaş ve üstündeki işçilere verilecek yıllık izin 20 günden az olamaz. Kıdemi 15 yılı geçmişse 26 gün hakkı devam eder.',
+  },
+  {
+    q: 'İzne hak kazanmak için ne kadar çalışmak gerekir?',
+    a: 'İşe başladığınız günden itibaren, deneme süresi dahil en az 1 yıl çalışmış olmanız gerekir. İzin hakkı her hizmet yılı dolduğunda yeniden doğar.',
+  },
+  {
+    q: 'Resmî tatiller ve hafta sonu izinden sayılır mı?',
+    a: 'Hayır. İzin süresine rastlayan ulusal bayram, hafta tatili ve genel tatil günleri izin süresinden sayılmaz (md. 56). Bu yüzden 14 günlük izin takvimde daha uzun bir süreye yayılır.',
+  },
+  {
+    q: 'İşten ayrılınca kullanılmayan izinler ne olur?',
+    a: 'İş sözleşmesi hangi sebeple sona ererse ersin, kullanılmamış yıllık izin günlerinin ücreti son brüt ücret üzerinden ödenir (md. 59). Robot, brüt ücretinizi girerseniz bu tutarı da hesaplar.',
+  },
+  {
+    q: 'Yıllık izin bölünebilir mi?',
+    a: 'Taraflar anlaşırsa izin bölümler halinde kullanılabilir; ancak bir bölüm 10 günden az olamaz (md. 56). İzni başka bir yerde geçirecek işçiye istemesi halinde toplam 4 güne kadar ücretsiz yol izni verilir.',
+  },
+];
+
+const o = hesaplaIzin({ giris: '2016-04-01', dogum: '1980-01-01', hesapTarihi: '2026-10-29', yeraltı: false, ekGun: 0, kullanilan: 120 });
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Yıllık izin nasıl hesaplanır?</h2>
+  <p>
+    İzin hakkı her hizmet yılınızın dolduğu gün doğar ve süresi o tarihteki kıdeminize ve yaşınıza göre belirlenir (4857
+    sayılı İş Kanunu md. 53).
+  </p>
+  <table>
+    <thead><tr><th>Hizmet süresi</th><th>Yıllık izin</th></tr></thead>
+    <tbody>
+      <tr><td>1 yıldan 5 yıla kadar (5 dahil)</td><td>14 gün</td></tr>
+      <tr><td>5 yıldan fazla, 15 yıldan az</td><td>20 gün</td></tr>
+      <tr><td>15 yıl ve fazlası</td><td>26 gün</td></tr>
+      <tr><td>18 yaş ve altı / 50 yaş ve üstü</td><td>en az 20 gün</td></tr>
+      <tr><td>Yeraltı işleri</td><td>yukarıdakilere +4 gün</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      1 Nisan 2016’da işe başlayan bir çalışan, 29 Ekim 2026 itibarıyla {o.hakEdisler.length} hizmet yılını doldurmuştur:
+      ilk 5 yıl için 14’er, sonraki {o.hakEdisler.length - 5} yıl için 20’şer gün olmak üzere toplam {o.toplamHak} gün izin hak
+      etmiştir. 120 gün kullandıysa {o.kalan} gün izni kalır.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Yıllık izin hakkından vazgeçilemez; izin yerine para ödenmesi yalnızca sözleşme sona erdiğinde mümkündür.</li>
+    <li>Aynı işverenin farklı işyerlerinde geçen süreler birleştirilerek hesaplanır (md. 54).</li>
+    <li>Kısmi süreli çalışanlar da aynı sürelerde izin hakkına sahiptir.</li>
+  </ul>
+</ToolLayout>

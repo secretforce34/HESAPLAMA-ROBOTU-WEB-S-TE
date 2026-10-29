@@ -1,0 +1,74 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/rapor-parasi-hesaplama/Calculator';
+import { meta } from '../tools/rapor-parasi-hesaplama/meta';
+import { hesaplaRapor } from '../tools/rapor-parasi-hesaplama/calc';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const temel = { pekToplam: 600_000, primGun: 360, sonBirYilPrimGun: 360, cogulGebelik: false, tarih: '2026-10-29' };
+const hastalik = hesaplaRapor({ ...temel, tur: 'hastalik', ayaktaGun: 7, yatarakGun: 0 });
+const dogum = hesaplaRapor({ ...temel, tur: 'analik', ayaktaGun: 0, yatarakGun: 0 });
+
+const faq: FaqItem[] = [
+  {
+    q: 'Rapor parası nasıl hesaplanır?',
+    a: 'Önce ödeneğe esas günlük kazanç bulunur: raporun (doğumda doğumun) başladığı tarihten önceki 12 aydaki prime esas kazançlar toplamı, prim gün sayısına bölünür. Ayakta tedavide bunun üçte ikisi, hastanede yatarak tedavide yarısı günlük ödenek olarak ödenir.',
+  },
+  {
+    q: 'Raporun ilk 2 günü ödenir mi?',
+    a: 'Hastalık raporlarında SGK ödeneği raporun 3. gününden başlar; ilk 2 gün ödenmez. İş kazası ve meslek hastalığında ilk günden itibaren ödenir.',
+  },
+  {
+    q: 'Rapor parası almak için kaç gün prim gerekir?',
+    a: 'Hastalıkta rapordan, doğum izninde doğumdan önceki 1 yıl içinde en az 90 gün kısa vadeli sigorta primi ödenmiş olmalıdır. İş kazası ve meslek hastalığında prim günü şartı yoktur.',
+  },
+  {
+    q: 'Doğum izni parası kaç gün ödenir?',
+    a: 'Doğumdan önceki 8 ve sonraki 8 hafta olmak üzere 112 gün ödenir; çoğul gebelikte doğum öncesi süreye 2 hafta eklenir (126 gün). Ödenek günlük kazancın üçte ikisidir.',
+  },
+  {
+    q: '2025’ten sonra hesaplama neden değişti?',
+    a: '27 Aralık 2024’te yapılan değişiklikle günlük kazanç, önceki 12 aylık dönemdeki kazançların ortalamasıyla hesaplanmaya başladı (önceden son 3 ay esas alınıyordu). Son 12 ayda 180 günden az prim varsa hastalık ve analıkta günlük kazanç, prime esas kazanç alt sınırının iki katını geçemez.',
+  },
+  {
+    q: 'Rapor parası ne zaman yatar?',
+    a: 'Rapor sona erip işvereniniz SGK sistemine “çalışmazlık bildirimi” girdikten sonra ödenek SGK tarafından ödenir. Ödeme durumunu ve tutarını e-Devlet’ten takip edebilirsiniz.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Rapor parası nasıl hesaplanır?</h2>
+  <div class="formula">Günlük kazanç  = Önceki 12 aydaki prime esas kazanç toplamı ÷ prim günü
+Ayakta tedavi  = Günlük kazanç × 2/3   (hastalıkta 3. günden itibaren)
+Yatarak tedavi = Günlük kazanç × 1/2
+Doğum izni     = Günlük kazanç × 2/3 × 112 gün (çoğul gebelikte 126 gün)</div>
+  <p>
+    Günlük kazanç, prime esas kazanç üst sınırını geçemez. Son 12 ayda 180 günden az prim bildirildiyse hastalık ve analıkta
+    günlük kazanç ayrıca alt sınırın iki katıyla sınırlanır (5510 sayılı Kanun md. 17–18).
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>7 günlük hastalık raporu:</strong> son 12 ayda 600.000 TL kazanç ve 360 gün prim → günlük kazanç {formatTL(hastalik.gunlukKazanc)}.
+      İlk 2 gün ödenmez; kalan 5 gün için günlük {formatTL(hastalik.ayaktaGunluk)} üzerinden toplam {formatTL(hastalik.toplam)} ödenir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Doğum izni:</strong> aynı kazançla 112 gün için günlük {formatTL(dogum.ayaktaGunluk)}, toplam {formatTL(dogum.toplam)} doğum
+      izni ödeneği alınır.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Ödeneğin alınabilmesi için raporun SGK’nın yetkilendirdiği hekim ya da sağlık kurulu tarafından verilmesi gerekir.</li>
+    <li>Bağ-Kur’lulara (4/b) hastalık halinde geçici iş göremezlik ödeneği verilmez; iş kazası ve analık için kendi şartları vardır.</li>
+    <li>SGK dökümünüzdeki tutarları girerseniz sonuç daha kesin olur.</li>
+  </ul>
+</ToolLayout>
