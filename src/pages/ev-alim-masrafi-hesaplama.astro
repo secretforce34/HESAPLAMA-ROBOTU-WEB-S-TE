@@ -1,0 +1,70 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/ev-alim-masrafi-hesaplama/Calculator';
+import { meta } from '../tools/ev-alim-masrafi-hesaplama/meta';
+import { hesaplaEvAlim } from '../tools/ev-alim-masrafi-hesaplama/calc';
+import { formatPercent, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const o = hesaplaEvAlim({
+  satisBedeli: 4_000_000,
+  saticiHarciniDaOde: false,
+  donerSermaye: 2534,
+  emlakciYuzde: 2,
+  kdvYuzde: 0,
+  krediTutari: 2_000_000,
+  tahsisBinde: 5,
+  ekspertiz: 6000,
+  dask: 0,
+  digerler: [],
+});
+
+const faq: FaqItem[] = [
+  {
+    q: 'Tapu harcı ne kadar, kim öder?',
+    a: 'Tapu harcı, tapuda beyan edilen satış bedelinin alıcı için %2’si, satıcı için %2’sidir (toplam %4). Kanunen her taraf kendi payını öder; ancak uygulamada tarafların anlaşmasıyla tamamını alıcı üstlenebilir.',
+  },
+  {
+    q: 'Emlakçı komisyonu ne kadar olabilir?',
+    a: 'Taşınmaz Ticareti Hakkında Yönetmelik’e göre alım satımda emlakçının alabileceği toplam hizmet bedeli satış bedelinin KDV hariç %4’ünü geçemez. Aksi kararlaştırılmadıkça alıcı ve satıcı eşit (%2’şer) öder; bu tutara %20 KDV eklenir.',
+  },
+  {
+    q: 'Döner sermaye ücreti nedir?',
+    a: 'Tapu müdürlüğünün yaptığı işlem için aldığı hizmet bedelidir. Tutar her yıl güncellenir ve taşınmazın bulunduğu bölgenin katsayısına göre değişir; 2026’da yaklaşık 2.500–6.700 TL arasındadır.',
+  },
+  {
+    q: 'Konut kredisinde hangi masraflar çıkar?',
+    a: 'Banka en fazla kredi tutarının binde 5’i kadar tahsis ücreti alabilir. Ayrıca ekspertiz (değerleme) ücreti, ipotek işlemleri ve zorunlu sigortalar için masraf çıkabilir. Konut kredilerinde faize KKDF ve BSMV uygulanmaz.',
+  },
+  {
+    q: 'Tapuda düşük değer göstermek sorun olur mu?',
+    a: 'Evet. Tapu harcı gerçek satış bedeli üzerinden ödenmelidir; beyan edilen değer emlak vergisi değerinden de düşük olamaz. Düşük beyan, sonradan tespit edilirse eksik harç ile vergi ziyaı cezasına yol açabilir.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Ev alırken hangi masraflar çıkar?</h2>
+  <table>
+    <thead><tr><th>Masraf</th><th>Tutar</th></tr></thead>
+    <tbody>
+      <tr><td>Tapu harcı</td><td>Satış bedelinin %2’si (alıcı payı)</td></tr>
+      <tr><td>Tapu döner sermaye ücreti</td><td>Bölgeye göre sabit ücret</td></tr>
+      <tr><td>Emlakçı hizmet bedeli</td><td>Genellikle %2 + %20 KDV (toplam üst sınır %4)</td></tr>
+      <tr><td>Kredi tahsis ücreti</td><td>Kredi tutarının en fazla binde 5’i</td></tr>
+      <tr><td>Ekspertiz, DASK, nakliye</td><td>Hizmet veren kuruma göre</td></tr>
+      <tr><td>KDV (müteahhitten alımda)</td><td>Konutun özelliklerine göre %1, %10 veya %20</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      4.000.000 TL’lik ikinci el bir daireyi emlakçı aracılığıyla, 2.000.000 TL konut kredisiyle alan biri yaklaşık
+      {formatTL(o.toplamMasraf, 0)} masraf öder (satış bedelinin {formatPercent(o.masrafOrani, 1)}’i). Kredi dışında peşin
+      hazırlaması gereken tutar {formatTL(o.pesinGereken, 0)}’dir.
+    </p>
+  </div>
+</ToolLayout>

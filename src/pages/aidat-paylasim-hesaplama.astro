@@ -1,0 +1,61 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/aidat-paylasim-hesaplama/Calculator';
+import { meta } from '../tools/aidat-paylasim-hesaplama/meta';
+import { paylastir } from '../tools/aidat-paylasim-hesaplama/calc';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const o = paylastir(
+  [
+    { ad: '1+1 daire', arsaPayi: 40 },
+    { ad: '2+1 daire', arsaPayi: 60 },
+    { ad: '3+1 daire', arsaPayi: 100 },
+  ],
+  [
+    { ad: 'Kapıcı', tutar: 30000, yontem: 'esit' },
+    { ad: 'Asansör ve elektrik', tutar: 6000, yontem: 'arsa' },
+  ],
+);
+
+const faq: FaqItem[] = [
+  {
+    q: 'Aidat arsa payına göre mi, eşit mi ödenir?',
+    a: 'Önce yönetim planına bakılır. Yönetim planında ya da kat malikleri kurulu kararında farklı bir düzenleme yoksa Kat Mülkiyeti Kanunu md. 20 uygulanır: kapıcı, kaloriferci, bahçıvan ve bekçi giderleri eşit; ortak yerlerin bakım, koruma, onarım ve işletme giderleri arsa payı oranında paylaşılır.',
+  },
+  {
+    q: 'Arsa payı nedir, nereden öğrenirim?',
+    a: 'Her bağımsız bölümün ana taşınmazın arsasındaki ortaklık payıdır ve tapuda “24/480” gibi kesir olarak yazar. Tapu senedinizden, e-Devlet’teki tapu bilgilerinden ya da yönetim planından öğrenebilirsiniz.',
+  },
+  {
+    q: 'Asansör kullanmayan zemin kat asansör giderini öder mi?',
+    a: 'Kural olarak öder; ortak tesislerin giderlerine katılmak için onları kullanmak şart değildir. Ancak yönetim planında farklı bir düzenleme yapılabilir.',
+  },
+  {
+    q: 'Boş daire aidat öder mi?',
+    a: 'Evet. Kat maliki, bağımsız bölümü boş olsa ya da ortak yerleri kullanmasa bile giderlere katılmakla yükümlüdür (KMK md. 20).',
+  },
+  {
+    q: 'Kiracı mı öder, ev sahibi mi?',
+    a: 'Olağan aidat ve ortak giderleri kural olarak kiracı öder; ancak çatı onarımı, dış cephe gibi yapıya ilişkin olağanüstü giderler ev sahibine aittir. Kat malikleri kuruluna karşı ise ev sahibi kiracıyla birlikte sorumludur.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Aidat nasıl hesaplanır?</h2>
+  <div class="formula">Arsa payına göre pay = Gider × (Dairenin arsa payı ÷ Toplam arsa payı)
+Eşit pay             = Gider ÷ Bağımsız bölüm sayısı
+Aylık aidat          = Arsa payına göre paylar + Eşit paylar</div>
+  <p>Robot, kuruşları da toplam gideri tam karşılayacak şekilde dağıtır.</p>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      Arsa payları 40, 60 ve 100 olan üç dairelik bir binada aylık 30.000 TL kapıcı (eşit) ve 6.000 TL asansör-elektrik (arsa payı)
+      gideri varsa aidatlar sırasıyla {o.satirlar.map((s) => formatTL(s.toplam)).join(', ')} olur.
+    </p>
+  </div>
+</ToolLayout>
