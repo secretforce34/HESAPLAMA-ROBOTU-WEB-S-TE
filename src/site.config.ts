@@ -1,6 +1,6 @@
 export const SITE = {
   name: 'Hesap Robotu',
-  // Alan adı alınınca burayı ve astro.config.mjs içindeki SITE_URL'i güncelle.
+  // Yalnızca yedek değer; sayfalar yayın adresini Astro.site'tan (SITE_URL ortam değişkeni) alır.
   url: 'https://hesaprobotu.com',
   tagline: 'Paranla ilgili her hesap, kuruşu kuruşuna.',
   description:

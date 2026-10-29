@@ -1,0 +1,58 @@
+# Siteyi GitHub Pages'te yayınlar.
+# Tetikleyiciler: main'e her yükleme, elle çalıştırma ve aylık "Veri güncelle" görevinin bitişi
+# (iş akışlarının GITHUB_TOKEN ile yaptığı commit'ler push tetiklemediği için ayrıca dinlenir).
+name: Siteyi yayınla
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+  workflow_run:
+    workflows: ['Veri güncelle']
+    types: [completed]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    if: github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Testler
+        run: npm test
+
+      - name: Derleme
+        run: npm run build
+        env:
+          # Kendi alan adınız varsa depo ayarlarında "SITE_URL" değişkeni tanımlayın (ör. https://hesaprobotu.com).
+          SITE_URL: ${{ vars.SITE_URL || format('https://{0}.github.io', github.repository_owner) }}
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

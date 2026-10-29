@@ -28,7 +28,7 @@ const jsonLd = [
     '@context': 'https://schema.org',
     '@type': 'WebSite',
     name: SITE.name,
-    url: SITE.url,
+    url: (Astro.site ?? new URL(SITE.url)).href,
     inLanguage: 'tr-TR',
     description: SITE.description,
   },

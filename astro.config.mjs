@@ -3,8 +3,9 @@ import { defineConfig } from 'astro/config';
 import preact from '@astrojs/preact';
 import sitemap from '@astrojs/sitemap';
 
-// Alan adı alınınca burayı güncelle (src/site.config.ts ile aynı olmalı).
-const SITE_URL = 'https://hesaprobotu.com';
+// Yayın adresi derleme sırasında SITE_URL ortam değişkeninden gelir (bkz. .github/workflows/yayinla.yml).
+// Site, alan adının kökünde çalışacak şekilde yazıldı: kendi alan adı ya da kullaniciadi.github.io deposu.
+const SITE_URL = process.env.SITE_URL || 'https://hesaprobotu.com';
 
 // https://astro.build/config
 export default defineConfig({
