@@ -1,0 +1,143 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/fazla-mesai-hesaplama/Calculator';
+import { meta } from '../tools/fazla-mesai-hesaplama/meta';
+import {
+  FAZLA_CALISMA_KATSAYI,
+  FAZLA_SURELER_KATSAYI,
+  VARSAYILAN_BOLEN,
+  YILLIK_SINIR,
+  hesaplaFazlaMesai,
+  type FazlaMesaiGirdi,
+} from '../tools/fazla-mesai-hesaplama/calc';
+import { MAAS_YILLARI } from '../data/params/maas';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const yil = MAAS_YILLARI[MAAS_YILLARI.length - 1];
+const bos = { fazlaCalisma: 0, fazlaSureler: 0, haftaTatili: 0, genelTatil: 0 };
+const temel: FazlaMesaiGirdi = {
+  yil,
+  ucret: { tur: 'aylik', tutar: 50000, bolen: VARSAYILAN_BOLEN },
+  haftalikSure: 45,
+  donemler: [{ ay: 3, ...bos, fazlaCalisma: 10 }],
+};
+// Örnekler robotun kendi hesap fonksiyonuyla üretilir.
+const o1 = hesaplaFazlaMesai(temel);
+const o2 = hesaplaFazlaMesai({
+  ...temel,
+  haftalikSure: 40,
+  donemler: [{ ay: 3, ...bos, fazlaSureler: 12, fazlaCalisma: 6 }],
+});
+const o3 = hesaplaFazlaMesai({
+  ...temel,
+  ucret: { tur: 'aylik', tutar: 36000, bolen: VARSAYILAN_BOLEN },
+  donemler: [{ ay: 5, ...bos, genelTatil: 1.5, haftaTatili: 8 }],
+});
+const saatlik50 = o1.saatlik * FAZLA_CALISMA_KATSAYI;
+
+const faq: FaqItem[] = [
+  {
+    q: 'Fazla mesai saat ücreti nasıl bulunur?',
+    a: `Aylık brüt ücret ${VARSAYILAN_BOLEN}’e bölünür (30 gün × 7,5 saat); Yargıtay uygulaması bu yöndedir. 50.000 TL brüt ücrette saat ücreti ${formatTL(o1.saatlik)}, %50 zamlı fazla mesai saati ${formatTL(saatlik50)} olur. Günlük ücretle çalışanlarda günlük ücret 7,5’e bölünür.`,
+  },
+  {
+    q: 'Bayramda ve resmî tatilde çalışmanın ücreti ne kadar?',
+    a: 'Ulusal bayram ve genel tatil günlerinde çalışan işçiye, o günün ücreti maaşına dahil olarak ödenir; ayrıca çalışılan her gün için bir günlük ücret daha ödenir (İş Kanunu md. 47). Yani o gün için toplam iki günlük ücret alınmış olur. Öğleden sonrası tatil olan arife günleri yarım gün sayılır.',
+  },
+  {
+    q: 'Pazar günü (hafta tatilinde) çalışınca ne ödenir?',
+    a: 'Hafta tatili ücreti çalışılmasa da ödenir ve aylık ücrete dahildir. Tatil gününde çalışılırsa, haftalık 45 saat aşılmış olacağından Yargıtay uygulamasında bu saatler fazla çalışma sayılır ve %50 zamlı ödenir; 7,5 saatlik bir tam gün için bu, bir buçuk günlük ücrete denk gelir.',
+  },
+  {
+    q: 'Yılda en fazla kaç saat fazla mesai yapılabilir?',
+    a: `Fazla çalışmanın toplamı bir yılda ${YILLIK_SINIR} saati geçemez (İş Kanunu md. 41) ve fazla çalışma için işçinin onayı gerekir. Sınırı aşan çalışmalar da yapılmış çalışmadır; ücretlerinin ödenmesi gerekir.`,
+  },
+  {
+    q: 'Fazla mesai ücretinden hangi kesintiler yapılır?',
+    a: 'Fazla mesai ücreti maaşla birlikte bordroya girer: %14 SGK ve %1 işsizlik primi, gelir vergisi ve binde 7,59 damga vergisi kesilir. Gelir vergisi yıl içinde biriken matrahınıza göre hesaplandığından mesainin neti, bulunduğunuz vergi dilimine bağlıdır. Asgari ücret istisnası genellikle maaşın kendisinde kullanıldığı için mesaiye ayrıca yansımaz.',
+  },
+  {
+    q: 'Fazla mesai yerine izin kullanabilir miyim?',
+    a: 'Evet, işçi isterse zamlı ücret yerine her fazla çalışma saati için 1 saat 30 dakika, her fazla sürelerle çalışma saati için 1 saat 15 dakika serbest zaman kullanabilir. Bu süre altı ay içinde, ücretten kesinti yapılmadan kullandırılır (İş Kanunu md. 41).',
+  },
+  {
+    q: 'Haftalık 40 saat çalışıyorsam 40 ile 45 saat arası nasıl ödenir?',
+    a: 'Sözleşmeyle haftalık süre 45 saatin altında belirlenmişse, bu süreyi aşan ve 45 saate kadar olan çalışmalar “fazla sürelerle çalışma”dır ve saat ücreti %25 artırılarak ödenir. 45 saati aşan kısım fazla çalışmadır ve %50 zamlıdır.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Fazla mesai ücreti nasıl hesaplanır?</h2>
+  <p>
+    Haftalık 45 saati aşan çalışmalar fazla çalışmadır ve her saati, normal saat ücretinin yüzde elli fazlasıyla ödenir (4857
+    sayılı İş Kanunu md. 41). Hesap için önce saat ücreti bulunur, sonra çalışma türüne göre zam katsayısıyla çarpılır.
+  </p>
+  <div class="formula">Saat ücreti               = aylık brüt ücret ÷ {VARSAYILAN_BOLEN}   (günlük ücret ÷ 7,5)
+Fazla çalışma (45 saat üstü)  = saat × saat ücreti × {formatNumber(FAZLA_CALISMA_KATSAYI, 2)}
+Fazla sürelerle çalışma       = saat × saat ücreti × {formatNumber(FAZLA_SURELER_KATSAYI, 2)}
+Hafta tatilinde çalışma       = saat × saat ücreti × {formatNumber(FAZLA_CALISMA_KATSAYI, 2)}
+Bayram / genel tatil çalışması = gün × günlük ücret (aylık ÷ 30), maaşa ek olarak</div>
+
+  <h2>Fazla çalışma ile fazla sürelerle çalışma arasındaki fark</h2>
+  <p>
+    Kanundaki üst sınır haftada 45 saattir (md. 63). Sözleşmenizde haftalık süre örneğin 40 saat olarak belirlenmişse 40 ile
+    45 saat arasındaki çalışmalar <strong>fazla sürelerle çalışma</strong> sayılır ve %25 zamlı ödenir; 45 saati aşan kısım
+    <strong>fazla çalışmadır</strong> ve %50 zamlıdır. Denkleştirme uygulanan işyerlerinde, iki aylık dönemde haftalık ortalama
+    45 saati aşmayan çalışmalar fazla çalışma sayılmaz.
+  </p>
+
+  <h2>Hafta tatili ve bayram çalışması</h2>
+  <p>
+    Yedi günlük dönemde en az 24 saat kesintisiz hafta tatili verilir ve bu günün ücreti çalışılmasa da ödenir (md. 46).
+    Tatil gününde çalışılırsa, haftalık 45 saat aşılmış olacağından Yargıtay uygulamasında bu saatler fazla çalışma olarak %50
+    zamlı ödenir. Ulusal bayram ve genel tatil günlerinde çalışan işçiye ise o günün ücretine ek olarak ayrıca bir günlük
+    ücret ödenir (md. 47).
+  </p>
+  <p>
+    Genel tatiller 2429 sayılı Kanunla belirlenir: 1 Ocak, 23 Nisan, 1 Mayıs, 19 Mayıs, 15 Temmuz, 30 Ağustos, 29 Ekim (28 Ekim
+    öğleden sonra dahil), Ramazan Bayramı ve Kurban Bayramı (arife günlerinin öğleden sonrası dahil). Arife gibi yarım günler
+    için hesaplayıcıya 0,5 gün yazabilirsiniz.
+  </p>
+
+  <h2>Örnek hesaplamalar ({yil})</h2>
+  <div class="example">
+    <p>
+      <strong>50.000 TL brüt ücret, ayda 10 saat fazla çalışma:</strong> Saat ücreti {formatTL(o1.saatlik)}, %50 zamlı saat
+      {formatTL(saatlik50)}. Brüt fazla mesai {formatTL(o1.toplam.brut)}; Mart bordrosuna yansıyan yaklaşık net
+      {formatTL(o1.toplam.net)}.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Haftalık 40 saatlik sözleşme, ayda 12 saat 40–45 arası ve 6 saat 45 üstü çalışma:</strong> fazla sürelerle
+      çalışma {formatTL(o2.toplam.fazlaSurelerUcreti)} (%25), fazla çalışma {formatTL(o2.toplam.fazlaCalismaUcreti)} (%50);
+      toplam brüt {formatTL(o2.toplam.brut)}.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>36.000 TL brüt ücret, bir buçuk gün bayram çalışması ve 8 saat pazar çalışması:</strong> bayram için
+      {formatTL(o3.toplam.genelTatilUcreti)}, hafta tatili çalışması için {formatTL(o3.toplam.haftaTatiliUcreti)}; toplam brüt
+      {formatTL(o3.toplam.brut)}, yaklaşık net {formatTL(o3.toplam.net)}.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li><strong>Yıllık sınır:</strong> fazla çalışma yılda {YILLIK_SINIR} saati geçemez; robot aşımda uyarır.</li>
+    <li><strong>Onay şartı:</strong> fazla çalışma için işçinin onayı alınmalıdır (md. 41).</li>
+    <li>
+      <strong>Yapılamayan durumlar:</strong> gece çalışmasında ve sağlık nedeniyle kısa süreli çalışılan işlerde fazla
+      çalışma yaptırılamaz.
+    </li>
+    <li>
+      <strong>Net hesabı:</strong> gelir vergisi kümülatif olduğundan, yılın ilk aylarındaki mesai sonraki aylarda üst dilime
+      daha erken geçmenize yol açabilir. Robot bu “dilim etkisini” ayrıca gösterir.
+    </li>
+    <li><strong>Zamanaşımı:</strong> fazla mesai bir ücret alacağıdır; zamanaşımı beş yıldır (md. 32).</li>
+  </ul>
+</ToolLayout>

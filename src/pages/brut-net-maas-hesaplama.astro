@@ -1,0 +1,238 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/brut-net-maas-hesaplama/Calculator';
+import { meta } from '../tools/brut-net-maas-hesaplama/meta';
+import {
+  asgariUcretIstisnalari,
+  hesaplaBordro,
+  nettenBrute,
+  tarifeVergisi,
+} from '../tools/brut-net-maas-hesaplama/calc';
+import { MAAS_YILLARI, hazineDestegiOn, maasYili } from '../data/params/maas';
+import { asgariUcretOn } from '../data/params/asgari-ucret';
+import { pekSinirlariOn } from '../data/params/sgk-sinirlar';
+import { formatNumber, formatPercent, formatTL, monthName } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const yil = MAAS_YILLARI[MAAS_YILLARI.length - 1];
+const p = maasYili(yil);
+const asgari = asgariUcretOn(`${yil}-06-15`);
+const pek = pekSinirlariOn(`${yil}-06-15`);
+const destek = hazineDestegiOn(`${yil}-06-15`);
+const her = (n: number) => Array(12).fill(n) as number[];
+const yuzde = (n: number) => formatPercent(n);
+
+// Asgari ücret istisnasını aynı tutarlı aylara göre grupla (ör. Ocak–Haziran)
+const ist = asgariUcretIstisnalari(yil);
+const istGruplari: { bas: number; son: number; gv: number }[] = [];
+for (const x of ist) {
+  const g = istGruplari[istGruplari.length - 1];
+  if (g && g.gv === x.gv) g.son = x.ay;
+  else istGruplari.push({ bas: x.ay, son: x.ay, gv: x.gv });
+}
+const ayAraligi = (g: { bas: number; son: number }) =>
+  g.bas === g.son ? monthName(g.bas - 1) : `${monthName(g.bas - 1)}–${monthName(g.son - 1)}`;
+const istMetni = istGruplari.map((g) => `${ayAraligi(g)} ${formatTL(g.gv)}`).join('; ');
+
+const asgariGenel = hesaplaBordro(her(asgari.brut), { yil, tesvik: 'genel' }).aylar[0];
+const asgariYok = hesaplaBordro(her(asgari.brut), { yil, tesvik: 'yok' }).aylar[0];
+const asgariImalat = hesaplaBordro(her(asgari.brut), { yil, tesvik: 'imalat' }).aylar[0];
+const o50 = hesaplaBordro(her(50000), { yil });
+const o150 = hesaplaBordro(her(150000), { yil });
+const o150gecis = o150.aylar.filter((a, i) => i > 0 && a.dilim > o150.aylar[i - 1].dilim);
+const oNet = nettenBrute(her(60000), { yil });
+const oEmekli = hesaplaBordro(her(50000), { yil, emekli: true }).aylar[0];
+const oEngelli = hesaplaBordro(her(50000), { yil, engellilik: 1 }).aylar[0];
+
+// Tarife tablosu: her dilimin alt sınırı ve o sınıra kadar biriken vergi
+const tarifeSatirlari: { alt: number; ust: number | null; oran: number; birikmis: number }[] = [];
+{
+  let alt = 0;
+  for (const d of p.ucretTarifesi) {
+    tarifeSatirlari.push({ alt, ust: d.ust, oran: d.oran, birikmis: tarifeVergisi(alt, p.ucretTarifesi) });
+    alt = d.ust ?? alt;
+  }
+}
+const ilkDilimUst = p.ucretTarifesi[0].ust ?? 0;
+
+const faq: FaqItem[] = [
+  {
+    q: 'Net maaşım neden yılın ilerleyen aylarında düşüyor?',
+    a: `Gelir vergisi her ay, yılbaşından o aya kadar biriken (kümülatif) matrah üzerinden hesaplanır. Matrah ilk dilimi (${yil}’da ${formatTL(ilkDilimUst, 0)}) aştığında aynı brüt ücretten daha yüksek oranda vergi kesilir ve net azalır. Ocak’ta kümülatif matrah sıfırlandığı için net yeniden yükselir.`,
+  },
+  {
+    q: `Asgari ücretli ${yil}’da gelir vergisi ve damga vergisi öder mi?`,
+    a: `Hayır. Asgari ücrete isabet eden ücret gelir vergisinden (GVK md. 23/18) ve damga vergisinden istisnadır. Brüt ${formatTL(asgari.brut)} asgari ücretten yalnızca %14 SGK ve %1 işsizlik primi kesilir; net ${formatTL(asgariGenel.net)} olur.`,
+  },
+  {
+    q: 'Asgari ücret gelir vergisi istisnası ne kadar?',
+    a: `Her ay, asgari ücretin o ayki gelir vergisi kadardır. ${yil}’da: ${istMetni}. Damga vergisi istisnası her ay ${formatTL(ist[0].dv)}’dir. Bu tutarlar asgari ücretin üzerinde kazanan herkesin hesaplanan vergisinden düşülür.`,
+  },
+  {
+    q: `SGK tavanı nedir, ${yil}’da kaç TL?`,
+    a: `Prime esas kazancın üst sınırıdır: ${yil}’da aylık ${formatTL(pek.aylikUst)} (brüt asgari ücretin ${formatNumber(pek.ustCarpan)} katı). Brüt ücretin bu tutarı aşan kısmından SGK ve işsizlik primi kesilmez, yalnızca gelir vergisi ve damga vergisi kesilir.`,
+  },
+  {
+    q: 'İşverene maliyet nasıl hesaplanır, 2 puan ve 5 puan indirimi nedir?',
+    a: `Brüt ücrete işveren SGK payı (${yuzde(p.sgkIsverenOrani)}) ve işsizlik sigortası işveren payı (${yuzde(p.issizlikIsverenOrani)}) eklenir. Şartları sağlayan özel sektör işverenlerinde SGK payının ${destek.genel} puanını, imalat sektöründe ${destek.imalat} puanını Hazine karşılar. Asgari ücretin maliyeti indirimsiz ${formatTL(asgariYok.maliyet)}, genel indirimle ${formatTL(asgariGenel.maliyet)}, imalatta ${formatTL(asgariImalat.maliyet)}’dir. İndirim net maaşı değiştirmez.`,
+  },
+  {
+    q: 'Emekli olup çalışanın maaşından hangi kesintiler yapılır?',
+    a: `Emekli aylığı alırken çalışan kişiden %7,5 sosyal güvenlik destek primi (SGDP) kesilir; işsizlik primi kesilmez. İşveren %24,75 SGDP öder ve Hazine desteğinden yararlanamaz. Gelir vergisi, damga vergisi ve asgari ücret istisnası diğer çalışanlarla aynıdır.`,
+  },
+  {
+    q: 'Engellilik indirimi net maaşı ne kadar artırır?',
+    a: `${yil}’da aylık indirim 1. derecede ${formatTL(p.engellilikIndirimi[0], 0)}, 2. derecede ${formatTL(p.engellilikIndirimi[1], 0)}, 3. derecede ${formatTL(p.engellilikIndirimi[2], 0)}’dir ve gelir vergisi matrahından düşülür. Net etkisi, indirim tutarı çarpı vergi diliminizdir; %15 dilimde 1. derece için ${formatTL(p.engellilikIndirimi[0] * 0.15)}. Asgari ücretli çalışan zaten vergi ödemediğinden ek kazanç sağlamaz.`,
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Brüt maaştan net maaş nasıl hesaplanır?</h2>
+  <p>
+    Bordroda brüt ücretten önce sigorta primleri, sonra vergiler düşülür. Gelir vergisi aylık değil, yılbaşından itibaren
+    biriken matrah üzerinden hesaplandığı için aynı brüt maaşın neti yıl içinde değişebilir. Robot bu nedenle 12 ayı ayrı
+    ayrı hesaplar.
+  </p>
+  <div class="formula">SGK işçi payı      = prime esas kazanç × %14   (tavan: {formatTL(pek.aylikUst)})
+İşsizlik işçi payı = prime esas kazanç × %1
+GV matrahı         = brüt − SGK − işsizlik (− varsa engellilik indirimi)
+Hesaplanan GV      = tarife(kümülatif matrah) − tarife(önceki kümülatif)
+Ödenecek GV        = hesaplanan GV − asgari ücretin o ayki vergisi
+Damga vergisi      = (brüt − brüt asgari ücret) × binde 7,59
+Net ücret          = brüt − SGK − işsizlik − ödenecek GV − damga vergisi</div>
+  <p>
+    Dayanaklar: prim oranları 5510 sayılı Kanun md. 81 ve 4447 sayılı Kanun md. 49; tarife Gelir Vergisi Kanunu (GVK) md.
+    103; asgari ücret istisnası GVK md. 23/18 ve Damga Vergisi Kanunu’na ekli (2) sayılı tablo.
+  </p>
+
+  <h2>Asgari ücret istisnası nasıl uygulanır?</h2>
+  <p>
+    2022’den beri herkesin ücretinin asgari ücrete denk gelen kısmı vergiden istisnadır. Uygulamada önce tüm ücretin vergisi
+    hesaplanır, sonra asgari ücretin o ayki vergisi düşülür. Asgari ücretin vergisi de kendi kümülatif matrahıyla
+    hesaplandığından istisna tutarı yıl içinde artar:
+  </p>
+  <table>
+    <thead>
+      <tr><th>{yil} dönemi</th><th>Gelir vergisi istisnası</th><th>Damga vergisi istisnası</th></tr>
+    </thead>
+    <tbody>
+      {
+        istGruplari.map((g) => (
+          <tr>
+            <td>{ayAraligi(g)}</td>
+            <td>{formatTL(g.gv)}</td>
+            <td>{formatTL(ist[g.bas - 1].dv)}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p>
+    İstisna, ay içinde yapılan maaş, prim, ikramiye ve mesai ödemelerinin toplamına bir kez uygulanır. Birden fazla işverenden
+    ücret alanlarda yalnızca en yüksek ücrete uygulanır (GV Genel Tebliği Seri No: 319).
+  </p>
+
+  <h2>Örnek hesaplamalar ({yil})</h2>
+  <div class="example">
+    <p>
+      <strong>Asgari ücret:</strong> Brüt {formatTL(asgari.brut)}’den {formatTL(asgariGenel.sgkIsci)} SGK ve
+      {formatTL(asgariGenel.issizlikIsci)} işsizlik primi kesilir; vergi kesilmez ve net {formatTL(asgariGenel.net)} olur.
+      İşverene maliyeti indirimsiz {formatTL(asgariYok.maliyet)}, {destek.genel} puan indirimle
+      {formatTL(asgariGenel.maliyet)}, imalatta {formatTL(asgariImalat.maliyet)}’dir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>50.000 TL brüt maaş:</strong> Ocak’ta net {formatTL(o50.aylar[0].net)}, Aralık’ta net
+      {formatTL(o50.aylar[11].net)}. Yıllık net toplam {formatTL(o50.toplam.net)}, işverene yıllık maliyet
+      {formatTL(o50.toplam.maliyet)}.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>150.000 TL brüt maaş:</strong> Ocak’ta net {formatTL(o150.aylar[0].net)}. Kümülatif matrah
+      {o150gecis.map((a) => `${monthName(a.ay - 1)} ayında %${a.dilim}`).join(', ')} dilimine geçtiği için net Aralık’ta
+      {formatTL(o150.aylar[11].net)}’ye iner.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Netten brüte, her ay 60.000 TL net:</strong> Ocak’ta {formatTL(oNet.aylar[0].brut)}, Aralık’ta
+      {formatTL(oNet.aylar[11].brut)} brüt gerekir. Fark, yıl içinde yükselen vergi diliminden kaynaklanır.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Aynı 50.000 TL brüt, farklı durumlar (Ocak):</strong> emekli (SGDP) çalışanın neti
+      {formatTL(oEmekli.net)}, 1. derece engelli çalışanın neti {formatTL(oEngelli.net)}; standart çalışanda
+      {formatTL(o50.aylar[0].net)}.
+    </p>
+  </div>
+
+  <h2>{yil} gelir vergisi dilimleri (ücretliler)</h2>
+  <table>
+    <thead>
+      <tr><th>Yıllık kümülatif matrah</th><th>Oran</th><th>Önceki dilimlerin vergisi</th></tr>
+    </thead>
+    <tbody>
+      {
+        tarifeSatirlari.map((s) => (
+          <tr>
+            <td>{s.ust === null ? `${formatTL(s.alt, 0)} üzeri` : `${formatTL(s.alt, 0)} – ${formatTL(s.ust, 0)}`}</td>
+            <td>{yuzde(s.oran)}</td>
+            <td>{formatTL(s.birikmis, 0)}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p>
+    Ücret dışındaki gelirlerde (kira, serbest meslek gibi) üçüncü ve dördüncü dilim sınırları farklıdır; bu tablo yalnızca
+    ücretliler içindir. Kaynak: GV Genel Tebliği (Seri No: 332), Resmî Gazete 31.12.2025.
+  </p>
+
+  <h2>Prim oranları ve işverene maliyet</h2>
+  <table>
+    <thead>
+      <tr><th>Kesinti</th><th>İşçi</th><th>İşveren</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SGK primi (malullük-yaşlılık-ölüm, genel sağlık, kısa vadeli)</td><td>{yuzde(p.sgkIsciOrani)}</td><td>{yuzde(p.sgkIsverenOrani)}</td></tr>
+      <tr><td>İşsizlik sigortası primi</td><td>{yuzde(p.issizlikIsciOrani)}</td><td>{yuzde(p.issizlikIsverenOrani)}</td></tr>
+      <tr><td>Hazine desteği sonrası SGK işveren payı (genel / imalat)</td><td>–</td><td>{yuzde(p.sgkIsverenOrani - destek.genel)} / {yuzde(p.sgkIsverenOrani - destek.imalat)}</td></tr>
+      <tr><td>Emekli çalışan: sosyal güvenlik destek primi</td><td>{yuzde(p.sgdpIsciOrani)}</td><td>{yuzde(p.sgdpIsverenOrani)}</td></tr>
+    </tbody>
+  </table>
+  <p>
+    {yil}’da 7566 sayılı Kanunla işverenin malullük-yaşlılık-ölüm primi bir puan artırıldı ve imalat dışı işverenlere
+    sağlanan Hazine desteği {destek.genel} puana indirildi; imalat sektöründe destek {destek.imalat} puan olarak sürüyor (5510
+    sayılı Kanun md. 81 ve geçici md. 108).
+  </p>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>İkramiye ve prim aylarında</strong> o ayın brütü yükselir ve kümülatif matrah hızla artar. Robotta “Ay ay
+      farklı tutar” seçeneğiyle ikramiye ayını ayrıca girebilirsiniz.
+    </li>
+    <li>
+      <strong>SGK tavanını aşan ikramiye</strong> o ay prime tabi tutulamazsa, aşan kısım izleyen en fazla iki ayın boş kalan
+      tavanına eklenir (5510 md. 80). Robot bunu kendiliğinden uygular; “Gelişmiş” bölümünden kapatabilirsiniz.
+    </li>
+    <li>
+      <strong>Yıl ortasında işe başlayan</strong> çalışanın kümülatif matrahı yeni işverende sıfırdan başlar. Önceki aylara 0
+      yazın.
+    </li>
+    <li>
+      <strong>Birden fazla işverenden ücret alanlar</strong> asgari ücret istisnasından yalnızca en yüksek ücrette
+      yararlanır; ikinci işverenden alınan ücret belirli tutarı aşarsa yıllık beyanname gerekebilir.
+    </li>
+    <li>
+      <strong>Yemek ve yol yardımı</strong> gibi ödemelerin istisna kısmı bu hesapta yer almaz; bordronuzda brütü artıran her
+      ödemeyi brüt tutara ekleyerek hesaplayın.
+    </li>
+  </ul>
+</ToolLayout>

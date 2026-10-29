@@ -1,0 +1,199 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kidem-tazminati-hesaplama/Calculator';
+import { meta } from '../tools/kidem-tazminati-hesaplama/meta';
+import { hesaplaKidem, type KidemGirdi } from '../tools/kidem-tazminati-hesaplama/calc';
+import { kidemTavani } from '../data/params/kidem';
+import { formatDateTR, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const donemler = kidemTavani.values.donemler;
+const son = donemler[donemler.length - 1];
+const onceki = donemler[donemler.length - 2];
+const sonYil = son.to.slice(0, 4);
+
+// Örnekler, robotun kendi hesap fonksiyonuyla üretilir (metin ile hesap hep tutarlı kalır).
+const ornek1Girdi: KidemGirdi = {
+  giris: '2019-03-15',
+  cikis: son.from,
+  sonBrut: 50000,
+  ekOdemeler: [],
+  ihbarHesapla: true,
+  ihbarKullandirildi: false,
+  oncekiKumulatif: null,
+};
+const ornek1 = hesaplaKidem(ornek1Girdi);
+const ornek2 = hesaplaKidem({
+  ...ornek1Girdi,
+  giris: '2014-02-01',
+  cikis: son.to,
+  sonBrut: 90000,
+  ekOdemeler: [
+    { tutar: 300, periyot: 'gunluk', gun: 22 },
+    { tutar: 90000, periyot: 'yillik' },
+  ],
+});
+const ornek3 = hesaplaKidem({ ...ornek1Girdi, giris: '2026-02-01', cikis: son.to, sonBrut: 40000 });
+const sure = (s: { yil: number; ay: number; gun: number }) =>
+  [s.yil ? `${s.yil} yıl` : '', s.ay ? `${s.ay} ay` : '', s.gun ? `${s.gun} gün` : ''].filter(Boolean).join(' ');
+
+const faq: FaqItem[] = [
+  {
+    q: `Kıdem tazminatı tavanı ${sonYil}’da ne kadar?`,
+    a: `${formatDateTR(onceki.from)} – ${formatDateTR(onceki.to)} arasında ${formatTL(onceki.tavan)}, ${formatDateTR(son.from)} – ${formatDateTR(son.to)} arasında ${formatTL(son.tavan)}’dir. Tavan, ödeme tarihine değil iş sözleşmesinin sona erdiği tarihe göre uygulanır.`,
+  },
+  {
+    q: 'Kıdem ve ihbar tazminatından vergi kesilir mi?',
+    a: 'Kıdem tazminatından gelir vergisi kesilmez (GVK md. 25/7), yalnızca binde 7,59 damga vergisi kesilir. İhbar tazminatı ücret sayıldığı için gelir vergisi ve damga vergisine tabidir. İkisinden de SGK primi kesilmez (5510 md. 80).',
+  },
+  {
+    q: 'Giydirilmiş ücret nedir?',
+    a: 'Tazminata esas ücret; çıplak brüt ücrete yemek, yol, ikramiye, düzenli prim gibi sürekli sağlanan para ve parayla ölçülebilen menfaatlerin eklenmesiyle bulunur (1475 md. 14). Yıllık ödemeler 12’ye bölünerek, günlük ödemeler ayda verildiği gün sayısıyla çarpılarak aylığa çevrilir. Fazla mesai gibi düzenli olmayan ödemeler eklenmez.',
+  },
+  {
+    q: 'İstifa edersem kıdem tazminatı alabilir miyim?',
+    a: 'Haklı bir nedene dayanmayan istifada kıdem tazminatı doğmaz. Ücretin ödenmemesi gibi haklı nedenlerle fesih (4857 md. 24), emeklilik, muvazzaf askerlik, emeklilik için gereken süre ve prim gününün yaş dışında tamamlanması ya da kadın işçinin evlendiği tarihten itibaren bir yıl içinde ayrılması hâllerinde ise kendi isteğinizle ayrılsanız da kıdem tazminatı ödenir.',
+  },
+  {
+    q: 'İhbar süresi ne kadar?',
+    a: 'İşi 6 aydan az sürende 2 hafta, 6 ay – 1,5 yıl arasında 4 hafta, 1,5 – 3 yıl arasında 6 hafta, 3 yıldan fazla sürende 8 haftadır (4857 md. 17). Bu süreler asgaridir, sözleşmeyle artırılabilir. Süreye uyulmadan fesih yapılırsa bu sürelerin ücreti ihbar tazminatı olarak ödenir.',
+  },
+  {
+    q: '1 yıldan az çalışan kıdem tazminatı alır mı?',
+    a: 'Hayır. Kıdem tazminatı için aynı işverene bağlı en az bir yıllık çalışma gerekir. Ancak bildirim süresine uyulmadan işten çıkarıldıysanız ihbar tazminatı doğabilir.',
+  },
+  {
+    q: 'Kıdem tazminatı geç ödenirse ne olur, ne zaman zamanaşımına uğrar?',
+    a: 'Zamanında ödenmeyen kıdem tazminatı için mevduata uygulanan en yüksek faiz istenebilir (1475 md. 14). Kıdem ve ihbar tazminatı alacakları beş yılda zamanaşımına uğrar (4857 ek md. 3).',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Kıdem tazminatı nasıl hesaplanır?</h2>
+  <p>
+    En az bir yıl çalışan işçiye, iş sözleşmesi kanunda sayılan bir nedenle sona erdiğinde her tam hizmet yılı için 30 günlük
+    ücreti tutarında kıdem tazminatı ödenir; bir yıldan artan süreler de aynı oranla hesaba katılır (1475 sayılı Kanun md.
+    14). Hesaba esas ücret, son brüt ücrete düzenli ek ödemelerin eklendiği giydirilmiş ücrettir; ancak çıkış tarihindeki
+    kıdem tavanını aşamaz.
+  </p>
+  <div class="formula">Kıdeme esas ücret = en az(giydirilmiş brüt ücret, kıdem tavanı)
+Brüt kıdem       = esas ücret × (tam yıl + artan ay ÷ 12 + artan gün ÷ 365)
+Damga vergisi    = brüt kıdem × binde 7,59      (gelir vergisi yok, GVK md. 25/7)
+Net kıdem        = brüt kıdem − damga vergisi</div>
+  <p>
+    Hizmet süresi, işe giriş ve çıkış günleri dahil takvim üzerinden yıl, ay ve gün olarak bulunur. Aynı işverenin farklı
+    işyerlerinde geçen süreler birlikte sayılır.
+  </p>
+
+  <h2>İhbar tazminatı nasıl hesaplanır?</h2>
+  <p>
+    Belirsiz süreli iş sözleşmesini fesheden taraf, karşı tarafa önceden bildirim yapmak zorundadır. İşveren bu süreyi
+    kullandırmadan ya da süreye ait ücreti peşin ödemeden sözleşmeyi sona erdirirse, süreye ait ücreti ihbar tazminatı olarak
+    öder (4857 sayılı Kanun md. 17).
+  </p>
+  <table>
+    <thead>
+      <tr><th>Hizmet süresi</th><th>Bildirim süresi</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>6 aydan az</td><td>2 hafta (14 gün)</td></tr>
+      <tr><td>6 ay – 1,5 yıl</td><td>4 hafta (28 gün)</td></tr>
+      <tr><td>1,5 – 3 yıl</td><td>6 hafta (42 gün)</td></tr>
+      <tr><td>3 yıldan fazla</td><td>8 hafta (56 gün)</td></tr>
+    </tbody>
+  </table>
+  <div class="formula">Brüt ihbar = giydirilmiş aylık brüt ÷ 30 × bildirim günü   (tavan yok)
+Net ihbar  = brüt ihbar − gelir vergisi − damga vergisi</div>
+  <p>
+    İhbar tazminatı ücret sayıldığından gelir vergisine tabidir ve yıl içinde biriken vergi matrahınıza eklenir. Robot,
+    tazminatın son ücretinizle aynı ay ödendiğini varsayar: ücretin vergisini ayrıca hesaplayıp yalnızca tazminatın
+    getirdiği ek vergiyi gösterir. Bordronuzdaki kümülatif matrahı girerseniz sonuç kesinleşir.
+  </p>
+
+  <h2>Kıdem tazminatı tavanı</h2>
+  <table>
+    <thead>
+      <tr><th>Dönem</th><th>Tavan (yıllık, brüt)</th></tr>
+    </thead>
+    <tbody>
+      {
+        [...donemler].reverse().map((d) => (
+          <tr>
+            <td>{formatDateTR(d.from)} – {formatDateTR(d.to)}</td>
+            <td>{formatTL(d.tavan)}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+  <p>
+    Tavan, en yüksek devlet memuruna bir hizmet yılı için ödenen azami emeklilik ikramiyesidir ve memur maaş katsayılarıyla
+    birlikte Ocak ve Temmuz’da güncellenir. Kaynak: Çalışma ve Sosyal Güvenlik Bakanlığı.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <div class="example">
+    <p>
+      <strong>{sure(ornek1.sure)} çalışan, 50.000 TL brüt ücretli işçi ({formatDateTR(ornek1Girdi.cikis)} çıkış):</strong>
+      Brüt kıdem tazminatı {formatTL(ornek1.kidemBrut)}, damga vergisi {formatTL(ornek1.kidemDamga)}, net
+      {formatTL(ornek1.kidemNet)}. Hizmeti 3 yılı aştığı için {ornek1.ihbarHafta} haftalık ihbar tazminatı brüt
+      {formatTL(ornek1.ihbarBrut)}, vergiler düşülünce net {formatTL(ornek1.ihbarNet)}. Toplam net {formatTL(ornek1.toplamNet)}.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Tavanı aşan ücret:</strong> 90.000 TL brüt ücrete günlük 300 TL yemek (ayda 22 gün) ve yıllık 90.000 TL
+      ikramiye eklenince giydirilmiş ücret {formatTL(ornek2.giydirilmis)} olur. {formatDateTR(son.to)} çıkışında tavan
+      {formatTL(ornek2.tavan)} olduğundan {sure(ornek2.sure)} için brüt kıdem {formatTL(ornek2.kidemBrut)} olarak hesaplanır;
+      tavan olmasaydı {formatTL(ornek2.kidemBrutTavansiz)} olacaktı. İhbar tazminatında tavan olmadığından brüt ihbar
+      {formatTL(ornek2.ihbarBrut)}’dir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Bir yılı doldurmadan çıkarılan işçi:</strong> {sure(ornek3.sure)} çalışan, 40.000 TL brüt ücretli işçi kıdem
+      tazminatı alamaz; ancak bildirim süresi verilmeden çıkarıldıysa {ornek3.ihbarHafta} haftalık ihbar tazminatına (brüt
+      {formatTL(ornek3.ihbarBrut)}) hak kazanır.
+    </p>
+  </div>
+
+  <h2>Kıdem tazminatı hangi durumlarda ödenir?</h2>
+  <p>En az bir yıllık çalışma şartıyla, iş sözleşmesi şu nedenlerle sona ererse kıdem tazminatı doğar (1475 md. 14):</p>
+  <ul>
+    <li>İşverenin, ahlak ve iyiniyet kurallarına aykırılık (4857 md. 25/II) dışındaki bir nedenle feshi,</li>
+    <li>İşçinin haklı nedenle feshi (4857 md. 24; ör. ücretin ödenmemesi, sağlık nedenleri),</li>
+    <li>Muvazzaf askerlik nedeniyle ayrılma,</li>
+    <li>Yaşlılık, emeklilik ya da malullük aylığı veya toptan ödeme almak amacıyla ayrılma,</li>
+    <li>Emeklilik için gereken sigortalılık süresi ve prim gününü yaş dışında tamamlayıp kendi isteğiyle ayrılma,</li>
+    <li>Kadın işçinin evlendiği tarihten itibaren bir yıl içinde kendi isteğiyle ayrılması,</li>
+    <li>İşçinin ölümü (tazminat mirasçılara ödenir).</li>
+  </ul>
+  <p>
+    Haklı bir nedene dayanmayan istifada ve işverenin 4857 md. 25/II kapsamındaki haklı feshinde kıdem tazminatı doğmaz.
+    Haklı fesihte bildirim süresi gerekmediği için ihbar tazminatı da doğmaz. Hangi durumun size uyduğu, fesih bildirimine ve
+    somut olaya göre değişir; bu bölüm yalnızca kanundaki hâlleri özetler.
+  </p>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Tavanın tarihi:</strong> Ocak–Haziran ile Temmuz–Aralık tavanları farklıdır; çıkış tarihi 30 Haziran mı 1 Temmuz
+      mu, sonucu değiştirebilir.
+    </li>
+    <li>
+      <strong>Son ücret esas alınır.</strong> Ücreti sabit olmayan (parça başı, yüzde usulü) işçilerde son bir yılın ortalaması
+      kullanılır (1475 md. 14).
+    </li>
+    <li>
+      <strong>Fazla mesai</strong> düzenli ve sürekli ödenmiyorsa giydirilmiş ücrete eklenmez; tek seferlik ödemeleri
+      eklemeyin.
+    </li>
+    <li>
+      <strong>Damga vergisi istisnası</strong> asgari ücrete isabet eden ücret ödemeleri içindir; kıdem tazminatına uygulanmaz.
+    </li>
+    <li><strong>Zamanaşımı:</strong> kıdem ve ihbar tazminatı alacakları beş yıldır (4857 ek md. 3).</li>
+  </ul>
+</ToolLayout>
