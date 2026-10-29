@@ -14,4 +14,8 @@ npm run dev      # geliştirme sunucusu (http://localhost:4321)
 npm test         # tüm birim testleri
 npm run check    # tip kontrolü
 npm run build    # dist/ klasörüne statik site
+node scripts/veri/guncelle.mjs   # TÜFE, kur, altın serilerini güncelle (docs/VERI.md)
+node scripts/link-kontrol.mjs    # kaynak bağlantılarını kontrol et
 ```
+
+Yayın: GitHub Actions ("Siteyi yayınla") her yüklemede test + derleme yapar; GitHub Pages yayını `YAYIN_ACIK=true` depo değişkeniyle açılır (docs/YAYINLAMA.md).
