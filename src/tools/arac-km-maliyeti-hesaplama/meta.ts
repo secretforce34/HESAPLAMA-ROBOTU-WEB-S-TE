@@ -6,7 +6,7 @@ export const meta: ToolMeta = {
   question: 'Arabam bana kilometre başına, ayda ve yılda kaça mal oluyor? Bu yolculuk kaç para tutar?',
   seoTitle: 'Araç Km Maliyeti ve Yakıt Masrafı Hesaplama',
   description:
-    'Yakıt, sigorta, kasko, MTV, bakım ve değer kaybıyla aracınızın km başına ve aylık maliyetini, yolculuk masrafını ve LPG ya da elektrikli geçişin kendini kaç km’de çıkardığını hesaplayın.',
+    'Yakıt, sigorta, kasko, MTV, bakım ve değer kaybıyla aracınızın km başına ve aylık maliyetini, yolculuk masrafını ve LPG dönüşümünün kaç km’de amorti olacağını hesaplayın.',
   cardText: 'Km başına, aylık maliyet ve yolculuk yakıt masrafı.',
   category: 'arac-ulasim',
   icon: '🚗',
