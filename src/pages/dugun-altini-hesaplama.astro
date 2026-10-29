@@ -1,0 +1,204 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/dugun-altini-hesaplama/Calculator';
+import { meta } from '../tools/dugun-altini-hesaplama/meta';
+import { adetHasGram, butceyeGore, hesaplaDugunAltini } from '../tools/dugun-altini-hesaplama/calc';
+import { altinAyarlari, darphaneAltinlari } from '../data/params/altin';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const turler = darphaneAltinlari.values.turler;
+const ziynet = turler.filter((t) => t.grup === 'ziynet');
+const sikke = turler.filter((t) => t.grup === 'sikke');
+const g3 = (n: number) => formatNumber(n, 3);
+
+// Örneklerdeki fiyatlar yalnızca anlatım içindir; güncel piyasa fiyatı değildir.
+const ORNEK_ALIS = 4000;
+const ORNEK_SATIS = 4100;
+
+const ornek1 = hesaplaDugunAltini({
+  ziynet: [
+    { id: 'ceyrek', adet: 6 },
+    { id: 'tam', adet: 2 },
+  ],
+  takilar: [{ gram: 20, milyem: 916, ayar: 22 }],
+  has: { alis: ORNEK_ALIS, satis: ORNEK_SATIS },
+});
+const ornek2 = hesaplaDugunAltini({
+  ziynet: [{ id: 'ceyrek', adet: 4 }],
+  takilar: [],
+  has: { alis: ORNEK_ALIS, satis: ORNEK_SATIS },
+  urunFiyatlari: { ceyrek: { alis: 6500, satis: 6800 } },
+});
+const ornek3 = hesaplaDugunAltini({
+  ziynet: [
+    { id: 'tam', adet: 1 },
+    { id: 'ata', adet: 1 },
+  ],
+  takilar: [],
+  has: { alis: ORNEK_ALIS, satis: ORNEK_SATIS },
+});
+const butce = butceyeGore(100000, { has: { alis: ORNEK_ALIS, satis: ORNEK_SATIS } }, ['ceyrek', 'tam']);
+const bilezik10 = (10 * 916) / 1000;
+
+const faq: FaqItem[] = [
+  {
+    q: 'Çeyrek altın kaç gram, kaç ayardır?',
+    a: `Darphane ve Damga Matbaası Genel Müdürlüğü’ne göre ziynet çeyrek altın <strong>${g3(1.754)} gram</strong>, sikke (Ata) çeyrek <strong>${g3(1.804)} gram</strong> ağırlığındadır. Her ikisi de <strong>22 ayardır</strong>; Darphane’nin raporunda ayar 916,6 milyem olarak gösterilir. Bir çeyrek ziynet altının içindeki saf altın yaklaşık ${g3(adetHasGram('ceyrek'))} gramdır.`,
+  },
+  {
+    q: 'Tam altın ile Ata (Cumhuriyet) altını arasındaki fark nedir?',
+    a: `Tam ziynet altın ${g3(7.016)} gram, Ata lirası (Cumhuriyet sikke altını) ${g3(7.216)} gramdır. Darphane’ye göre Ata lira, sikke altınların “birlik” boyudur ve halk arasında bu adla anılır. Sikke altınlar ziynetlere göre daha küçük çaplı, daha kalın ve daha ağırdır; bu yüzden aynı “tam” adetinde Ata lira biraz daha fazla has altın içerir (${g3(adetHasGram('ata'))} g ve ${g3(adetHasGram('tam'))} g).`,
+  },
+  {
+    q: 'Gremse altın nedir, kaç gramdır?',
+    a: `Gremse, halk arasında 2,5 liralık (ikibuçukluk) altına verilen addır; Darphane’nin kendi sınıflamasında “ikibuçukluk” geçer. Ziynet gremse ${g3(17.54)} gram, sikke (Ata) 2,5’luk ${g3(18.04)} gramdır. Hesaplayıcıda gremse ana listede, Ata 2,5’luk “daha fazla Ata türü” bölümünde yer alır.`,
+  },
+  {
+    q: 'Düğün altınlarını bozdururken hangi fiyat geçerli olur?',
+    a: 'Kuyumcunun <strong>alış fiyatı</strong> geçerlidir. Kuyumcular altını satarken “satış”, sizden alırken “alış” fiyatı uygular ve alış fiyatı satış fiyatının altındadır. Bu yüzden altınları aldığınız gün ile bozdurduğunuz gün fiyat aynı kalsa bile elinize geçen tutar ödediğiniz tutardan az olur. Hesaplayıcı iki fiyatı ayrı ayrı girmenize izin verir ve aradaki farkı gösterir.',
+  },
+  {
+    q: 'Has altın ne demektir, takının has değeri nasıl bulunur?',
+    a: `Has altın, 24 ayar saf altındır. Bir takının has altın miktarı, ağırlığının milyem oranıyla çarpılmasıyla bulunur. Örneğin 22 ayar (916 milyem) 10 gramlık bir bilezikte 10 × 916 ÷ 1000 = ${formatNumber(bilezik10, 2)} gram saf altın vardır. Aynı hesap 18 ayar için 0,750, 14 ayar için 0,583 çarpanıyla yapılır.`,
+  },
+  {
+    q: 'Bu sayfa neden güncel altın fiyatını kendisi getirmiyor?',
+    a: 'Hesap Robotu’nda tüm hesaplar tarayıcınızda yapılır; site dış bir sunucudan fiyat çekmez ve girdiğiniz bilgiler cihazınızdan çıkmaz. Üstelik kuyumcular alış ve satışta kendi fiyatlarını uygular. Bu yüzden bozdurmayı ya da alımı planladığınız kuyumcunun o günkü gram (has) fiyatını kutulara yazmanız en doğru sonucu verir.',
+  },
+  {
+    q: 'Kuyumcunun çeyrek fiyatı neden has altından hesaplanandan farklı çıkıyor?',
+    a: 'Kuyumcu, ziynet altınlarında ve bileziklerde kendi prim ve işçilik payını fiyata ekleyebilir; piyasada o günkü arz-talep de fiyatı etkiler. Hesaplayıcının “Ürün fiyatlarını kendim girmek istiyorum” bölümüne kuyumcunuzun çeyrek, tam ya da 22 ayar bilezik fiyatını yazarsanız, o ürün için has fiyatından türetilen değer yerine sizin fiyatınız kullanılır.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Düğün altını nasıl hesaplanır?</h2>
+  <p>
+    Düğünde takılan altınlar farklı ağırlık ve ayarlardadır; hepsini aynı ölçüye, yani <strong>has (saf, 24 ayar) altın
+    gramına</strong> çevirince toplam değer kolayca bulunur. Hesap üç adımdır: her türün adedini ağırlığıyla çarpın, ayarın
+    milyem oranını uygulayıp has gramı bulun, has gramı güncel fiyatla çarpın.
+  </p>
+  <div class="formula">Has altın (g) = ağırlık (g) × milyem ÷ 1000
+Değer (TL)   = has altın (g) × has gram fiyatı
+Ziynet/sikke altınlar: milyem 916,6 (22 ayar) · Bilezik/takı: kendi ayarının milyemi</div>
+
+  <h2>Çeyrek, yarım, tam, Ata ve gremse kaç gram?</h2>
+  <p>
+    Cumhuriyet altınlarını yalnızca Darphane basar. Ziynet altınlar ile sikke (halk arasında “Ata”) altınların ağırlıkları
+    farklıdır; ikisi de 22 ayardır. Aşağıdaki değerler Darphane ve Damga Matbaası Genel Müdürlüğü’nün yayımladığı
+    ağırlıklardır, has altın sütunu 916,6 milyemle hesaplanmıştır.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Tür</th><th>Grup</th><th>Ağırlık</th><th>Has altın</th></tr>
+    </thead>
+    <tbody>
+      {[...ziynet, ...sikke].map((t) => (
+        <tr>
+          <td>{t.ad}</td>
+          <td>{t.grup === 'ziynet' ? 'Ziynet' : 'Sikke (Ata)'}</td>
+          <td>{g3(t.agirlik)} g</td>
+          <td>{g3(adetHasGram(t.id))} g</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <p>
+    Gremse, halk arasındaki adıyla 2,5 liralık altındır; Darphane bu boyu “ikibuçukluk” diye adlandırır. Tam ziynet altın
+    dört çeyreğin ağırlığına eşittir (4 × {g3(1.754)} = {g3(7.016)} g).
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <p>
+    Aşağıdaki örneklerde has gram fiyatı olarak alış {formatTL(ORNEK_ALIS, 0)}, satış {formatTL(ORNEK_SATIS, 0)} alınmıştır.
+    Bunlar anlatım için seçilmiş örnek rakamlardır, güncel piyasa fiyatı değildir.
+  </p>
+  <div class="example">
+    <p>
+      <strong>6 çeyrek, 2 tam ve 20 gram 22 ayar bilezik:</strong> Toplam brüt ağırlık {g3(ornek1.brutGram)} g, içindeki
+      saf altın {g3(ornek1.hasGram)} g’dır. Kuyumcu alış fiyatıyla {formatTL(ornek1.alisToplam ?? 0)}, satış fiyatıyla
+      {formatTL(ornek1.satisToplam ?? 0)} eder. Aradaki {formatTL(ornek1.makas ?? 0)} fark, hepsini aynı gün
+      bozdurmanız halinde alış–satış farkından doğan kaybı gösterir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Kuyumcunun kendi fiyatı:</strong> Kuyumcunuz çeyreği 6.500 TL alış / 6.800 TL satış diye söylüyorsa 4 çeyrek
+      için {formatTL(ornek2.alisToplam ?? 0)} (alış) ve {formatTL(ornek2.satisToplam ?? 0)} (satış) bulursunuz. Aynı 4
+      çeyreğin has fiyatından hesaplanan alış değeri ise yalnızca
+      {formatTL(hesaplaDugunAltini({ ziynet: [{ id: 'ceyrek', adet: 4 }], takilar: [], has: { alis: ORNEK_ALIS, satis: ORNEK_SATIS } }).alisToplam ?? 0)}
+      olurdu; yani ürün fiyatı ile saf altın değeri arasındaki fark ayrıca görünür.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>1 tam ve 1 Ata lira:</strong> Tam ziynet {g3(ornek3.kalemler[0].hasGram)} g, Ata lira
+      {g3(ornek3.kalemler[1].hasGram)} g saf altın içerir. Ağırlık farkı {g3(7.216 - 7.016)} gramdır; has gram
+      fiyatıyla alış değerleri {formatTL(ornek3.kalemler[0].alis ?? 0)} ve {formatTL(ornek3.kalemler[1].alis ?? 0)} olur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>100.000 TL bütçeyle kaç adet?</strong> Satış fiyatıyla bir çeyrek {formatTL(butce[0].birimSatis)}, bir tam
+      {formatTL(butce[1].birimSatis)} eder. Bütçe {butce[0].adet} çeyreğe ({formatTL(butce[0].kalan)} artar) ya da
+      {butce[1].adet} tama ({formatTL(butce[1].kalan)} artar) yeter.
+    </p>
+  </div>
+
+  <h2>Alış–satış farkı ve bozdurma</h2>
+  <p>
+    Kuyumcu iki fiyat uygular: sattığı altın için <strong>satış</strong>, sizden aldığı altın için <strong>alış</strong>
+    fiyatı. Alış fiyatı daha düşüktür. Düğün altınlarını bozdururken geçerli olan alış fiyatıdır; bu nedenle “takılan altın
+    şu kadar eder” derken satış fiyatı değil alış fiyatı üzerinden bakmak, elinize geçecek tutarı daha doğru yansıtır.
+    Hesaplayıcı, iki fiyatı girdiğinizde bozdurma değerini ve aradaki farkı ayrı ayrı gösterir.
+  </p>
+  <p>
+    Bilezik, kolye gibi işlenmiş takılarda satın alırken ödenen <strong>işçilik</strong> de bozdurmada çoğunlukla
+    karşılığını bulmaz: kuyumcu altını gram (has) değeri üzerinden alır. İşçilik payını ayrıca görmek için
+    <a href="/altin-ayar-iscilik-hesaplama/">Altın Ayar ve İşçilik Hesaplama</a> aracını kullanabilirsiniz.
+  </p>
+
+  <h2>Bilezik ve takıların ayarı</h2>
+  <p>
+    Takının ayarı, 1000 birimin kaçının saf altın olduğunu (milyem) belirler. Hesaplayıcı, Hazine Müsteşarlığı’nın ayar
+    tebliğindeki milyem değerlerini kullanır; farklı bir değer biliyorsanız “Özel milyem” seçeneğiyle girebilirsiniz.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Ayar</th><th>Milyem</th><th>10 gramda has altın</th></tr>
+    </thead>
+    <tbody>
+      {altinAyarlari.values.ayarlar.map((a) => (
+        <tr>
+          <td>{a.ayar} ayar{a.kod === '24-995' ? ' (külçe)' : a.kod === '14-585' ? ' (585 damgalı)' : ''}</td>
+          <td>{a.milyem}</td>
+          <td>{formatNumber((10 * a.milyem) / 1000, 3)} g</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Fiyatı siz yazarsınız.</strong> Hesaplayıcı fiyat getirmez; kuyumcunun o günkü has gram alış ve satış fiyatını
+      girin. İsterseniz çeyrek, tam, Ata ve 22 ayar bilezik için kuyumcunun kendi fiyatını da ayrı girebilirsiniz.
+    </li>
+    <li>
+      <strong>Ziynet milyemi 916,6, bilezik 916.</strong> Darphane ziynet ve Ata altınlarının ayarını 916,6 milyem olarak
+      yazar; tebliğdeki 22 ayar değeri 916’dır. Aradaki fark binde birin çok altındadır ve ±0,002 toleransın içindedir.
+    </li>
+    <li>
+      <strong>24 ayar gram altın saf kabul edilir.</strong> Külçe altınlar 995/1000 standardında üretilir. 995 milyemli bir
+      külçenin has değerini bulmak için “24 ayar (995 milyem)” seçeneğini kullanın.
+    </li>
+    <li>
+      <strong>Eski, hasarlı ya da lehimli takılar.</strong> Bu tür takılarda gerçek ayar damgadan düşük çıkabilir. Kesin
+      sonuç için ayar evinde ya da kuyumcuda test ettirin.
+    </li>
+  </ul>
+</ToolLayout>

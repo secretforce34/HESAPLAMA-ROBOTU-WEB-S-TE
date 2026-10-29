@@ -1,0 +1,188 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/zekat-hesaplama/Calculator';
+import { meta } from '../tools/zekat-hesaplama/meta';
+import { fidyeTutari, fitreDonemiOn, fitreTutari, hesaplaZekat, kameriYilDurumu } from '../tools/zekat-hesaplama/calc';
+import { fitreFidye, zekatNisap } from '../data/params/diyanet';
+import { formatDateTR, formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const nisap = zekatNisap.values;
+const donem = fitreDonemiOn('2026-10-29');
+const fitre = donem.tutar;
+
+// Örneklerdeki gram altın fiyatı yalnızca anlatım içindir; güncel piyasa fiyatı değildir.
+const ALTIN = 4000;
+const temel = { varliklar: [], borclar: 0, temelIhtiyac: 0, altinFiyati: ALTIN, gumusFiyati: null, takiDahil: true };
+
+const o1 = hesaplaZekat({
+  ...temel,
+  varliklar: [
+    { tur: 'nakit', tutar: 150000 },
+    { tur: 'altin', gram: 60, milyem: 916, taki: true },
+  ],
+});
+const o2 = hesaplaZekat({ ...temel, borclar: 250000, varliklar: [{ tur: 'nakit', tutar: 500000 }] });
+const o3 = hesaplaZekat({ ...temel, varliklar: [{ tur: 'altin', gram: 100, milyem: 583 }] });
+const o4 = hesaplaZekat({
+  ...temel,
+  varliklar: [
+    { tur: 'ticari-mal', tutar: 400000 },
+    { tur: 'doviz', miktar: 1000, kur: 40 },
+    { tur: 'alacak', tutar: 60000 },
+  ],
+});
+const yil = kameriYilDurumu('2026-01-01', '2026-10-29');
+
+const faq: FaqItem[] = [
+  {
+    q: 'Zekâtın nisap miktarı kaç gram altındır?',
+    a: `Diyanet İşleri Başkanlığı’nın yayınlarına göre altının nisabı 20 miskal, yani <strong>${formatNumber(nisap.altinNisabiGram, 2)} gramdır</strong>. Para ve ticaret mallarının nisabı da bu miktar altının (24 ayar) değeridir. Hesaplayıcı, girdiğiniz gram altın fiyatıyla bu değeri bulur ve net varlığınızı onunla karşılaştırır.`,
+  },
+  {
+    q: 'Zekât oranı nedir, nasıl hesaplanır?',
+    a: 'Oran kırkta birdir (%2,5). Nisap miktarına ulaşan zekâta tabi varlıkların toplamından borçlar ve temel ihtiyaçlar düşülür, kalanın %2,5’i zekât olarak verilir. Örneğin net 400.000 TL için zekât 10.000 TL’dir.',
+  },
+  {
+    q: 'Zekât için bir yıl geçmesi şart mı? Kamerî yıl nedir?',
+    a: `Evet. Nisap miktarına sahip olduktan sonra üzerinden bir kamerî (hicrî) yıl geçmesi, yıl sonunda da nisabın korunması gerekir; yıl içindeki artış ve azalışlara bakılmaz. Kamerî yıl 354 ya da 355 gündür. Örneğin ${formatDateTR('2026-01-01')} tarihinde nisaba ulaşan biri için yıl dönümü yaklaşık ${formatDateTR(yil.bitisIso)}’dir. Zekât, farz olduğu andan itibaren Ramazan’ı beklemeden verilebilir.`,
+  },
+  {
+    q: 'Takı olarak kullandığım altından zekât gerekir mi?',
+    a: 'Diyanet, Hanefî mezhebine göre altın ve gümüşten yapılmış ziynet eşyasının, diğer şartlar da varsa zekâta tabi olduğunu belirtir; 80,18 gram veya üzerindeyse ve bir yıl geçmişse kırkta biri verilir. Şâfiî, Mâlikî ve Hanbelî bilginlerine göre kadının olağan kullandığı takı asli ihtiyaç sayıldığından zekât gerekmez. Hesaplayıcıda bu görüşlerden birini seçebilirsiniz.',
+  },
+  {
+    q: 'Borçlar zekât hesabından düşer mi?',
+    a: 'Evet, ancak Diyanet’in açıklamasına göre uzun vadeli kredi, konut ve kooperatif borçlarının tamamı düşülmez. Yalnızca o zekât yılına ait birikmiş borçlar ile vadesi o yıl içinde dolmuş ya da dolacak olan, yani yıl içinde ödenmesi gereken kısım düşülür. Hesaplayıcıdaki borç kutusuna bu tutarı yazın.',
+  },
+  {
+    q: 'Hisse senedi, döviz ve alacaklar için zekât nasıl hesaplanır?',
+    a: 'Döviz ve nakit para olarak birlikte değerlendirilir. Alıp satmak amacıyla tutulan hisse senetleri ticaret malı gibi piyasa değeri üzerinden hesaplanır; kâr payı için tutulan hissede ise hissenin kendisi değil, elde edilen kâr payı zekâta tabidir. Alacaklar üçe ayrılır: borç verilen para ve mal bedeli alacakları (kuvvetli) her yıl hesaba girer; tahsili beklenmeyen alacaklar tahsil edilince değerlendirilir. Fon, BES gibi kalemler için doğrulanabilir bir Diyanet açıklaması bulunamadığından “Diğer” satırında kendi değerlendirmenizle yer alabilir.',
+  },
+  {
+    q: '2026 fitre ve fidye ne kadar?',
+    a: `Din İşleri Yüksek Kurulu, 2026 Ramazanı’nın başlangıcından 2027 Ramazanı’nın başlangıcına kadar fitre miktarını <strong>${formatTL(fitre, 0)}</strong> olarak belirlemiştir. Belirlenen tutar aynı zamanda günlük oruç fidyesinin bedelidir. Fitre nakit olarak da gıda olarak da verilebilir. Örneğin 4 kişi için ${formatTL(fitreTutari(4, fitre), 0)}, 30 günlük fidye için ${formatTL(fidyeTutari(30, fitre), 0)} eder.`,
+  },
+  {
+    q: 'Zekât kimlere verilir, kimlere verilemez?',
+    a: 'Zekâtın verileceği yerler Tevbe suresinin 60. ayetinde sayılmıştır: fakirler, miskinler, zekât toplamakla görevlilerle diğer belirtilen gruplar. Diyanet’e göre Hanefîlerde anne, baba, dede, nine, çocuk ve torunlara, eşe, gayrimüslimlere ve zengine zekât ve fitre verilmez. Devlete ödenen vergi zekât yerine geçmez; zekâtın ayrıca verilmesi gerekir.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Zekât kimlere farzdır?</h2>
+  <p>
+    Diyanet İşleri Başkanlığı’nın açıklamalarına göre zekâtın farz olması için kişinin Müslüman, akıl sağlığı yerinde,
+    ergenlik çağına gelmiş ve hür olması; borcundan ve asli ihtiyaçlarından fazla, <strong>nisap miktarı</strong> mala sahip
+    olması ve bu malın üzerinden <strong>bir kamerî yıl</strong> geçmesi gerekir. Asli ihtiyaçlar; barınma, geçim, ulaşım,
+    eğitim, ev eşyası, mesleğin aletleri gibi temel ihtiyaçlardır.
+  </p>
+
+  <h2>Nisap ve oran nasıl hesaplanır?</h2>
+  <div class="formula">Nisap (TL) = 80,18 g × gram altın fiyatı (24 ayar)
+Net varlık = zekâta tabi varlıklar − bu yıl ödenecek borçlar − temel ihtiyaç için ayrılan para
+Zekât = net varlık × %2,5   (net varlık ≥ nisap ise)</div>
+  <p>
+    Altın, gümüş, para (döviz dahil) ve ticaret malları birleştirilir; her biri tek başına nisaba ulaşmasa da toplamı
+    ulaşıyorsa zekât gerekir. Gümüşün nisabı 561 gramdır. Diyanet, gümüşün altına göre çok değer kaybettiğini belirterek
+    para ve ticaret mallarında altın nisabının esas alınmasını uygun görür; elinde 561 gram veya fazla gümüş bulunan kişi ise
+    zekâtını bu nisap üzerinden verir. Hesaplayıcı bu kuralları birlikte uygular.
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Varlık</th><th>Zekât hesabında nasıl sayılır?</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Altın</td><td>Ayarı fark etmez; farklı ayarlardaki altınların toplam ağırlığı 80,18 grama ulaşırsa nisap oluşur. Zekât her ayarın kendi değeri üzerinden hesaplanır.</td></tr>
+      <tr><td>Gümüş</td><td>Nisap 561 gramdır; değer gümüşün gram fiyatıyla bulunur.</td></tr>
+      <tr><td>Nakit, döviz, mevduat</td><td>Değeri altın nisabına ulaşırsa zekâta tabidir; tek başına nisabı bulmazsa altın ve ticaret malıyla birleştirilir.</td></tr>
+      <tr><td>Ticaret malı</td><td>Alınıp satılan malın zekât günündeki güncel değeri esas alınır; satışta elde edilecek kâr hesaba katılmaz.</td></tr>
+      <tr><td>Hisse senedi</td><td>Alım-satım amaçlıysa piyasa değeriyle ticaret malı gibi; kâr payı amaçlıysa yalnızca elde edilen kâr payı.</td></tr>
+      <tr><td>Alacaklar</td><td>Borç verilen para ve mal bedeli alacakları (kuvvetli alacak) her yıl hesaba girer.</td></tr>
+      <tr><td>Ev, araç, mesleki araç-gereç</td><td>Kullanım amaçlı olanlar asli ihtiyaçtır, zekâta tabi değildir. Ticari amaçla tutulan taşınmaz zekâta tabidir.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Örnek hesaplamalar</h2>
+  <p>
+    Örneklerde gram altın fiyatı {formatTL(ALTIN, 0)} alınmıştır; nisap değeri {formatNumber(nisap.altinNisabiGram, 2)} ×
+    {formatTL(ALTIN, 0)} = {formatTL(o1.altinNisabiDegeri ?? 0)} olur. Bu bir anlatım rakamıdır, güncel piyasa fiyatı değildir.
+  </p>
+  <div class="example">
+    <p>
+      <strong>150.000 TL nakit ve 60 gram 22 ayar takı altın:</strong> Altının değeri {formatTL(o1.kalemler[1].deger)}, toplam
+      varlık {formatTL(o1.toplamVarlik)}. Nisabı aştığı için zekât {formatTL(o1.zekat)} (%2,5), altın cinsinden
+      {formatNumber(o1.zekatAltinGram ?? 0, 3)} gramdır.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>500.000 TL nakit, bu yıl ödenecek 250.000 TL borç:</strong> Net varlık {formatTL(o2.netVarlik)}; nisap
+      değerinin ({formatTL(o2.altinNisabiDegeri ?? 0)}) altında kaldığı için nisaba ulaşılmaz.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>100 gram 14 ayar altın:</strong> Değeri yalnızca {formatTL(o3.toplamVarlik)} olsa da ağırlığı 80,18 grama
+      ulaştığı için Diyanet’in ayar farkını dikkate almayan ölçüsüne göre nisap oluşur. Zekât, altının kendi değeri
+      üzerinden {formatTL(o3.zekat)} olur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>400.000 TL ticari mal, 1.000 birim döviz (kur 40 TL) ve 60.000 TL alacak:</strong> Toplam varlık
+      {formatTL(o4.toplamVarlik)}, zekât {formatTL(o4.zekat)}.
+    </p>
+  </div>
+
+  <h2>Fitre ve oruç fidyesi ({donem.etiket})</h2>
+  <p>
+    Din İşleri Yüksek Kurulu fitre miktarını her yıl Ramazan öncesinde açıklar. {donem.etiket} dönemi için tutar
+    <strong>{formatTL(fitre, 0)}</strong>’dir; bu tutar günlük oruç fidyesinin de bedelidir. Kurul, her mükellefin günlük gıda
+    harcamasını dikkate alarak belirlediği tutarı fitre olarak verebileceğini, fitrenin nakit ya da gıda olarak verilebileceğini
+    belirtir. Kurulun 2026 kararında gram cinsinden bir ölçü verilmemiştir.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Dönem</th><th>Fitre ve günlük fidye</th></tr>
+    </thead>
+    <tbody>
+      {fitreFidye.values.donemler.map((d) => (
+        <tr><td>{d.etiket}</td><td>{formatTL(d.tutar, 0)}</td></tr>
+      ))}
+    </tbody>
+  </table>
+  <p>
+    Sadaka-i fıtır, borç ve asli ihtiyaçlardan fazla nisap miktarı mala sahip olanlara vaciptir; zekâttaki gibi bir yıl geçmesi
+    aranmaz. Ramazan Bayramı’nın birinci günü tan yerinin ağarmasıyla vacip olur, Ramazan içinde de verilebilir.
+  </p>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Bu araç fetva vermez.</strong> Diyanet İşleri Başkanlığı’nın yayımladığı ölçüleri uygular. Mezhepler arasında ve
+      bireysel durumlarda farklı değerlendirmeler olabilir (örneğin takı altın, alacakların türü, borcun düşülmesi).
+    </li>
+    <li>
+      <strong>Ayrıntılı sorular için</strong> Din İşleri Yüksek Kurulu’nun fetvalarına (kurul.diyanet.gov.tr), <strong>190 Diyanet
+      Fetva Hattı’na (Alo 190)</strong> ya da Dini Bilgilendirme Platformu’na (diyk.diyanet.gov.tr) başvurabilirsiniz.
+    </li>
+    <li>
+      <strong>Fiyatı siz yazarsınız.</strong> Site altın ve gümüş fiyatı çekmez; zekât günündeki güncel fiyatı girin. Ticaret
+      malının değeri de zekât gününün güncel değeridir.
+    </li>
+    <li>
+      <strong>Tahmin ya da öneri içermez.</strong> Araç, yalnızca girdiğiniz bilgilere ve Diyanet’in açıkladığı ölçülere göre
+      hesap yapar.
+    </li>
+    <li>
+      <strong>Takı altının gramı için</strong> <a href="/altin-ayar-iscilik-hesaplama/">Altın Ayar ve İşçilik Hesaplama</a>
+      aracıyla ayarlar arasında dönüşüm yapabilir, <a href="/dugun-altini-hesaplama/">Düğün Altını Hesaplama</a> ile ziynet
+      altınlarınızın has gramını görebilirsiniz.
+    </li>
+  </ul>
+</ToolLayout>

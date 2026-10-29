@@ -1,0 +1,183 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/altin-gunu-hesaplama/Calculator';
+import { meta } from '../tools/altin-gunu-hesaplama/meta';
+import { hesaplaAltinGunu, siraAraligi, yillikKarsilik } from '../tools/altin-gunu-hesaplama/calc';
+import { monthlyFromAnnual } from '../lib/finance';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const isaretli = (n: number) => `${n > 0 ? '+' : ''}${formatTL(n)}`;
+
+// Aşağıdaki oranlar ve fiyatlar yalnızca anlatım içindir; tahmin ya da güncel veri değildir.
+const tl = hesaplaAltinGunu({
+  katilimci: 12,
+  birim: 'tl',
+  katki: 5000,
+  altinFiyati: null,
+  aylikOran: 3,
+  altinArtisi: 0,
+  alanOder: true,
+});
+const altinDusuk = hesaplaAltinGunu({
+  katilimci: 12,
+  birim: 'gram',
+  katki: 1.25,
+  altinFiyati: 4000,
+  aylikOran: 3,
+  altinArtisi: 2,
+  alanOder: true,
+});
+const altinYuksek = hesaplaAltinGunu({
+  katilimci: 12,
+  birim: 'gram',
+  katki: 1.25,
+  altinFiyati: 4000,
+  aylikOran: 3,
+  altinArtisi: 4,
+  alanOder: true,
+});
+const esit = hesaplaAltinGunu({
+  katilimci: 12,
+  birim: 'gram',
+  katki: 1.25,
+  altinFiyati: 4000,
+  aylikOran: 3,
+  altinArtisi: 3,
+  alanOder: true,
+});
+const ceyrek = hesaplaAltinGunu({
+  katilimci: 10,
+  birim: 'ceyrek',
+  katki: 2,
+  altinFiyati: 6500,
+  aylikOran: 3,
+  altinArtisi: 3,
+  alanOder: false,
+});
+const aylik40 = monthlyFromAnnual(0.4) * 100;
+
+const faq: FaqItem[] = [
+  {
+    q: 'Altın gününde kaçıncı sıra kârlıdır?',
+    a: 'Bu, enflasyon ve altın fiyatı için yapacağınız varsayıma bağlıdır; her koşulda geçerli tek bir cevap yoktur. TL gününde enflasyon pozitifse kasayı erken alanlar kazançlı, geç alanlar kayıplıdır, çünkü ödedikleri TL’nin değeri zamanla düşer. Altın gününde ise altının TL fiyatı enflasyondan hızlı artıyorsa durum tersine döner ve geç alanlar lehine olur. Hesaplayıcı, girdiğiniz oranlarla her sıranın net farkını gösterir.',
+  },
+  {
+    q: 'TL günü mü, altın günü mü enflasyona karşı daha az kaybettirir?',
+    a: 'Altının TL fiyatı artışı, enflasyon ya da alternatif getiri varsayımınızla aynı hızdaysa altın gününde sıranın önemi kalmaz. Altın enflasyondan daha yavaş artarsa (ama artıyorsa) erken sıralar yine avantajlıdır, yalnızca fark TL gününe göre daha küçük kalır; daha hızlı artarsa geç sıralar kazanır. Hangisinin “daha iyi” olduğu geleceğe dair bir tahmindir ve bu araç tahmin yapmaz; geçmiş ve gelecek fiyatlar kendi varsayımlarınıza bağlı olarak denenir.',
+  },
+  {
+    q: 'Altın günü nasıl hesaplanır?',
+    a: 'Her ay herkes aynı miktarı (TL, gram ya da çeyrek) öder ve sırası gelen kişi kasayı alır. Herkesin ödemesi aynı olduğu için fark, kasayı hangi ay aldığından doğar. Hesap, ödenen ve alınan her tutarı aylık orana göre bugüne çevirir ve ikisini kıyaslar. Altın katkıda her katkının TL değeri, altın fiyatı varsayımınızla büyür.',
+  },
+  {
+    q: 'Bugünkü değer ne demek, neden kullanılıyor?',
+    a: 'Farklı aylarda ödenen ve alınan paralar aynı değerde değildir; enflasyonda bir yıl sonraki 1.000 TL bugünkü 1.000 TL’den daha az mal alır. Bugünkü değer, her tutarı aylık oranla bugüne indirerek karşılaştırılabilir hâle getirir. Aylık oran olarak enflasyonu ya da paranızı başka yerde değerlendirseydiniz elde edeceğiniz getiriyi yazabilirsiniz.',
+  },
+  {
+    q: 'Yıllık enflasyonu aylığa nasıl çeviririm?',
+    a: `Yıllık oranı bileşik olarak aylığa çevirmek gerekir: (1 + yıllık)^(1/12) − 1. Örneğin yıllık %40 için aylık oran yaklaşık %${formatNumber(aylik40, 2)}’dir. Hesaplayıcı, girdiğiniz aylık oranın yıllık karşılığını kutunun altında gösterir; örneğin aylık %3, yıllık yaklaşık %${formatNumber(yillikKarsilik(3), 2)}’dir.`,
+  },
+  {
+    q: 'Sırası gelen kişi o ay da katkı öder mi? Sonuç değişir mi?',
+    a: 'Gruptan gruba değişir. Sırası gelen kişi kendi ayında da katkı ödüyorsa kasa N katkıdan, ödemiyorsa N−1 katkıdan oluşur. Kişinin kendi ayında ödediği ile aldığı aynı anda olduğu için bunlar birbirini götürür ve net fark iki durumda da aynı çıkar; yalnızca ödenen ve alınan toplam tutarlar farklılaşır. Hesaplayıcıda her iki seçenek de vardır.',
+  },
+  {
+    q: 'Çeyrek altınla yapılan gün nasıl hesaplanır?',
+    a: `Her ay belirlenen adet çeyrek altın ödenir; katkının TL değeri çeyrek fiyatı ve fiyat artışı varsayımınızla hesaplanır. Örneğin 10 kişilik bir günde aylık 2 çeyrek ödeniyor ve sırası gelen ayrıca ödeme yapmıyorsa, kasadan ${formatNumber(ceyrek.alinacakAltin ?? 0, 0)} çeyrek alınır ve toplam ${ceyrek.odemeSayisi} ay ödeme yapılır. Gram altın günü de aynı mantıkla çalışır.`,
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Altın günü nasıl işler?</h2>
+  <p>
+    Altın günü ya da kura günü, bir grup kişinin her ay aynı miktarı bir araya getirip kasayı sırayla birbirine verdiği
+    geleneksel bir birikim yöntemidir. Katkı TL ile yapılabilir ya da gram veya çeyrek altın ile. N kişilik bir gün N ay
+    sürer; her katılımcı kasayı bir kez alır. Herkes baştan sona aynı miktarı ödediği için nominal olarak kimse kazanmaz ya
+    da kaybetmez. Fark, paranın (ya da altının TL fiyatının) zaman içinde değişmesinden doğar.
+  </p>
+
+  <h2>Kaçıncı sıra kazançlı? Hesap nasıl yapılır?</h2>
+  <p>
+    Hesap her sıra için ödenenleri ve alınanı ayrı ayrı bugüne çevirir. 1. ay bugündür; m. ayın nakit akışı (m − 1) ay
+    sonradır. Aylık oran, sizin girdiğiniz enflasyon ya da alternatif getiri varsayımıdır.
+  </p>
+  <div class="formula">Katkının TL değeri (m. ay) = miktar × bugünkü fiyat × (1 + altın artışı)^(m − 1)    (TL günü: sabit tutar)
+Bugünkü değer = nakit akışı ÷ (1 + aylık oran)^(m − 1)
+Net fark (k. sıra) = kasanın bugünkü değeri − ödenenlerin bugünkü değeri</div>
+  <p>
+    Bu hesapta tüm katılımcıların net farklarının toplamı sıfırdır: biri kazanıyorsa diğer biri aynı tutarda kaybeder.
+    Kasayı bir kurayla belirliyorsanız her sıranın çekilme olasılığı eşit olduğundan ortalama net fark da sıfırdır.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <p>
+    Aşağıdaki oranlar ve fiyatlar anlatım için seçilmiş örnek varsayımlardır; tahmin ya da güncel veri değildir.
+  </p>
+  <div class="example">
+    <p>
+      <strong>12 kişilik TL günü, aylık 5.000 TL, aylık oran %3:</strong> 1. sıra bugünkü değerle {isaretli(tl.siralar[0].net)},
+      6. sıra {isaretli(tl.siralar[5].net)}, 12. sıra {isaretli(tl.siralar[11].net)} fark yaşar. Kazançlı sıralar:
+      {siraAraligi(tl.kazancliSiralar)}. Herkes nominal olarak {formatTL(tl.siralar[0].odenenNominal)} öder ve
+      {formatTL(tl.siralar[0].alinanNominal)} alır; fark yalnızca paranın değer kaybından gelir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>12 kişilik altın günü (aylık 1,25 gram, bugün gram 4.000 TL), altın aylık %2, oran %3:</strong> Altın
+      enflasyonun altında kaldığı için erken sıralar yine kazançlıdır ancak fark daha küçüktür: 1. sıra
+      {isaretli(altinDusuk.siralar[0].net)}, 12. sıra {isaretli(altinDusuk.siralar[11].net)}. Kazançlı sıralar:
+      {siraAraligi(altinDusuk.kazancliSiralar)}.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Aynı gün, altın aylık %4 artarsa:</strong> Altın aylık %3 olan orandan hızlı yükseldiği için tablo tersine
+      döner: 1. sıra {isaretli(altinYuksek.siralar[0].net)}, 12. sıra {isaretli(altinYuksek.siralar[11].net)}. Kazançlı
+      sıralar: {siraAraligi(altinYuksek.kazancliSiralar)}.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Altın artışı oranla aynıysa (ikisi de %3):</strong> Altının TL değeri enflasyona göre sabit kalır;
+      12 sıranın tamamında net fark sıfıra yakındır ({isaretli(esit.siralar[0].net)} ile {isaretli(esit.siralar[11].net)}).
+    </p>
+  </div>
+
+  <h2>TL günü ile altın günü arasındaki fark</h2>
+  <p>
+    <strong>TL gününde</strong> katkı sabit TL tutarıdır. Enflasyon pozitif olduğu sürece her ay ödenen TL’nin satın alma
+    gücü azalır; kasayı erken alan kişi değeri yüksek parayı alıp değeri düşük paralarla ödemiş olur. Bu yüzden sıra
+    ilerledikçe net fark küçülür ve bir noktadan sonra negatife döner.
+  </p>
+  <p>
+    <strong>Altın gününde</strong> katkı gram veya çeyrek olduğu için ödenen ve alınan altın miktarı eşittir; TL değerleri
+    ise altının fiyatıyla birlikte değişir. Altının TL fiyatı enflasyon (aylık oran) kadar artarsa sıranın önemi kalmaz.
+    Altın daha hızlı artarsa geç alanlar, daha yavaş artarsa erken alanlar avantajlı olur. Bu araç gelecekteki fiyatları
+    tahmin etmez; hangi senaryoda ne olacağını gösterir.
+  </p>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Katılımcıların ödemelerini zamanında yaptığı varsayılır.</strong> Ödeme aksaması ve gruptan ayrılma riski bu
+      hesaba dahil değildir.
+    </li>
+    <li>
+      <strong>Altının alım–satım farkı ve işçilik hesaba katılmaz.</strong> Altın fiziksel olarak alınıp satılıyorsa
+      kuyumcunun alış–satış farkı sonucu değiştirir. Bu farkı görmek için
+      <a href="/dugun-altini-hesaplama/">Düğün Altını Hesaplama</a> aracına bakabilirsiniz.
+    </li>
+    <li>
+      <strong>Aylık oran tek bir sayıdır.</strong> Enflasyon ayı ayına değişir; ortalama bir değer girmek sonucu yaklaşık
+      kılar. Farklı değerleri deneyerek sonucun varsayıma ne kadar duyarlı olduğunu görebilirsiniz.
+    </li>
+    <li>
+      <strong>Bu hesap yatırım tavsiyesi değildir.</strong> Hangi sırada ya da hangi türde gün tutmanın uygun olduğu kişisel
+      koşullara bağlıdır.
+    </li>
+  </ul>
+</ToolLayout>

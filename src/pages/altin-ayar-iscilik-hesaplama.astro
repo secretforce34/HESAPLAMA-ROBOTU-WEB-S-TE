@@ -1,0 +1,183 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/altin-ayar-iscilik-hesaplama/Calculator';
+import { meta } from '../tools/altin-ayar-iscilik-hesaplama/meta';
+import { donustur, hasGramOf, hesaplaIscilik } from '../tools/altin-ayar-iscilik-hesaplama/calc';
+import { altinAyarlari } from '../data/params/altin';
+import { formatNumber, formatPercent, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const g2 = (n: number) => formatNumber(n, 2);
+const g3 = (n: number) => formatNumber(n, 3);
+
+// Örneklerdeki fiyatlar yalnızca anlatım içindir; güncel piyasa fiyatı değildir.
+const ALIM = 4000;
+const ALIS = 3900;
+
+const o1 = hesaplaIscilik({
+  mod: 'odenenden',
+  iscilikBirimi: 'yuzde',
+  alimHasFiyati: ALIM,
+  bozdurmaHasAlis: null,
+  takilar: [{ gram: 10, milyem: 916, ayar: 22, odenen: 40000 }],
+});
+const o2 = hesaplaIscilik({
+  mod: 'odenenden',
+  iscilikBirimi: 'yuzde',
+  alimHasFiyati: ALIM,
+  bozdurmaHasAlis: ALIS,
+  takilar: [{ gram: 10, milyem: 916, ayar: 22, odenen: 40000 }],
+});
+const o3 = hesaplaIscilik({
+  mod: 'orandan',
+  iscilikBirimi: 'yuzde',
+  alimHasFiyati: ALIM,
+  bozdurmaHasAlis: null,
+  takilar: [{ gram: 25, milyem: 916, ayar: 22, iscilik: 8 }],
+});
+const o4 = hesaplaIscilik({
+  mod: 'orandan',
+  iscilikBirimi: 'tl-gram',
+  alimHasFiyati: ALIM,
+  bozdurmaHasAlis: null,
+  takilar: [{ gram: 25, milyem: 916, ayar: 22, iscilik: 300 }],
+});
+const don14to22 = donustur(20, 583, 916);
+
+const faq: FaqItem[] = [
+  {
+    q: '22 ayar kaç milyemdir, 14 ayar ve 18 ayar kaç milyem?',
+    a: '<strong>22 ayar 916</strong>, <strong>18 ayar 750</strong>, <strong>14 ayar 583</strong>, 21 ayar 875, 10 ayar 416, 9 ayar 375 ve 8 ayar 333 milyemdir. Bu değerler Hazine Müsteşarlığı’nın ayar evlerine ilişkin tebliğindeki (RG 20.06.2007, sayı 26558, md. 12) tablodan alınmıştır. 24 ayar saf (has) altındır.',
+  },
+  {
+    q: '14 ayar 583 midir, 585 midir?',
+    a: 'Tebliğdeki tabloda 14 ayar için 583 yazar; ticarette ise 585 damgalı 14 ayar ürünler de yaygındır. İkisi arasındaki fark binde ikidir ve tebliğdeki ±0,002 toleransın içindedir. Hesaplayıcıda her iki seçenek de vardır; ürününüzün damgasına göre seçin.',
+  },
+  {
+    q: 'Has altın nasıl hesaplanır?',
+    a: `Has altın, takının ağırlığı ile milyem oranının çarpımıdır: ağırlık × milyem ÷ 1000. Örneğin 22 ayar (916 milyem) 10 gramlık bir bilezikte ${g2(hasGramOf(10, 916))} gram saf altın vardır. Bu miktar, o günkü has gram fiyatıyla çarpıldığında takının sadece altın değerini verir; işçilik bu değerin dışındadır.`,
+  },
+  {
+    q: 'İşçilik farkı nasıl bulunur?',
+    a: `Ödediğiniz toplam tutardan takının saf altın değerini çıkarırsınız. Örneğin ${g2(10)} g 22 ayar bilezik için ${formatTL(40000, 0)} ödediyseniz ve aldığınız gün has gram fiyatı ${formatTL(ALIM, 0)} idiyse altın değeri ${formatTL(o1.altinDegeri ?? 0)}, işçilik ${formatTL(o1.iscilikTL ?? 0)} (altın değerinin ${formatPercent(o1.iscilikOrani ?? 0)}’i) olur. Hesap, alım gününün fiyatına bağlıdır; farklı bir günün fiyatını girerseniz sonuç da değişir.`,
+  },
+  {
+    q: 'Normal işçilik oranı yüzde kaçtır?',
+    a: 'Belirli bir “normal” oran yoktur; işçilik ürünün modeline, işleme zorluğuna, kuyumcuya ve döneme göre değişir. Bu araç bir oranı iyi ya da kötü diye yorumlamaz; ödediğiniz işçiliği TL, yüzde ve gram başına olarak gösterir, kıyaslamayı siz yaparsınız.',
+  },
+  {
+    q: 'Bileziği bozdururken işçilik geri alınır mı?',
+    a: `Çoğunlukla alınmaz. Kuyumcu eski takıyı saf altın değeri üzerinden, alış fiyatıyla değerlendirir. Örnekte ${formatTL(40000, 0)} ödenen bileziğin bozdurma günü alış fiyatı ${formatTL(ALIS, 0)} ise alınacak tutar ${formatTL(o2.bozdurma ?? 0)} olur; ${formatTL(Math.abs(o2.fark ?? 0))} fark hem işçilikten hem fiyat değişiminden gelir. Bazı kuyumcular ayrıca kesinti uygular; hesaplayıcıda bu kesintiyi de girebilirsiniz.`,
+  },
+  {
+    q: '14 ayar altını 22 ayara çevirince kaç gram eder?',
+    a: `Saf altın miktarı korunarak çevrilir: gram × kaynak milyem ÷ hedef milyem. Örneğin 20 gram 14 ayar (583), 20 × 583 ÷ 916 = ${g3(don14to22)} gram 22 ayar altına denktir. Hesaplayıcının “Ayar dönüştürücü” bölümü bunu doğrudan yapar; ayrıca sonuç alanında toplam saf altınınızın tüm ayarlardaki karşılığı tablo olarak yer alır.`,
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Altın ayarı ve milyem nedir?</h2>
+  <p>
+    Ayar, bir altın alaşımında saf altının payını gösterir. Kuyumculukta 24 ayar saf altındır; 22 ayar, 24 parçanın 22’si
+    altın olan alaşımdır. Aynı oranın binde olarak yazılmasına <strong>milyem</strong> denir. Saf altın miktarına
+    <strong>has altın</strong> adı verilir ve takıların asıl değeri bu miktar üzerinden hesaplanır.
+  </p>
+  <div class="formula">Has altın (g) = ağırlık (g) × milyem ÷ 1000
+Altın değeri (TL) = has altın (g) × has gram fiyatı
+İşçilik (TL) = ödenen tutar − altın değeri
+İşçilik (%) = işçilik ÷ altın değeri × 100</div>
+
+  <table>
+    <thead>
+      <tr><th>Ayar</th><th>Milyem</th><th>10 gramda has altın</th></tr>
+    </thead>
+    <tbody>
+      {altinAyarlari.values.ayarlar.map((a) => (
+        <tr>
+          <td>{a.ayar} ayar{a.kod === '24-995' ? ' (külçe / gram altın)' : a.kod === '14-585' ? ' (585 damgalı)' : ''}</td>
+          <td>{a.milyem}</td>
+          <td>{g3((10 * a.milyem) / 1000)} g</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+  <p>
+    8–22 ayar değerleri Hazine Müsteşarlığı’nın ayar evlerine ilişkin tebliğindeki tablodan alınmıştır; tebliğdeki tolerans
+    ±0,002’dir (22 ayarda 914–918 milyem). Tebliğde 24 ayar için bir değer yoktur, 24 ayar saf altın sayılır. Külçe ve gram
+    altınlar 995/1000 standardında üretildiği için tabloda ayrıca gösterilmiştir.
+  </p>
+
+  <h2>İşçilik nasıl hesaplanır?</h2>
+  <p>
+    Kuyumcu takının fiyatını, içindeki saf altının değerine işçilik ekleyerek belirler. İşçiliği bulmak için ödediğiniz
+    toplam tutardan, aldığınız günün has gram fiyatıyla hesaplanan altın değerini çıkarırsınız. Sonucu altın değerine
+    bölerek yüzdesini, takının gramına bölerek gram başına TL tutarını elde edersiniz. Hesaplayıcı iki yönde çalışır:
+    ödediğiniz fiyattan işçiliği bulur ya da kuyumcunun söylediği işçilik oranından toplam fiyatı hesaplar.
+  </p>
+
+  <h2>Örnek hesaplamalar</h2>
+  <p>
+    Aşağıdaki örneklerde has gram fiyatı alım gününde {formatTL(ALIM, 0)}, bozdurma gününde alış {formatTL(ALIS, 0)}
+    alınmıştır. Bunlar anlatım için seçilmiş örnek rakamlardır, güncel piyasa fiyatı değildir.
+  </p>
+  <div class="example">
+    <p>
+      <strong>10 gram 22 ayar bilezik için {formatTL(40000, 0)} ödendi:</strong> Saf altın {g2(o1.hasGram)} g,
+      altın değeri {formatTL(o1.altinDegeri ?? 0)}. İşçilik {formatTL(o1.iscilikTL ?? 0)}; bu, altın değerinin
+      {formatPercent(o1.iscilikOrani ?? 0)}’i, gram başına {formatTL(o1.iscilikGramBasina ?? 0)} eder.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Aynı bileziği bozdurmak:</strong> Alış fiyatı {formatTL(ALIS, 0)} ise {g2(o2.hasGram)} g saf altın için
+      {formatTL(o2.bozdurma ?? 0)} alınır. Ödenen tutarla fark {formatTL(o2.fark ?? 0)}’dir. Ödediğiniz tutarı geri
+      almak için has gram alış fiyatının {formatTL(o2.basabasFiyati ?? 0)} seviyesine ulaşması gerekir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>25 gram 22 ayar bilezik, kuyumcu %8 işçilik diyor:</strong> Saf altın {g2(o3.hasGram)} g, altın değeri
+      {formatTL(o3.altinDegeri ?? 0)}; %8 işçilik {formatTL(o3.iscilikTL ?? 0)} tutar, toplam fiyat
+      {formatTL(o3.odenen ?? 0)} olur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Aynı bilezik için gram başına 300 TL işçilik:</strong> 25 × 300 = {formatTL(o4.iscilikTL ?? 0)} işçilik,
+      toplam fiyat {formatTL(o4.odenen ?? 0)}; bu işçilik altın değerinin {formatPercent(o4.iscilikOrani ?? 0)}’ine denk
+      gelir. İki farklı söyleyiş böylece aynı ölçüye çevrilir.
+    </p>
+  </div>
+
+  <h2>Bozdururken alınan tutar</h2>
+  <p>
+    Kuyumcu alış fiyatını uygular; alış fiyatı satış fiyatının altındadır. Ayrıca satın alırken ödenen işçilik çoğunlukla
+    bozdurmada karşılığını bulmaz. Bu yüzden aynı gün alıp bozdursanız bile ödediğinizden az alırsınız; fiyatın yükselmesi
+    bu farkı kapatabilir, ancak bunun ne zaman olacağı bilinemez. Araç bir tahmin yapmaz; yalnızca girdiğiniz fiyatlarla
+    sonucu gösterir ve “başabaş” has alış fiyatını verir.
+  </p>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>
+      <strong>Damgadaki ayar ile gerçek ayar farklı olabilir.</strong> Kesin ayar, ayar evlerinde yapılan analizle
+      belirlenir. Bu araç sizin girdiğiniz ayara güvenir.
+    </li>
+    <li>
+      <strong>Taşlı takılarda ağırlık altının ağırlığı değildir.</strong> Pırlanta, inci ya da değerli taş içeren ürünlerde
+      toplam gram taşları da içerir; yalnızca altının gramını girin.
+    </li>
+    <li>
+      <strong>Fiyatları siz yazarsınız.</strong> Site fiyat çekmez. Alım günündeki fiyatı bilmiyorsanız işçilik hesabı
+      yaklaşık kalır; fişteki ya da faturadaki tutar ve tarih en güvenilir dayanaktır.
+    </li>
+    <li>
+      <strong>Ziynet altınları için</strong> ayrı bir araç var:
+      <a href="/dugun-altini-hesaplama/">Düğün Altını Hesaplama</a> çeyrek, yarım, tam ve Ata liranın Darphane ağırlıklarını
+      kullanır.
+    </li>
+  </ul>
+</ToolLayout>
