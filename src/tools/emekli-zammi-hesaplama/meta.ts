@@ -18,5 +18,5 @@ export const meta: ToolMeta = {
   sources: [],
   lastReviewed: '2026-10-29',
   featured: true,
-  related: ['enflasyon-hesaplama', 'brut-net-maas-hesaplama', 'issizlik-maasi-hesaplama'],
+  related: ['ne-zaman-emekli-olurum', 'enflasyon-hesaplama', 'brut-net-maas-hesaplama'],
 };

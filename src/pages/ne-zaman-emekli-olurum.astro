@@ -1,0 +1,66 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/ne-zaman-emekli-olurum/Calculator';
+import { meta } from '../tools/ne-zaman-emekli-olurum/meta';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'EYT’liler ne zaman emekli olur?',
+    a: '08.09.1999 ve öncesinde sigortalı olanlar için 2023’te yaş şartı kaldırıldı. SSK’lı (4/a) erkekler 25 yıl sigortalılık ve giriş tarihine göre 5.000–5.975 gün, kadınlar 20 yıl sigortalılık ve 5.000–5.975 gün ile emekli olabilir. Bağ-Kur’lu kadınlar 7.200, erkekler 9.000 gün ile emekli olur.',
+  },
+  {
+    q: '1999–2008 arası işe girenler ne zaman emekli olur?',
+    a: '09.09.1999 ile 30.04.2008 arasında ilk kez sigortalı olanlar kadınsa 58, erkekse 60 yaşını doldurmalıdır. SSK’lılar için 7.000 gün ya da 25 yıl sigortalılık + 4.500 gün, Bağ-Kur’lular için 9.000 gün gerekir.',
+  },
+  {
+    q: '2008 sonrası işe girenler kaç yaşında emekli olur?',
+    a: '01.05.2008’den sonra sigortalı olanlarda SSK için 7.200, Bağ-Kur için 9.000 gün gerekir. Gün şartı 2035 sonuna kadar tamamlanırsa kadın 58, erkek 60 yaşında; sonrasında yaş kademeli olarak artar ve 2048’den itibaren herkes için 65 olur.',
+  },
+  {
+    q: 'Askerlik borçlanması emekliliği öne çeker mi?',
+    a: 'Borçlanılan günler prim gününe eklenir. Askerlik ilk işe girişten önce yapıldıysa sigortalılık başlangıcı borçlanılan gün kadar geriye çekilir; bu, kişiyi daha avantajlı bir gruba (ör. EYT kapsamına) taşıyabilir. Borçlanma için SGK’ya başvurup bedeli ödemek gerekir.',
+  },
+  {
+    q: 'Kesin emeklilik tarihimi nereden öğrenirim?',
+    a: 'e-Devlet’teki SGK “Ne Zaman Emekli Olabilirim” hizmeti ve hizmet dökümünüz resmî bilgiyi verir. Farklı statülerde (SSK, Bağ-Kur, memurluk) çalıştıysanız son 7 yılda en çok prim ödediğiniz statü esas alınır; bu tür durumlarda SGK’dan teyit almanız önemlidir.',
+  },
+  {
+    q: 'Memurlar (4/c) bu hesaplamaya dahil mi?',
+    a: 'Hayır. Bu robot SSK (4/a) ve Bağ-Kur (4/b) sigortalıları içindir. Memurların (Emekli Sandığı) emeklilik şartları hizmet yılı esasına göre ayrıca belirlenir.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Emeklilik şartları ilk girişe göre nasıl değişir?</h2>
+  <table>
+    <thead><tr><th>İlk sigortalılık</th><th>SSK (4/a)</th><th>Bağ-Kur (4/b)</th></tr></thead>
+    <tbody>
+      <tr><td>08.09.1999 ve öncesi (EYT)</td><td>Kadın 20 yıl, erkek 25 yıl + 5.000–5.975 gün; yaş yok</td><td>Kadın 7.200, erkek 9.000 gün; yaş yok</td></tr>
+      <tr><td>09.09.1999 – 30.04.2008</td><td>Kadın 58 / erkek 60 yaş + 7.000 gün (ya da 25 yıl + 4.500 gün)</td><td>Kadın 58 / erkek 60 yaş + 9.000 gün</td></tr>
+      <tr><td>01.05.2008 ve sonrası</td><td>7.200 gün + kademeli yaş (58/60 → 65)</td><td>9.000 gün + kademeli yaş</td></tr>
+    </tbody>
+  </table>
+
+  <h3>2008 sonrası kademeli yaş tablosu</h3>
+  <table>
+    <thead><tr><th>Gün şartının tamamlandığı dönem</th><th>Kadın</th><th>Erkek</th></tr></thead>
+    <tbody>
+      <tr><td>2035 sonuna kadar</td><td>58</td><td>60</td></tr>
+      <tr><td>2036 – 2037</td><td>59</td><td>61</td></tr>
+      <tr><td>2038 – 2039</td><td>60</td><td>62</td></tr>
+      <tr><td>2040 – 2041</td><td>61</td><td>63</td></tr>
+      <tr><td>2042 – 2043</td><td>62</td><td>64</td></tr>
+      <tr><td>2044 – 2045</td><td>63</td><td>65</td></tr>
+      <tr><td>2046 – 2047</td><td>64</td><td>65</td></tr>
+      <tr><td>2048 ve sonrası</td><td>65</td><td>65</td></tr>
+    </tbody>
+  </table>
+  <p>
+    Bu robot SGK’nın yayımladığı tablolarla çalışır ve sonucu her şartın ayrı ayrı ne zaman dolacağını göstererek açıklar.
+    Hizmet birleştirme ve statü değişikliği gibi durumlarda kesin sonuç için e-Devlet’teki SGK hizmetini kullanın.
+  </p>
+</ToolLayout>

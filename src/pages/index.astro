@@ -9,13 +9,13 @@ import { SITE } from '../site.config';
 // Ana sayfadaki "En çok kullanılanlar": önce bu sıradakiler, sonra diğer öne çıkanlar (en fazla 8).
 const FEATURED_ORDER = [
   'brut-net-maas-hesaplama',
+  'ne-zaman-emekli-olurum',
   'kidem-tazminati-hesaplama',
   'kredi-hesaplama',
   'kira-artis-hesaplama',
+  'emekli-zammi-hesaplama',
   'kdv-hesaplama',
   'enflasyon-hesaplama',
-  'halka-arz-lot-hesaplama',
-  'dugun-altini-hesaplama',
 ];
 const featured = [
   ...FEATURED_ORDER.map((slug) => TOOLS.find((t) => t.slug === slug)).filter((t) => t !== undefined),
