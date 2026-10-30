@@ -143,7 +143,7 @@ export const mtvTarifesi: ParamSet<{
       label: 'Ventera Partners Vergi Sirküleri 2026/02 – 2026 MTV tarifeleri (MTV Genel Tebliği, RG 31.12.2025/33124 5. mük.)',
       url: 'https://www.venterapartners.com/vergi-sirkuleri-2026-02-2026-yili-motorlu-tasitlari-vergi-tarifeleri/',
     },
-    { label: 'T24 – 2026 MTV tarifesi belli oldu', url: 'https://t24.com.tr/ekonomi/2026-mtv-tarifesi-belli-oldu-hangi-aracta-vergi-kac-liraya-cikti,1287695' },
+    { label: 'Ehliyet Sınav Soruları – 2026 MTV tablosu ve elektrikli araç örneği (çapraz kontrol)', url: 'https://ehliyetsinavsorulari.io/mtv/' },
     {
       label: '197 sayılı Motorlu Taşıtlar Vergisi Kanunu (md. 5 elektrikli taşıtlar ve taşıt değeri satırı, md. 10 taksitler, md. 11 yaş)',
       url: 'https://www.mevzuat.gov.tr/mevzuat?MevzuatNo=197&MevzuatTur=1&MevzuatTertip=4',
