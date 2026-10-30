@@ -1,0 +1,49 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/trafik-cezasi-hesaplama/Calculator';
+import { meta } from '../tools/trafik-cezasi-hesaplama/meta';
+import { trafikCezasiOdeme } from '../data/params/trafik-cezasi';
+import type { FaqItem } from '../tools/types';
+
+const p = trafikCezasiOdeme.values;
+
+const faq: FaqItem[] = [
+  {
+    q: 'Trafik cezası kaç gün içinde ödenirse indirimli olur?',
+    a: `Tebliğ tarihinden itibaren ${p.odemeSuresiAy} ay içinde ödenen trafik cezalarında %${p.indirimYuzde} indirim uygulanır. Bu süre Ocak 2024’te 15 günden bir aya çıkarıldı; hâlâ “15 gün” yazan kaynaklar eskidir.`,
+  },
+  {
+    q: 'Trafik cezası geç ödenirse ne olur?',
+    a: `Bir ay içinde ödenmeyen cezada indirim kalkar ve her ay için cezanın %${p.aylikFaizYuzde}’i kadar faiz eklenir. Ayın bir günü bile geçse tam ay sayılır. Faizle birlikte tutar cezanın ${p.ustSinirKat} katını geçemez. Ödenmeyen cezalar vergi dairesince icra yoluyla tahsil edilir.`,
+  },
+  {
+    q: 'e-Tebligatla gelen cezada süre ne zaman başlar?',
+    a: `Elektronik tebligat, e-Tebligat (UETS) adresinize ulaştığı günü izleyen ${p.eTebligatGun}. günün sonunda tebliğ edilmiş sayılır. Tebligatı daha önce açmanız bu tarihi değiştirmez. İndirim ve itiraz süreleri bu tebliğ tarihinden itibaren işler.`,
+  },
+  {
+    q: 'Trafik cezasına itiraz süresi ne kadar?',
+    a: `Tebliğden itibaren ${p.itirazGun} gün içinde sulh ceza hâkimliğine itiraz edilir. Cezayı indirimli ödemek itiraz hakkınızı ortadan kaldırmaz; itiraz kabul edilirse ödenen tutar iade edilir.`,
+  },
+  {
+    q: 'Ceza tutarımı nereden öğrenirim?',
+    a: 'Yolda verilen tutanakta, posta ya da e-Tebligatla gelen ceza karar tutanağında yazar. e-Devlet’te Emniyet Genel Müdürlüğünün “Trafik Cezası Sorgulama” hizmetinden de tüm cezalarınızı ve tebliğ tarihlerini görebilirsiniz.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Nasıl hesaplanır?</h2>
+  <div class="formula">Son indirimli gün = Tebliğ tarihi + {p.odemeSuresiAy} ay
+İndirimli tutar = Ceza × %{100 - p.indirimYuzde}
+Geç ödemede = Ceza + Ceza × %{p.aylikFaizYuzde} × geciken ay (en fazla cezanın {p.ustSinirKat} katı)</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      10 Ekim’de elden verilen 5.000 TL’lik ceza 10 Kasım’a kadar ödenirse %{p.indirimYuzde} indirimle 3.750 TL’dir. 11 Aralık’ta ödenirse indirim
+      kalkar, iki aylık gecikme için %{p.aylikFaizYuzde * 2} faiz eklenir ve 5.500 TL ödenir. İtiraz için son gün 25 Ekim’dir.
+    </p>
+  </div>
+</ToolLayout>
