@@ -1,0 +1,74 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/mtv-hesaplama/Calculator';
+import { meta } from '../tools/mtv-hesaplama/meta';
+import { mtvTarifesi } from '../data/params/mtv';
+import { formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const p = mtvTarifesi.values;
+const tl = (n: number) => n.toLocaleString('tr-TR');
+const hacimAdi = (i: number) => {
+  const s = p.otomobil[i];
+  const alt = i === 0 ? null : p.otomobil[i - 1].ustCc;
+  return alt === null ? `${tl(s.ustCc!)} cm³ ve altı` : s.ustCc === null ? `${tl(alt + 1)} cm³ ve üstü` : `${tl(alt + 1)} – ${tl(s.ustCc)} cm³`;
+};
+const kwAdi = (i: number) => {
+  const s = p.otomobil[i];
+  const alt = i === 0 ? null : p.otomobil[i - 1].ustKw;
+  return alt === null ? `${s.ustKw} kW ve altı` : s.ustKw === null ? `${alt} kW üstü` : `${alt} – ${s.ustKw} kW`;
+};
+
+const faq: FaqItem[] = [
+  {
+    q: `${p.yil} MTV ne zaman ödenir?`,
+    a: 'Motorlu taşıtlar vergisi her yıl iki eşit taksitte ödenir: birinci taksit Ocak, ikinci taksit Temmuz ayı sonuna kadar. Ödeme e-Devlet, GİB Dijital Vergi Dairesi, banka uygulamaları veya vergi dairesinden yapılabilir.',
+  },
+  {
+    q: 'Aracın yaşı nasıl hesaplanır?',
+    a: `Ruhsattaki model yılında araç 1 yaşında sayılır. Örneğin ${p.yil} yılında 2024 model bir araç 3 yaşındadır ve 1–3 yaş tutarını öder; ${p.yil + 1}’de 4–6 yaş grubuna geçer.`,
+  },
+  {
+    q: 'Taşıt değeri kademesi nedir?',
+    a: '1 Ocak 2018’den sonra ilk kez tescil edilen otomobillerde vergi, motor hacmi ve yaşın yanında aracın vergisiz (KDV matrahı) satış bedeline göre de değişir. Kademe, aracın ilk tescil edildiği yılın tutarlarına göre bir kez belirlenir ve sonraki yıllarda aynı kalır.',
+  },
+  {
+    q: 'Elektrikli araçlar MTV öder mi?',
+    a: `Evet. Sadece elektrik motoru olan otomobil ve motosikletlerde silindir hacmi yerine motor gücü (kW) esas alınır ve tarifedeki tutarın %${p.elektrikliOran}’i ödenir. Hibrit araçlar bu indirimden yararlanmaz.`,
+  },
+  {
+    q: 'MTV ödenmezse ne olur?',
+    a: 'Süresinde ödenmeyen taksite her ay için gecikme zammı uygulanır. MTV borcu bulunan araç satılamaz, devredilemez; trafik muayenesinde de borç sorgulanır.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>{p.yil} MTV tablosu (1–3 yaş, otomobil)</h2>
+  <p>Aşağıdaki tutarlar 1–3 yaşındaki otomobiller içindir; diğer yaşlar için hesaplayıcıyı kullanın. Elektrikli araçlar karşılığındaki satırın %{p.elektrikliOran}’ini öder.</p>
+  <table>
+    <thead><tr><th>Motor hacmi</th><th>Elektrikli karşılığı</th><th>2018 sonrası tescil (değere göre)</th><th>2017 ve öncesi</th></tr></thead>
+    <tbody>
+      {
+        p.otomobil.map((s, i) => (
+          <tr>
+            <td>{hacimAdi(i)}</td>
+            <td>{kwAdi(i)}</td>
+            <td>{s.kademeler.map((k) => formatTL(k.tutar[0], 0)).join(' / ')}</td>
+            <td>{formatTL(s.eski[0], 0)}</td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      2024 model, 1.598 cm³ benzinli ve ilk tescilinde değeri en üst kademede olan bir otomobil {p.yil} yılında 3 yaşındadır ve yıllık
+      {` ${formatTL(p.otomobil[1].kademeler[2].tutar[0], 0)}`} MTV öder. Bu tutar Ocak ve Temmuz’da {formatTL(p.otomobil[1].kademeler[2].tutar[0] / 2, 0)} olmak üzere iki taksitte ödenir.
+    </p>
+  </div>
+</ToolLayout>
