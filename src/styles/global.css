@@ -2817,41 +2817,17 @@ table.data tfoot td {
     border-top-left-radius: 0;
   }
 
-  .menu-kapali .topbar {
-    padding-left: 56px;
-  }
-
+  /* Düğme üst çubuğun başında durur; menünün üstüne binmez */
   .menu-toggle {
-    position: fixed;
-    top: 18px;
-    left: calc(var(--sidebar-w) - 14px);
-    z-index: 45;
-    display: grid;
-    place-items: center;
-    width: 28px;
-    height: 28px;
-    padding: 0;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    background: var(--surface);
+    display: inline-grid;
+    flex: none;
     color: var(--brand);
-    box-shadow: var(--shadow);
-    cursor: pointer;
-    transition: left 0.25s ease, background 0.15s;
-  }
-
-  .menu-toggle:hover {
-    background: var(--brand-soft);
   }
 
   .menu-toggle svg {
-    width: 15px;
-    height: 15px;
+    width: 18px;
+    height: 18px;
     transition: transform 0.25s ease;
-  }
-
-  .menu-kapali .menu-toggle {
-    left: 14px;
   }
 
   .menu-kapali .menu-toggle svg {
