@@ -1,0 +1,61 @@
+---
+// Bir başlığın robotları: Petshree'deki gibi yan yana kartlar, sağda kaydırma oku.
+import NavIcon from './NavIcon.astro';
+import ToolCard from './ToolCard.astro';
+import type { Category } from '../tools/categories';
+import type { ToolMeta } from '../tools/types';
+
+interface Props {
+  cat: Category;
+  tools: ToolMeta[];
+}
+const { cat, tools } = Astro.props;
+const headingId = `kat-${cat.id}`;
+---
+
+<section class="rsection" aria-labelledby={headingId}>
+  <div class="rsection__head">
+    <h2 id={headingId} class="section-title">
+      <span class="section-title__icon" style={`--tint:${cat.color}`}><NavIcon name={cat.id} /></span>
+      {cat.name}
+    </h2>
+    <a class="rsection__more" href={`/kategori/${cat.id}/`}>Tümü ({tools.length}) →</a>
+  </div>
+  <div class="rrow-wrap">
+    <ul class="rrow" data-rrow>
+      {
+        tools.map((t) => (
+          <li>
+            <ToolCard tool={t} />
+          </li>
+        ))
+      }
+    </ul>
+    <button type="button" class="rrow__btn rrow__btn--prev" data-rrow-prev aria-label={`${cat.name}: önceki robotlar`} hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m15 6-6 6 6 6"></path></svg>
+    </button>
+    <button type="button" class="rrow__btn rrow__btn--next" data-rrow-next aria-label={`${cat.name}: sonraki robotlar`} hidden>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="m9 6 6 6-6 6"></path></svg>
+    </button>
+  </div>
+</section>
+
+<script>
+  // Kaydırma okları yalnızca sığmayan kart varken görünür.
+  document.querySelectorAll<HTMLElement>('.rrow-wrap').forEach((wrap) => {
+    const row = wrap.querySelector<HTMLElement>('[data-rrow]');
+    const prev = wrap.querySelector<HTMLButtonElement>('[data-rrow-prev]');
+    const next = wrap.querySelector<HTMLButtonElement>('[data-rrow-next]');
+    if (!row || !prev || !next) return;
+    const update = () => {
+      prev.hidden = row.scrollLeft <= 4;
+      next.hidden = row.scrollLeft + row.clientWidth >= row.scrollWidth - 4;
+    };
+    const step = (dir: number) => row.scrollBy({ left: dir * row.clientWidth * 0.9, behavior: 'smooth' });
+    prev.addEventListener('click', () => step(-1));
+    next.addEventListener('click', () => step(1));
+    row.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    update();
+  });
+</script>

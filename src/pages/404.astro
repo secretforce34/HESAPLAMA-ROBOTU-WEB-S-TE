@@ -6,11 +6,11 @@ import { searchItems } from '../lib/search-items';
 
 <BaseLayout title="Sayfa bulunamadı" description="Aradığınız sayfa bulunamadı." noindex>
   <div class="container">
-    <section class="hero">
-      <h1>Bu sayfa bulunamadı.</h1>
-      <p class="hero__lead">Robotlarımız her yeri aradı, ama bu adreste bir şey yok. Aşağıdan aradığınız hesaplamayı bulabilirsiniz.</p>
-      <ToolSearch items={searchItems()} client:load autofocus />
+    <div class="panel notfound">
+      <h1 class="panel__title">Bu sayfa bulunamadı.</h1>
+      <p class="panel__sub">Robotlarımız her yeri aradı, ama bu adreste bir şey yok. Aradığınız hesaplamayı aşağıya yazın.</p>
+      <ToolSearch items={searchItems()} client:load autofocus id="robot-ara-404" />
       <p style="margin-top:20px"><a href="/">← Ana sayfaya dön</a></p>
-    </section>
+    </div>
   </div>
 </BaseLayout>

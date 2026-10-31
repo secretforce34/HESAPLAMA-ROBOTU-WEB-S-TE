@@ -1,0 +1,75 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/qr-kod-olusturucu/Calculator';
+import { meta } from '../tools/qr-kod-olusturucu/meta';
+import { wifiMetni } from '../tools/qr-kod-olusturucu/calc';
+import type { FaqItem } from '../tools/types';
+
+const wifiOrnek = wifiMetni({ ssid: 'EvAgi', sifre: 'gizli123', guvenlik: 'WPA', gizli: false });
+
+const faq: FaqItem[] = [
+  {
+    q: 'QR kod oluşturmak ücretli mi, kodun süresi dolar mı?',
+    a: 'Hayır. Bu araçla oluşturduğunuz QR kodlar ücretsizdir ve süresi dolmaz; içerik doğrudan kodun içine yazılır (statik QR). Bazı sitelerin “süreli” kodları, sizi kendi sunucularına yönlendiren dinamik kodlardır; burada böyle bir yönlendirme yoktur.',
+  },
+  {
+    q: 'Wi-Fi QR kodu nasıl okutulur?',
+    a: 'Android ve iPhone’un kendi kamera uygulaması Wi-Fi QR kodlarını tanır. Kamerayı koda tutunca “ağa katıl” bildirimi çıkar; şifre yazmadan bağlanılır. Modeminizin ağ adını ve şifresini doğru yazdığınızdan emin olun; büyük-küçük harf önemlidir.',
+  },
+  {
+    q: 'Kartvizit QR kodu okutulunca ne olur?',
+    a: 'Telefon, kodu okuttuğunda ad, telefon, e-posta ve şirket bilgilerini içeren bir kişi kartı açar ve “Kişilere ekle” seçeneği sunar. Kod vCard 3.0 biçimindedir; çoğu telefon ve kartvizit uygulaması bu biçimi tanır.',
+  },
+  {
+    q: 'IBAN QR koduyla doğrudan ödeme yapılabilir mi?',
+    a: 'Bu araçtaki IBAN kodu, alıcı adını, IBAN’ı ve açıklamayı metin olarak taşır; okutan kişi bilgileri kopyalayıp bankacılık uygulamasına yapıştırır. Bankaların “karekodla ödeme” özelliği farklı bir biçim kullanır, bu yüzden kod doğrudan ödeme ekranı açmayabilir. IBAN’ın kontrol basamağı araçta otomatik denetlenir.',
+  },
+  {
+    q: 'QR kodu ne büyüklükte basmalıyım?',
+    a: 'Yakından okutulacak kodlar (kartvizit, masa üstü) için en az 2 × 2 cm yeterlidir. Genel kural olarak kod genişliği, okutma mesafesinin yaklaşık onda biri olmalıdır: 1 metreden okutulacak bir afişte en az 10 cm. Baskı için SVG dosyası her boyutta keskin kalır.',
+  },
+  {
+    q: 'Renkli QR kod okunur mu?',
+    a: 'Kod rengi koyu, zemin açık ve aralarındaki fark yeterliyse okunur. Açık renkli kod ya da koyu zemin (ters QR) bazı telefonlarda okunmaz; araç bu durumlarda uyarı verir. Kenar boşluğunu 4 karenin altına indirmemek de okunmayı kolaylaştırır.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>QR kod nasıl oluşturulur?</h2>
+  <ol>
+    <li>Yukarıdan QR kodun içeriğini seçin: bağlantı, metin, Wi-Fi, kartvizit, IBAN, e-posta, SMS ya da telefon.</li>
+    <li>Bilgileri yazın; QR kod siz yazarken hazırlanır.</li>
+    <li>İsterseniz “Renk, boyut ve okunabilirlik” bölümünden renkleri ve hata düzeltme seviyesini değiştirin.</li>
+    <li>Ekranda paylaşmak için PNG, baskı için SVG dosyasını indirin.</li>
+  </ol>
+
+  <h2>Hangi içerik nasıl kodlanır?</h2>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>İçerik</th><th>Okutulunca</th><th>Biçim</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Bağlantı</td><td>Web sayfası açılır</td><td>https://…</td></tr>
+        <tr><td>Wi-Fi</td><td>Ağa şifresiz bağlanılır</td><td>WIFI:T:WPA;S:…;P:…;;</td></tr>
+        <tr><td>Kartvizit</td><td>Kişilere ekleme ekranı açılır</td><td>vCard 3.0</td></tr>
+        <tr><td>IBAN</td><td>Alıcı ve IBAN metin olarak görünür</td><td>Düz metin</td></tr>
+        <tr><td>E-posta</td><td>Hazır e-posta açılır</td><td>mailto:</td></tr>
+        <tr><td>SMS</td><td>Hazır mesaj açılır</td><td>SMSTO:</td></tr>
+        <tr><td>Telefon</td><td>Numara arama ekranına gelir</td><td>tel:</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Örneğin “EvAgi” adlı ağın Wi-Fi kodunun içinde şu metin bulunur:</p>
+  <div class="formula">{wifiOrnek}</div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>QR kod tamamen tarayıcınızda üretilir. Wi-Fi şifreniz, IBAN’ınız ya da kişi bilgileriniz hiçbir sunucuya gönderilmez.</li>
+    <li>Hata düzeltme seviyesi yükseldikçe kod kirlense ya da kısmen yırtılsa bile okunabilir; ancak kare sayısı artar.</li>
+    <li>Her sayfanın üst çubuğundaki QR düğmesiyle o sayfanın, hesap sonuçlarındaki “QR ile paylaş” düğmesiyle de sonucun QR kodunu alabilirsiniz.</li>
+  </ul>
+</ToolLayout>

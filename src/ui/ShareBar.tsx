@@ -1,5 +1,6 @@
 import { useState } from 'preact/hooks';
 import { buildShareUrl, type ShareValue } from './url';
+import { QrPopover } from './PageQr';
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -29,6 +30,7 @@ async function copyText(text: string): Promise<boolean> {
  */
 export function ShareBar({ params, summary }: { params: Record<string, ShareValue>; summary: string }) {
   const [msg, setMsg] = useState<string | null>(null);
+  const [qr, setQr] = useState<string | null>(null);
 
   const flash = (m: string) => {
     setMsg(m);
@@ -68,6 +70,18 @@ export function ShareBar({ params, summary }: { params: Record<string, ShareValu
         </svg>
         Sonucu kopyala
       </button>
+      <span class="qr-anchor">
+        <button type="button" class="btn btn--small" data-qr-trigger aria-expanded={qr !== null} onClick={() => setQr((v) => (v ? null : buildShareUrl(params)))}>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+            <rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1" />
+            <rect x="14" y="3.5" width="6.5" height="6.5" rx="1" />
+            <rect x="3.5" y="14" width="6.5" height="6.5" rx="1" />
+            <path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18z" />
+          </svg>
+          QR ile paylaş
+        </button>
+        {qr && <QrPopover text={qr} title="Bu sonucun QR kodu" onClose={() => setQr(null)} />}
+      </span>
       <span role="status" aria-live="polite" class="field__hint" style={{ alignSelf: 'center' }}>
         {msg}
       </span>

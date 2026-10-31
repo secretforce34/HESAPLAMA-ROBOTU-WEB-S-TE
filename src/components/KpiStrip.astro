@@ -1,0 +1,46 @@
+---
+// "Bu ayın rakamları": Petshree'deki üst rakam şeridi. Her kutucuk ilgili robota gider.
+import { buildKpis } from '../lib/kpi';
+import { todayIsoTR } from '../lib/finance';
+
+const kpis = buildKpis(todayIsoTR());
+const R = 15;
+const C = 2 * Math.PI * R;
+---
+
+<section class="kpis-wrap" aria-labelledby="bu-ay">
+  <h2 id="bu-ay" class="section-title">Bu ayın rakamları</h2>
+  <ul class="kpis">
+    {
+      kpis.map((k) => (
+        <li>
+          <a class="kpi" href={k.href} style={`--kpi:${k.color}`}>
+            {k.ring !== undefined ? (
+              <svg class="kpi__ring" viewBox="0 0 36 36" aria-hidden="true">
+                <circle cx="18" cy="18" r={R} class="kpi__track" />
+                <circle
+                  cx="18"
+                  cy="18"
+                  r={R}
+                  class="kpi__arc"
+                  stroke-dasharray={`${(C * Math.min(k.ring, 100)) / 100} ${C}`}
+                  transform="rotate(-90 18 18)"
+                />
+              </svg>
+            ) : (
+              <span class="kpi__bars" aria-hidden="true">
+                <i />
+                <i />
+              </span>
+            )}
+            <span class="kpi__text">
+              <span class="kpi__label">{k.label}</span>
+              <span class="kpi__value">{k.value}</span>
+              <span class="kpi__tag">{k.tag}</span>
+            </span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</section>

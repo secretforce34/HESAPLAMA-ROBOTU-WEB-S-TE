@@ -1,0 +1,18 @@
+---
+// Robotun yuvarlak resmi; resim henüz yoksa başlık renginde zemin üstünde emoji.
+import { getCategory } from '../tools/categories';
+import { robotImage } from '../lib/robot-image';
+import type { ToolMeta } from '../tools/types';
+
+interface Props {
+  tool: ToolMeta;
+  size?: 'sm' | 'md' | 'lg';
+}
+const { tool, size = 'md' } = Astro.props;
+const image = robotImage(tool.slug);
+const color = getCategory(tool.category).color;
+---
+
+<span class={`avatar avatar--${size}`} style={`--avatar-tint:${color}`} aria-hidden="true">
+  {image ? <img src={image} alt="" loading="lazy" decoding="async" /> : <span class="avatar__emoji">{tool.icon}</span>}
+</span>

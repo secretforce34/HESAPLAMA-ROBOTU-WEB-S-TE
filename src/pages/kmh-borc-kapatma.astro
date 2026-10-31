@@ -1,0 +1,80 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kmh-borc-kapatma/Calculator';
+import { meta } from '../tools/kmh-borc-kapatma/meta';
+import { asgariOdemeDonemiOn, kartFaizDonemiOn, krediKartiFaizleri } from '../data/params/kredi';
+import { kmhAylikFaizYuku, krediyleKapat, planla, type Borc } from '../tools/kmh-borc-kapatma/calc';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const fd = kartFaizDonemiOn(meta.lastReviewed);
+const o = { faizDonemi: fd, asgariDonemi: asgariOdemeDonemiOn(meta.lastReviewed) };
+const v = krediKartiFaizleri.values.vergiler;
+const faiz = fd.nakit.akdi;
+
+// Örnek 1: 40.000 TL KMH, ayda 8.000 TL
+const ornek1: Borc[] = [{ ad: 'KMH', tur: 'kmh', bakiye: 40_000, aylikFaiz: null, limit: 0 }];
+const plan1 = planla(ornek1, 8_000, 'cig', o);
+const yuk1 = kmhAylikFaizYuku(40_000, faiz);
+
+// Örnek 2: aynı borcu 24 ay vadeli ihtiyaç kredisiyle kapatmak (örnek aylık faiz %3)
+const kredi = krediyleKapat(40_000, 3, 24, 0);
+
+const sure = (ay: number) => (ay < 12 ? `${ay} ay` : ay % 12 === 0 ? `${ay / 12} yıl` : `${Math.floor(ay / 12)} yıl ${ay % 12} ay`);
+
+const faq: FaqItem[] = [
+  {
+    q: 'KMH borcu neden hiç azalmıyor?',
+    a: 'Kredili mevduat hesabında kredi kartındaki gibi yasal bir asgari ödeme oranı yoktur. Banka her ay işleyen faizi ve vergisini hesaptan tahsil eder; hesaba yalnızca bu kadar para yatırılırsa ana borç yerinde sayar. Borcun bitmesi için her ay faizden fazlasını yatırmak gerekir.',
+  },
+  {
+    q: 'KMH faizi ne kadar?',
+    a: `TCMB, kredili mevduat hesabı için de azami faiz oranı ilan eder; bu ay için aylık %${formatNumber(faiz, 2)}. Faizin üzerine %${v.kkdf} KKDF ve %${v.bsmv} BSMV eklenir, yani borcun maliyeti aylık yaklaşık %${formatNumber(faiz * 1.3, 2)} olur. Bankanız daha düşük oran uyguluyorsa hesap özetinizdeki oranı yazın.`,
+  },
+  {
+    q: 'KMH faizi nasıl işler?',
+    a: 'Bankalar faizi genellikle günlük eksi bakiye üzerinden hesaplar ve ay sonunda hesaba yansıtır. Robot hesabı aylık yapar; ay içinde para yatırıp çektiğinizde gerçek faiz biraz farklı olabilir.',
+  },
+  {
+    q: 'KMH borcunu ihtiyaç kredisiyle kapatmak mantıklı mı?',
+    a: 'Kredinin faizi KMH faizinden düşükse ve taksiti bütçenize uyuyorsa toplam maliyeti azaltabilir. İhtiyaç kredisinde de faize KKDF ve BSMV eklenir, tahsis ücreti alınabilir ve BDDK tutara göre vade sınırı koyar. Robotun “İhtiyaç kredisiyle kapatsam?” bölümüne bankanın teklifini yazarak karşılaştırabilirsiniz.',
+  },
+  {
+    q: 'Birden çok bankada eksi hesabım var, hangisini önce kapatmalıyım?',
+    a: 'Her hesabın faizini ödeyip artan parayı tek hesaba yatırmak en hızlı yoldur. En az faizi ödemek için en yüksek faizli hesaptan başlanır (çığ yöntemi); küçük borcu önce bitirmek isteyenler en küçük borçtan başlar (kartopu yöntemi).',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>KMH borcu nasıl hesaplanır?</h2>
+  <p>
+    Kredili mevduat hesabında (KMH, eksi hesap) her ay kalan borca aylık akdi faiz, faizin üzerine de %{v.kkdf} KKDF ve %{v.bsmv} BSMV işler. Robot her ay
+    bütçenizi önce işleyen faize, kalanını ana borca sayar; birden çok bankada KMH varsa artan parayı seçtiğiniz yönteme göre tek hesaba yığar.
+  </p>
+  <div class="formula">Sonraki ay borcu = (Borç − Ödeme) × (1 + Aylık faiz × 1,30)
+Yalnızca faiz ödenirse aylık tutar = Borç × Aylık faiz × 1,30</div>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      <strong>40.000 TL eksi hesap:</strong> TCMB azami faiziyle (aylık %{formatNumber(faiz, 2)}) yalnızca faiz ödenirse her ay {formatTL(yuk1)} ödenir ve
+      borç hiç azalmaz. Ayda 8.000 TL ödenirse borç {sure(plan1.ay)} içinde kapanır; faiz ve vergi toplamı {formatTL(plan1.toplamFaiz, 0)} olur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Krediyle kapatma:</strong> Aynı 40.000 TL, aylık %3 faizli 24 ay vadeli ihtiyaç kredisiyle kapatılırsa taksit {formatTL(kredi.taksit)}
+      olur; faiz ve vergi toplamı {formatTL(kredi.toplamMaliyet, 0)} tutar. Kredinin faizi bankadan bankaya değiştiği için robotta kendi teklifinizi yazın.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Robot, borcu kapatırken hesaptan yeni para çekilmediğini varsayar.</li>
+    <li>Maaş hesabınız KMH’liyse yatan maaş önce eksi bakiyeyi kapatır; bu da bir ödeme gibi hesaba katılmalıdır.</li>
+    <li>Kredi kartı borcunuz da varsa “Kredi Kartı ve KMH Birlikte Borç Kapatma Planı” robotunu kullanın.</li>
+  </ul>
+</ToolLayout>

@@ -1,23 +1,24 @@
 ---
+// Üst çubuk: menü düğmesi (dar ekran), robot arama, QR kısayolu ve tema düğmesi.
 import Logo from './Logo.astro';
-import { CATEGORIES } from '../tools/categories';
-import { SITE } from '../site.config';
-
-interface Props {
-  activeCategory?: string;
-}
-const { activeCategory } = Astro.props;
+import ToolSearch from '../ui/ToolSearch';
+import PageQr from '../ui/PageQr';
+import { searchItems } from '../lib/search-items';
 ---
 
-<header class="site-header">
-  <div class="container site-header__inner">
-    <a class="brand" href="/" aria-label={`${SITE.name} – ana sayfa`}>
-      <Logo class="brand__mark" />
-      <span>{SITE.name}</span>
-    </a>
-    <nav class="site-nav" aria-label="Ana menü">
-      <a href="/tum-araclar/">Tüm araçlar</a>
-    </nav>
+<header class="topbar">
+  <button type="button" class="icon-btn topbar__menu" data-sidebar-open aria-label="Menüyü aç" aria-controls="sidebar">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+      <path d="M4 7h16M4 12h16M4 17h16"></path>
+    </svg>
+  </button>
+  <a class="topbar__brand" href="/" aria-label="Hesap Robotu – ana sayfa">
+    <Logo class="topbar__mark" />
+    <span>Hesap<span>Robotu</span></span>
+  </a>
+  <ToolSearch items={searchItems()} bar client:load />
+  <div class="topbar__actions">
+    <PageQr client:idle />
     <button class="icon-btn" type="button" data-theme-toggle aria-label="Açık/koyu tema değiştir" title="Tema">
       <svg class="theme-icon-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
@@ -29,22 +30,6 @@ const { activeCategory } = Astro.props;
     </button>
   </div>
 </header>
-<nav class="cat-bar" aria-label="Kategoriler">
-  <div class="container">
-    <ul class="cat-bar__list">
-      {
-        CATEGORIES.map((c) => (
-          <li>
-            <a class="chip" href={`/kategori/${c.id}/`} aria-current={activeCategory === c.id ? 'page' : undefined}>
-              <span aria-hidden="true">{c.icon}</span>
-              {c.name}
-            </a>
-          </li>
-        ))
-      }
-    </ul>
-  </div>
-</nav>
 
 <script>
   const btn = document.querySelector<HTMLButtonElement>('[data-theme-toggle]');

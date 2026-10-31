@@ -5,7 +5,7 @@ const yil = krediSinirlari.lastReviewed.slice(0, 4);
 
 export const meta: ToolMeta = {
   slug: 'kredi-hesaplama',
-  title: 'Kredi Hesaplama',
+  title: 'Kredi Hesaplama Robotu',
   question: 'Aylık taksit ne kadar, faiz, KKDF ve BSMV dahil krediye toplam ne ödersiniz? Masraflarla gerçek maliyet ve yıllık maliyet oranı.',
   seoTitle: `Kredi Hesaplama ${yil} – Taksit, KKDF/BSMV ve Gerçek Maliyet`,
   description:

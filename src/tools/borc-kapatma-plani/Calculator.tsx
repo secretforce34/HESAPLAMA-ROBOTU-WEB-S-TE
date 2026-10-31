@@ -23,6 +23,31 @@ const TURLER: { value: BorcTuru; label: string }[] = [
   { value: 'kmh', label: 'Kredili mevduat (KMH, eksi hesap)' },
 ];
 
+/** hepsi: kart + KMH birlikte; kart: yalnız kredi kartları; kmh: yalnız kredili mevduat hesapları */
+export type Mod = 'hepsi' | 'kart' | 'kmh';
+
+const VARSAYILAN: Record<Mod, Omit<Satir, 'id'>[]> = {
+  hepsi: [
+    { ad: '1. kart', tur: 'kart', bakiye: 45_000, limit: 60_000, faiz: null },
+    { ad: '2. kart', tur: 'kart', bakiye: 12_000, limit: 30_000, faiz: null },
+    { ad: 'Eksi hesap', tur: 'kmh', bakiye: 20_000, limit: null, faiz: null },
+  ],
+  kart: [
+    { ad: '1. kart', tur: 'kart', bakiye: 45_000, limit: 60_000, faiz: null },
+    { ad: '2. kart', tur: 'kart', bakiye: 12_000, limit: 30_000, faiz: null },
+  ],
+  kmh: [
+    { ad: '1. banka KMH', tur: 'kmh', bakiye: 30_000, limit: null, faiz: null },
+    { ad: '2. banka KMH', tur: 'kmh', bakiye: 10_000, limit: null, faiz: null },
+  ],
+};
+
+const METIN: Record<Mod, { baslik: string; ekle: string; yeniAd: (n: number) => string; butce: number }> = {
+  hepsi: { baslik: 'Borçlarınız', ekle: '+ Borç ekle', yeniAd: (n) => `${n}. kart`, butce: 15_000 },
+  kart: { baslik: 'Kredi kartlarınız', ekle: '+ Kart ekle', yeniAd: (n) => `${n}. kart`, butce: 12_000 },
+  kmh: { baslik: 'KMH (eksi hesap) borçlarınız', ekle: '+ KMH ekle', yeniAd: (n) => `${n}. banka KMH`, butce: 8_000 },
+};
+
 const STRATEJI_ADI: Record<Strateji, string> = {
   cig: 'Çığ yöntemi (en yüksek faiz önce)',
   kartopu: 'Kartopu yöntemi (en küçük borç önce)',
@@ -38,18 +63,16 @@ const silIkon = (
 const sure = (ay: number) => (ay < 12 ? `${ay} ay` : ay % 12 === 0 ? `${ay / 12} yıl` : `${Math.floor(ay / 12)} yıl ${ay % 12} ay`);
 const sureMetni = (p: PlanSonucu) => (p.bitmedi ? 'Bitmiyor' : sure(p.ay));
 
-export default function Calculator() {
+export default function Calculator({ mod = 'hepsi' }: { mod?: Mod }) {
   const sayac = useRef(100);
+  const metin = METIN[mod];
+  const turler = mod === 'kart' ? TURLER.filter((t) => t.value !== 'kmh') : TURLER;
   const ortam = useMemo(() => {
     const bugun = todayIsoTR();
     return { faizDonemi: kartFaizDonemiOn(bugun), asgariDonemi: asgariOdemeDonemiOn(bugun) };
   }, []);
-  const [satirlar, setSatirlar] = useState<Satir[]>([
-    { id: 1, ad: '1. kart', tur: 'kart', bakiye: 45_000, limit: 60_000, faiz: null },
-    { id: 2, ad: '2. kart', tur: 'kart', bakiye: 12_000, limit: 30_000, faiz: null },
-    { id: 3, ad: 'Eksi hesap', tur: 'kmh', bakiye: 20_000, limit: null, faiz: null },
-  ]);
-  const [butce, setButce] = useState<number | null>(15_000);
+  const [satirlar, setSatirlar] = useState<Satir[]>(() => VARSAYILAN[mod].map((s, i) => ({ ...s, id: i + 1 })));
+  const [butce, setButce] = useState<number | null>(metin.butce);
   const [strateji, setStrateji] = useState<Exclude<Strateji, 'asgari'>>('cig');
   const [krediFaiz, setKrediFaiz] = useState<number | null>(null);
   const [krediVade, setKrediVade] = useState<number | null>(24);
@@ -95,7 +118,7 @@ export default function Calculator() {
     <div class="calc-grid">
       <div class="calc-inputs">
         <div class="field">
-          <span class="field__label">Borçlarınız</span>
+          <span class="field__label">{metin.baslik}</span>
           <ul class="line-items">
             {satirlar.map((s, i) => {
               const otomatik = (s.bakiye ?? 0) > 0 ? borcFaizi({ ad: '', tur: s.tur, bakiye: s.bakiye!, aylikFaiz: null, limit: 0 }, s.bakiye!, ortam) : null;
@@ -111,7 +134,9 @@ export default function Calculator() {
                   </div>
                   <div class="line-item__fields">
                     <TextField id={`bk-ad-${s.id}`} label="Adı" value={s.ad} onChange={(v) => guncelle(s.id, { ad: v })} />
-                    <SelectField id={`bk-tur-${s.id}`} label="Türü" value={s.tur} options={TURLER} onChange={(v) => guncelle(s.id, { tur: v })} />
+                    {mod !== 'kmh' && (
+                      <SelectField id={`bk-tur-${s.id}`} label="Türü" value={s.tur} options={turler} onChange={(v) => guncelle(s.id, { tur: v })} />
+                    )}
                     <NumberField id={`bk-bakiye-${s.id}`} label="Borç (son ekstre)" value={s.bakiye} onChange={(v) => guncelle(s.id, { bakiye: v })} suffix="TL" />
                     {s.tur !== 'kmh' && (
                       <NumberField id={`bk-limit-${s.id}`} label="Kart limiti" value={s.limit} onChange={(v) => guncelle(s.id, { limit: v })} suffix="TL" />
@@ -134,9 +159,14 @@ export default function Calculator() {
           <button
             type="button"
             class="btn btn--small add-row"
-            onClick={() => setSatirlar((l) => [...l, { id: sayac.current++, ad: `${l.length + 1}. kart`, tur: 'kart', bakiye: null, limit: null, faiz: null }])}
+            onClick={() =>
+              setSatirlar((l) => [
+                ...l,
+                { id: sayac.current++, ad: metin.yeniAd(l.length + 1), tur: mod === 'kmh' ? 'kmh' : 'kart', bakiye: null, limit: null, faiz: null },
+              ])
+            }
           >
-            + Borç ekle
+            {metin.ekle}
           </button>
         </div>
         <NumberField
@@ -177,10 +207,17 @@ export default function Calculator() {
       <div class="calc-results">
         {sonuc && secili ? (
           secili.yetersiz ? (
-            <Callout kind="danger">
-              Bütçeniz bu ayki asgari ödemelerin toplamını ({formatTL(secili.ilkAsgariToplam)}) karşılamıyor. Asgari tutar ödenmezse gecikme faizi
-              işler; bir yılda üç kez ödenmeyen kart nakit kullanımına kapatılır. Bütçeyi artırın ya da bankanızla yapılandırma konuşun.
-            </Callout>
+            mod === 'kmh' ? (
+              <Callout kind="danger">
+                Bütçeniz bu ay işleyecek faiz ve vergiyi ({formatTL(secili.ilkAsgariToplam)}) bile karşılamıyor; bu durumda borç her ay büyür. Bütçeyi
+                artırın ya da bankanızla borcu taksitli krediye çevirmeyi konuşun.
+              </Callout>
+            ) : (
+              <Callout kind="danger">
+                Bütçeniz bu ayki asgari ödemelerin toplamını ({formatTL(secili.ilkAsgariToplam)}) karşılamıyor. Asgari tutar ödenmezse gecikme faizi
+                işler; bir yılda üç kez ödenmeyen kart nakit kullanımına kapatılır. Bütçeyi artırın ya da bankanızla yapılandırma konuşun.
+              </Callout>
+            )
           ) : (
             <>
               <ResultHero
@@ -267,10 +304,17 @@ export default function Calculator() {
                   }))}
                 />
               </Details>
-              <Callout kind="info">
-                Çığ yöntemi en az faizi öder; kartopu yöntemi küçük borçları hızla kapatıp motivasyon sağlar. Faiz boş bırakılırsa TCMB’nin ilan
-                ettiği azami oran (alışverişte dönem borcuna göre) kullanılır; faize %15 KKDF ve %15 BSMV eklenir.
-              </Callout>
+              {mod === 'kmh' ? (
+                <Callout kind="info">
+                  KMH’de yasal asgari ödeme yoktur; banka her ay faizi ve vergisini tahsil eder, yalnızca bu tutar ödenirse ana para hiç azalmaz. Faiz boş
+                  bırakılırsa TCMB’nin nakit kullanım için ilan ettiği azami oran kullanılır; faize %15 KKDF ve %15 BSMV eklenir.
+                </Callout>
+              ) : (
+                <Callout kind="info">
+                  Çığ yöntemi en az faizi öder; kartopu yöntemi küçük borçları hızla kapatıp motivasyon sağlar. Faiz boş bırakılırsa TCMB’nin ilan
+                  ettiği azami oran (alışverişte dönem borcuna göre) kullanılır; faize %15 KKDF ve %15 BSMV eklenir.
+                </Callout>
+              )}
               <ShareBar params={{}} summary={ozet} />
             </>
           )

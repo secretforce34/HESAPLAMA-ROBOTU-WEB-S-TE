@@ -26,8 +26,10 @@ describe('araç kaydı', () => {
         expect(existsSync(path.resolve(process.cwd(), 'src/pages', `${t.slug}.astro`))).toBe(true);
       });
 
-      it('kategori geçerli', () => {
+      it('kategori geçerli ve menü sırasında yer alıyor', () => {
         expect(catIds.has(t.category)).toBe(true);
+        const order: readonly string[] = CATEGORIES.find((c) => c.id === t.category)!.order;
+        expect(order, `${t.slug} kategorinin order listesinde yok`).toContain(t.slug);
       });
 
       it('SEO metinleri uygun uzunlukta', () => {

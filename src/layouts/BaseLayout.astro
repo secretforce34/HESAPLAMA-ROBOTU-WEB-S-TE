@@ -1,7 +1,11 @@
 ---
 import '@fontsource-variable/inter';
+import '@fontsource/poppins/500.css';
+import '@fontsource/poppins/600.css';
+import '@fontsource/poppins/700.css';
 import '../styles/global.css';
 import Header from '../components/Header.astro';
+import Sidebar from '../components/Sidebar.astro';
 import Footer from '../components/Footer.astro';
 import { SITE } from '../site.config';
 
@@ -10,11 +14,13 @@ interface Props {
   title: string;
   description: string;
   activeCategory?: string;
+  /** Robot sayfasında sol menüde işaretlenecek robot */
+  activeSlug?: string;
   noindex?: boolean;
   jsonLd?: Record<string, unknown>[];
 }
 
-const { title, description, activeCategory, noindex = false, jsonLd = [] } = Astro.props;
+const { title, description, activeCategory, activeSlug, noindex = false, jsonLd = [] } = Astro.props;
 const fullTitle = title.includes(SITE.name) ? title : `${title} | ${SITE.name}`;
 const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
 ---
@@ -31,7 +37,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#0d7a64" />
+    <meta name="theme-color" content="#0d3461" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="tr_TR" />
     <meta property="og:site_name" content={SITE.name} />
@@ -53,10 +59,15 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
   </head>
   <body>
     <a class="skip-link" href="#icerik">İçeriğe geç</a>
-    <Header activeCategory={activeCategory} />
-    <main id="icerik">
-      <slot />
-    </main>
-    <Footer />
+    <div class="app">
+      <Sidebar activeCategory={activeCategory} activeSlug={activeSlug} />
+      <div class="app-main">
+        <Header />
+        <main id="icerik">
+          <slot />
+        </main>
+        <Footer />
+      </div>
+    </div>
   </body>
 </html>

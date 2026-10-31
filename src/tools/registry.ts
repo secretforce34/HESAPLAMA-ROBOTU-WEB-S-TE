@@ -1,4 +1,4 @@
-import { CATEGORIES, type CategoryId } from './categories';
+import { CATEGORIES, getCategory, type CategoryId } from './categories';
 import type { ToolMeta } from './types';
 
 // Her araç kendi klasöründe meta.ts dosyası taşır; burada otomatik toplanır.
@@ -12,8 +12,14 @@ export function getTool(slug: string): ToolMeta | undefined {
   return TOOLS.find((t) => t.slug === slug);
 }
 
+/** Başlıktaki robotlar, categories.ts içindeki `order` sırasıyla (listede olmayanlar sona, alfabetik). */
 export function toolsInCategory(id: CategoryId): ToolMeta[] {
-  return TOOLS.filter((t) => t.category === id);
+  const order: readonly string[] = getCategory(id).order;
+  const rank = (slug: string) => {
+    const i = order.indexOf(slug);
+    return i === -1 ? order.length : i;
+  };
+  return TOOLS.filter((t) => t.category === id).sort((a, b) => rank(a.slug) - rank(b.slug));
 }
 
 export function categoriesWithTools() {

@@ -1,0 +1,103 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/faiz-getiri-hesaplama/Calculator';
+import { meta } from '../tools/faiz-getiri-hesaplama/meta';
+import { stopajDonemiOn } from '../data/params/mevduat';
+import { donemHesapla, faizHesapla, gerekenAnapara, aylikHedeftenDonemHedefi, stopajOrani } from '../tools/faiz-getiri-hesaplama/calc';
+import { formatDateTR, formatNumber, formatPercent, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const s = stopajDonemiOn(meta.lastReviewed);
+
+// Örnek 1: 100.000 TL, yıllık %45, 32 gün
+const o1 = donemHesapla(100_000, 45, 32, stopajOrani(32, meta.lastReviewed));
+// Örnek 2: aynı para 1 yıl boyunca 32 günlük vadeyle faiziyle yenilenirse (11 vade)
+const o2 = faizHesapla({ anapara: 100_000, yillikOran: 45, gun: 32, stopaj: stopajOrani(32, meta.lastReviewed), donemSayisi: 11 });
+// Örnek 3: 1 yıldan uzun vade (400 gün) stopajı
+const o3 = donemHesapla(500_000, 38, 400, stopajOrani(400, meta.lastReviewed));
+// Örnek 4: ayda 30.000 TL net faiz için gereken para
+const hedef = gerekenAnapara(aylikHedeftenDonemHedefi(30_000, 32), 45, 32, s.altiAya);
+
+const faq: FaqItem[] = [
+  {
+    q: 'Mevduat faizinden ne kadar vergi (stopaj) kesilir?',
+    a: `TL mevduatta stopaj vadeye göre değişir: vadesiz hesaplarda ve 6 aya kadar vadede %${formatNumber(s.altiAya, 1)}, 1 yıla kadar vadede %${s.birYila}, 1 yıldan uzun vadede %${s.uzun}. Bu oranlar ${formatDateTR(s.to)} tarihine kadar geçerlidir (Cumhurbaşkanı Kararı, Resmî Gazete 20.06.2026). Banka vergiyi faizden keser, size net tutar yatar; ayrıca beyanname vermeniz gerekmez.`,
+  },
+  {
+    q: 'Mevduat faizi nasıl hesaplanır?',
+    a: 'Bankalar TL mevduatta faizi gün esasına göre hesaplar: anapara × yıllık faiz oranı × gün sayısı ÷ 365. Örneğin yıllık %45 oranla 32 günlük vadede 100.000 TL için brüt faiz yaklaşık 3.945 TL’dir; stopaj düşülünce net tutar ele geçer.',
+  },
+  {
+    q: 'Bileşik faiz nedir, mevduatta nasıl işler?',
+    a: 'Vade sonunda faizi çekmeyip anaparayla birlikte yeniden yatırırsanız sonraki vadede faiz, büyümüş tutar üzerinden işler; buna bileşik faiz denir. 32 günlük vadeyi bir yıl boyunca yenilemek, aynı oranlı tek seferlik 365 günlük vadeden daha yüksek toplam getiri sağlayabilir; ancak her yenilemede faiz oranı değişebilir.',
+  },
+  {
+    q: 'Ayda 30.000 TL faiz geliri için ne kadar para gerekir?',
+    a: `Yıllık %45 brüt faiz ve 32 günlük vadeyle, %${formatNumber(s.altiAya, 1)} stopaj sonrasında ayda ortalama 30.000 TL net faiz için yaklaşık ${formatTL(hedef, 0)} gerekir. Robotun “Aylık gelir için gereken para” seçeneğiyle kendi oranınıza göre hesaplayabilirsiniz.`,
+  },
+  {
+    q: 'Faiz getirim enflasyonu yeniyor mu?',
+    a: 'Net faiz getirinizin bileşik yıllık karşılığı enflasyondan yüksekse paranızın alım gücü artar, düşükse azalır. Reel getiri = (1 + net getiri) ÷ (1 + enflasyon) − 1 formülüyle bulunur. Robot, son açıklanan yıllık TÜFE ile bu karşılaştırmayı kendiliğinden yapar.',
+  },
+  {
+    q: 'Katılım bankası kâr payına da stopaj var mı?',
+    a: 'Evet. Katılım bankalarındaki katılma hesaplarına ödenen kâr payına da TL mevduatla aynı vadeye bağlı stopaj oranları uygulanır. Döviz ve altın hesaplarında oranlar farklıdır; bu hesaplar için stopajı “Kendim gireceğim” seçeneğiyle yazabilirsiniz.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Faiz getirisi nasıl hesaplanır?</h2>
+  <p>
+    Bankalar TL vadeli mevduatta faizi gün esasına göre, yılı 365 gün sayarak hesaplar. Brüt faizden stopaj (gelir vergisi kesintisi) düşülür ve net faiz
+    vade sonunda hesabınıza eklenir. Hesap faiziyle birlikte yenilenirse sonraki vade büyümüş tutar üzerinden işler (bileşik faiz).
+  </p>
+  <div class="formula">Brüt faiz = Anapara × Yıllık oran × Gün ÷ 365
+Stopaj = Brüt faiz × Stopaj oranı
+Net faiz = Brüt faiz − Stopaj</div>
+
+  <h3>Stopaj oranları ({formatDateTR(s.to)} tarihine kadar)</h3>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Vade</th><th>Stopaj</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Vadesiz ve 6 aya kadar</td><td>%{formatNumber(s.altiAya, 1)}</td></tr>
+        <tr><td>6 aydan uzun, 1 yıla kadar</td><td>%{s.birYila}</td></tr>
+        <tr><td>1 yıldan uzun</td><td>%{s.uzun}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>Oran, hesabın açıldığı ya da vadesinin yenilendiği gün geçerli olan orandır; vade boyunca değişmez.</p>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      <strong>32 günlük vade:</strong> 100.000 TL, yıllık %45 oranla 32 gün için brüt faiz {formatTL(o1.brutFaiz)} olur. %{formatNumber(s.altiAya, 1)}
+      stopaj ({formatTL(o1.stopaj)}) düşülünce net faiz {formatTL(o1.netFaiz)}, vade sonunda hesapta {formatTL(o1.sonTutar)} bulunur.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Faiziyle yenilenirse:</strong> Aynı para bir yıl boyunca 32 günlük vadeyle 11 kez faiziyle yenilenirse ({o2.toplamGun} gün) toplam net faiz
+      {` ${formatTL(o2.toplamNet)}`} olur; bu, yıllık bileşik {formatPercent(o2.netYillikEfektif)} net getiriye karşılık gelir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>1 yıldan uzun vade:</strong> 500.000 TL, yıllık %38 oranla 400 günlük vadede brüt faiz {formatTL(o3.brutFaiz)}; stopaj %{s.uzun} olduğu için
+      yalnızca {formatTL(o3.stopaj)} kesilir ve net faiz {formatTL(o3.netFaiz)} olur.
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Bankaların ilan ettiği oranlar yıllık brüt oranlardır; ele geçen getiri stopaj kadar düşüktür.</li>
+    <li>Vadeyi bozmak (vadesinden önce çekmek) çoğu bankada o dönemin faizinin kaybedilmesine yol açar.</li>
+    <li>Mevduat, her bankada kişi başına belirli bir tutara kadar TMSF güvencesindedir; güncel tutarı bankanızdan ya da TMSF’den öğrenebilirsiniz.</li>
+    <li>Bu robot faizi hesaplar; hangi bankanın ne kadar faiz verdiğini göstermez. Oranı bankanızın teklifinden yazın.</li>
+  </ul>
+</ToolLayout>

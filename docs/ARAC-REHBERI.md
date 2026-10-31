@@ -40,7 +40,8 @@ src/pages/<slug>.astro            → sayfa: ToolLayout + Calculator + açıklam
 Gerekirse ek olarak: `src/data/params/<konu>.ts` (yasal oran seti, bkz. §4).
 
 - `slug`: küçük harf, Türkçe karakter yok, tire ile; arama niyetine uygun: `fazla-mesai-hesaplama`, `halka-arz-lot-hesaplama`.
-- Araç, `meta.ts` dosyası sayesinde ana sayfaya, kategoriye, aramaya ve site haritasına **kendiliğinden** eklenir. Kayıt dosyası düzenlemek gerekmez.
+- Araç, `meta.ts` dosyası sayesinde ana sayfaya, kategoriye, aramaya ve site haritasına **kendiliğinden** eklenir; yalnızca `categories.ts` içindeki `order` listesine slug'ı eklemek gerekir.
+- Robot kartındaki yuvarlak resim: `src/assets/robotlar/<slug>.webp` (kare, 512×512, nesne ortada). Resim yoksa kartta `icon` emojisi gösterilir.
 
 ## 3. meta.ts
 
@@ -53,7 +54,7 @@ Gerekirse ek olarak: `src/data/params/<konu>.ts` (yasal oran seti, bkz. §4).
 | `seoTitle` | ≤ 65 karakter. Yıllık oranlı araçlarda yıl, oran setinden gelsin (ör. `` `Brüt Net Maaş Hesaplama ${maas.year}` ``), elle yazma. |
 | `description` | 120–155 karakter, somut fayda |
 | `cardText` | tek kısa cümle (kartlarda) |
-| `category` | `src/tools/categories.ts` içindeki id'lerden biri |
+| `category` | `src/tools/categories.ts` içindeki id'lerden biri. Robotun slug'ı o başlığın `order` listesine de eklenmeli (sol menü ve kart sırası buradan gelir; test denetler). |
 | `keywords` | 5–10 eş anlamlı/arama ifadesi (arama kutusu için) |
 | `maintenance` | `none` / `yearly` / `monthly` |
 | `paramSets` | kullandığın oran setleri (bayatlık uyarısı + "Kullanılan oranlar" kutusu bunlardan oluşur) |

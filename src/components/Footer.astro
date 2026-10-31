@@ -1,49 +1,18 @@
 ---
-import Logo from './Logo.astro';
-import { CATEGORIES } from '../tools/categories';
 import { SITE } from '../site.config';
 
 const year = new Date().getFullYear();
 ---
 
 <footer class="site-footer">
-  <div class="container">
-    <div class="footer-grid">
-      <div class="footer-about">
-        <a class="brand" href="/">
-          <Logo class="brand__mark" />
-          <span>{SITE.name}</span>
-        </a>
-        <p style="margin-top:10px">
-          Türkiye’nin güncel kurallarıyla çalışan ücretsiz hesaplama robotları. Hesaplar tarayıcınızda yapılır; girdiğiniz
-          bilgiler hiçbir sunucuya gönderilmez.
-        </p>
-      </div>
-      <div>
-        <h2>Kategoriler</h2>
-        <ul>
-          {
-            CATEGORIES.map((c) => (
-              <li>
-                <a href={`/kategori/${c.id}/`}>{c.name}</a>
-              </li>
-            ))
-          }
-        </ul>
-      </div>
-      <div>
-        <h2>Hesap Robotu</h2>
-        <ul>
-          <li><a href="/tum-araclar/">Tüm araçlar</a></li>
-          <li><a href="/hakkimizda/">Hakkımızda ve yöntem</a></li>
-          <li><a href="/gizlilik/">Gizlilik</a></li>
-          <li><a href="/sorumluluk-reddi/">Sorumluluk reddi</a></li>
-        </ul>
-      </div>
-    </div>
-    <div class="footer-bottom">
-      <span>© {year} {SITE.name}</span>
-      <span>Sonuçlar bilgilendirme amaçlıdır; hukuki, mali veya yatırım tavsiyesi değildir.</span>
-    </div>
-  </div>
+  <nav class="site-footer__links" aria-label="Site bağlantıları">
+    <a href="/tum-araclar/">Tüm robotlar</a>
+    <a href="/hakkimizda/">Hakkımızda ve yöntem</a>
+    <a href="/gizlilik/">Gizlilik</a>
+    <a href="/sorumluluk-reddi/">Sorumluluk reddi</a>
+  </nav>
+  <p>
+    © {year} {SITE.name} · Sonuçlar bilgilendirme amaçlıdır; hukuki, mali veya yatırım tavsiyesi değildir. Hesaplar tarayıcınızda
+    yapılır, girdiğiniz bilgiler hiçbir sunucuya gönderilmez.
+  </p>
 </footer>

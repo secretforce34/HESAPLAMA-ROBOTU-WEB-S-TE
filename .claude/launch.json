@@ -4,8 +4,24 @@
     {
       "name": "hesap-robotu-dev",
       "runtimeExecutable": "npx",
-      "runtimeArgs": ["astro", "dev", "--port", "4321"],
+      "runtimeArgs": [
+        "astro",
+        "dev",
+        "--port",
+        "4321"
+      ],
       "port": 4321
+    },
+    {
+      "name": "hesap-robotu-onizleme",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": [
+        "astro",
+        "preview",
+        "--port",
+        "4330"
+      ],
+      "port": 4330
     }
   ]
 }

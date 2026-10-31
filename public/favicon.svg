@@ -1,11 +1,11 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 36">
-  <line x1="18" y1="3.5" x2="18" y2="9" stroke="#0d7a64" stroke-width="2.2" stroke-linecap="round"/>
-  <circle cx="18" cy="3.6" r="2.6" fill="#f59e0b"/>
-  <rect x="3" y="8.5" width="30" height="24" rx="8" fill="#0d7a64"/>
+  <line x1="18" y1="3.5" x2="18" y2="9" stroke="#0d3461" stroke-width="2.2" stroke-linecap="round"/>
+  <circle cx="18" cy="3.6" r="2.6" fill="#0d3461"/>
+  <rect x="3" y="8.5" width="30" height="24" rx="8" fill="#f5a524"/>
   <rect x="7" y="13" width="22" height="11.5" rx="5.75" fill="#ffffff"/>
-  <circle cx="13.2" cy="18.75" r="2.4" fill="#0f1b2d"/>
-  <circle cx="22.8" cy="18.75" r="2.4" fill="#0f1b2d"/>
+  <circle cx="13.2" cy="18.75" r="2.4" fill="#0d3461"/>
+  <circle cx="22.8" cy="18.75" r="2.4" fill="#0d3461"/>
   <circle cx="13.9" cy="18" r="0.75" fill="#ffffff"/>
   <circle cx="23.5" cy="18" r="0.75" fill="#ffffff"/>
-  <rect x="13" y="27.2" width="10" height="2.2" rx="1.1" fill="#f59e0b"/>
+  <rect x="13" y="27.2" width="10" height="2.2" rx="1.1" fill="#0d3461"/>
 </svg>

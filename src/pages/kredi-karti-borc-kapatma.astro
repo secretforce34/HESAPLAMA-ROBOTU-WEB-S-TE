@@ -1,0 +1,93 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/kredi-karti-borc-kapatma/Calculator';
+import { meta } from '../tools/kredi-karti-borc-kapatma/meta';
+import { asgariOdemeDonemiOn, kartFaizDonemiOn, krediKartiFaizleri } from '../data/params/kredi';
+import { planla, type Borc } from '../tools/kredi-karti-borc-kapatma/calc';
+import { formatNumber, formatTL } from '../lib/format';
+import type { FaqItem } from '../tools/types';
+
+const fd = kartFaizDonemiOn(meta.lastReviewed);
+const ad = asgariOdemeDonemiOn(meta.lastReviewed);
+const o = { faizDonemi: fd, asgariDonemi: ad };
+const v = krediKartiFaizleri.values.vergiler;
+const d = fd.dilimler;
+
+// Örnek 1: iki kart, ayda 12.000 TL
+const ornek1: Borc[] = [
+  { ad: '1. kart', tur: 'kart', bakiye: 45_000, aylikFaiz: null, limit: 60_000 },
+  { ad: '2. kart', tur: 'kart', bakiye: 12_000, aylikFaiz: null, limit: 30_000 },
+];
+const plan1 = planla(ornek1, 12_000, 'cig', o);
+const asgari1 = planla(ornek1, 0, 'asgari', o);
+
+// Örnek 2: tek kart, yüksek limit (asgari %40)
+const ornek2: Borc[] = [{ ad: 'Kart', tur: 'kart', bakiye: 80_000, aylikFaiz: null, limit: 150_000 }];
+const plan2 = planla(ornek2, 20_000, 'cig', o);
+const asgari2 = planla(ornek2, 0, 'asgari', o);
+
+const sure = (ay: number) => (ay < 12 ? `${ay} ay` : ay % 12 === 0 ? `${ay / 12} yıl` : `${Math.floor(ay / 12)} yıl ${ay % 12} ay`);
+
+const faq: FaqItem[] = [
+  {
+    q: 'Kredi kartı borcu kaç ayda biter?',
+    a: 'Borcun bitme süresi her ay ne kadar ödediğinize ve kartın faizine bağlıdır. Yalnızca asgari tutarı öderseniz borç her ay küçülür ama faiz işlemeye devam ettiği için yıllarca sürebilir. Asgari tutardan fazlasını ödedikçe süre ve ödenen faiz hızla azalır; robot iki durumu yan yana gösterir.',
+  },
+  {
+    q: 'Asgari ödeme tutarı nasıl belirlenir?',
+    a: `Asgari tutar, dönem borcunun kart limitine göre belirlenen yüzdesidir: limiti ${formatTL(ad.limitEsigi, 0)} ve altındaki kartlarda %${ad.altOran}, üzerindekilerde %${ad.ustOran} (BDDK). Asgari tutar ödenirse kalan borca akdi faiz, ödenmezse daha yüksek olan gecikme faizi uygulanır.`,
+  },
+  {
+    q: 'Birden çok kartım varsa hangisini önce kapatmalıyım?',
+    a: 'Her kartın asgari tutarını ödeyip artan parayı tek bir karta yığmak en hızlı yoldur. En az faizi ödemek için en yüksek faizli karttan başlanır (çığ yöntemi); küçük borçları hızla bitirmek isteyenler en küçük borçtan başlar (kartopu yöntemi). Robot iki yöntemin süresini ve faizini karşılaştırır.',
+  },
+  {
+    q: 'Nakit avans borcu alışveriş borcundan farklı mı hesaplanır?',
+    a: `Evet. Nakit avansta dönem borcundan bağımsız tek bir azami faiz oranı vardır (aylık %${formatNumber(fd.nakit.akdi, 2)}) ve faiz çekildiği günden itibaren işler. Robotta borç türünü “nakit avans” seçerek bu oranla hesaplatabilirsiniz.`,
+  },
+  {
+    q: 'Asgari tutarı ödemezsem ne olur?',
+    a: 'Ödenmeyen kısma gecikme faizi işler. Bir takvim yılı içinde asgari tutar toplam üç kez ödenmezse kart nakit kullanımına, üst üste üç kez ödenmezse alışverişe de kapatılır ve borç ödenene kadar yeni limit verilmez.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Kredi kartı borcu nasıl kapanır?</h2>
+  <p>
+    Her ay her kartın asgari tutarı ödenir; bütçeden artan para seçtiğiniz yönteme göre tek bir karta eklenir. Ödenmeyen kalan borca aylık akdi faiz,
+    faizin üzerine de %{v.kkdf} KKDF ve %{v.bsmv} BSMV eklenir. Bir kart bitince onun ödemesi sıradaki karta geçer, böylece aylık bütçeniz hep aynı kalır.
+  </p>
+  <div class="formula">Sonraki dönem borcu = (Dönem borcu − Ödeme) × (1 + Aylık faiz × 1,30)
+Asgari tutar = Dönem borcu × %{ad.altOran} (limit ≤ {formatTL(ad.limitEsigi, 0)}) ya da %{ad.ustOran}</div>
+  <p>
+    Faiz alanını boş bırakırsanız TCMB’nin bu ay için ilan ettiği azami oranlar kullanılır: alışverişte dönem borcu {formatTL(d[0].ust!, 0)} altındaysa
+    aylık %{formatNumber(d[0].akdi, 2)}, {formatTL(d[1].ust!, 0)}’ye kadar %{formatNumber(d[1].akdi, 2)}, üzerindeyse %{formatNumber(d[2].akdi, 2)}.
+    Bankanız daha düşük oran uyguluyorsa ekstrenizdeki oranı yazın.
+  </p>
+
+  <h2>Örnek hesaplama</h2>
+  <div class="example">
+    <p>
+      <strong>İki kart, ayda 12.000 TL:</strong> 45.000 TL (limit 60.000 TL) ve 12.000 TL (limit 30.000 TL) borcu olan iki kart, en yüksek faizliden
+      başlanarak ayda 12.000 TL ödenirse {sure(plan1.ay)} içinde kapanır; faiz ve vergi toplamı {formatTL(plan1.toplamFaiz, 0)} olur. Yalnızca asgari
+      tutar ödenirse borç {sure(asgari1.ay)} sürer ve {formatTL(asgari1.toplamFaiz, 0)} faiz ve vergi ödenir.
+    </p>
+  </div>
+  <div class="example">
+    <p>
+      <strong>Yüksek limitli kart:</strong> Limiti 150.000 TL olan kartta asgari oran %{ad.ustOran}’tır. 80.000 TL borç ayda 20.000 TL ödenerek
+      {` ${sure(plan2.ay)}`} içinde biter ({formatTL(plan2.toplamFaiz, 0)} faiz ve vergi); yalnızca asgari ödenirse {sure(asgari2.ay)} sürer
+      ({formatTL(asgari2.toplamFaiz, 0)}).
+    </p>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Robot, borcu kapatırken karta yeni harcama yapılmadığını varsayar. Harcama sürerse plan uzar.</li>
+    <li>Taksitli alışverişlerin henüz ekstreye gelmemiş taksitleri dönem borcuna eklenmez; onları da kapatmak istiyorsanız toplam borca ekleyin.</li>
+    <li>Eksi hesap (KMH) borcunuz da varsa “Kredi Kartı ve KMH Birlikte Borç Kapatma Planı” robotunu kullanın.</li>
+  </ul>
+</ToolLayout>

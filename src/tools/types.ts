@@ -31,8 +31,12 @@ export interface ToolMeta {
   sources: Source[];
   /** İçeriğin ve hesap mantığının en son kontrol edildiği gün (ISO) */
   lastReviewed: string;
-  /** Ana sayfada "öne çıkanlar"da gösterilsin mi */
+  /** Kartta "Popüler" etiketi */
   featured?: boolean;
+  /** Kartta "Yeni" etiketi (yeni eklenen robotlar) */
+  yeni?: boolean;
+  /** schema.org uygulama türü; varsayılan FinanceApplication */
+  schemaCategory?: string;
   /** İlgili araçların slug'ları */
   related?: string[];
 }

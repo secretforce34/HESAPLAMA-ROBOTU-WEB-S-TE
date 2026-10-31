@@ -10,6 +10,7 @@ import Breadcrumbs from '../components/Breadcrumbs.astro';
 import Faq from '../components/Faq.astro';
 import StaleWarning from '../components/StaleWarning.astro';
 import ToolAside from '../components/ToolAside.astro';
+import RobotAvatar from '../components/RobotAvatar.astro';
 import { getCategory } from '../tools/categories';
 import { formatDateTR } from '../lib/format';
 import { SITE } from '../site.config';
@@ -33,7 +34,7 @@ const jsonLd: Record<string, unknown>[] = [
     name: meta.title,
     description: meta.description,
     url: pageUrl,
-    applicationCategory: 'FinanceApplication',
+    applicationCategory: meta.schemaCategory ?? 'FinanceApplication',
     operatingSystem: 'Tümü',
     inLanguage: 'tr-TR',
     isAccessibleForFree: true,
@@ -63,22 +64,32 @@ if (faq.length > 0) {
 }
 ---
 
-<BaseLayout title={meta.seoTitle} description={meta.description} activeCategory={meta.category} jsonLd={jsonLd}>
+<BaseLayout title={meta.seoTitle} description={meta.description} activeCategory={meta.category} activeSlug={meta.slug} jsonLd={jsonLd}>
   <div class="container">
     <Breadcrumbs items={[{ name: 'Ana sayfa', href: '/' }, { name: cat.name, href: `/kategori/${cat.id}/` }, { name: meta.title }]} />
     <header class="tool-head">
-      <h1>{meta.title}</h1>
-      <p class="tool-head__question">{meta.question}</p>
-      <div class="badges">
-        <span class="badge badge--ok">🔒 Bilgileriniz cihazınızda kalır</span>
-        <span class="badge">✓ Kurallar kontrol edildi: {formatDateTR(meta.lastReviewed)}</span>
-        <span class="badge">Ücretsiz · üyelik yok</span>
+      <RobotAvatar tool={meta} size="lg" />
+      <div class="tool-head__text">
+        <h1>{meta.title}</h1>
+        <p class="tool-head__question">{meta.question}</p>
+        <div class="badges">
+          <span class="badge badge--ok">🔒 Bilgileriniz cihazınızda kalır</span>
+          <span class="badge">✓ Kurallar kontrol edildi: {formatDateTR(meta.lastReviewed)}</span>
+          <span class="badge">Ücretsiz · üyelik yok</span>
+        </div>
       </div>
     </header>
 
+    <nav class="tabs" aria-label="Sayfa bölümleri">
+      <a href="#hesapla" class="is-active">Hesapla</a>
+      <a href="#aciklama">Nasıl hesaplanır?</a>
+      {faq.length > 0 && <a href="#sss">Sık sorulanlar</a>}
+      <a href="#kaynaklar">Kaynaklar</a>
+    </nav>
+
     <StaleWarning sets={meta.paramSets} />
 
-    <section class="calc" aria-label={`${meta.title} hesaplayıcısı`}>
+    <section class="calc" id="hesapla" aria-label={`${meta.title} hesaplayıcısı`}>
       <slot name="calculator" />
     </section>
     <p class="embed-credit">
@@ -88,12 +99,12 @@ if (faq.length > 0) {
     </p>
 
     <div class="tool-body">
-      <article class="prose">
+      <article class="prose panel" id="aciklama">
         <slot />
         {
           faq.length > 0 && (
             <>
-              <h2>Sık sorulan sorular</h2>
+              <h2 id="sss">Sık sorulan sorular</h2>
               <Faq items={faq} />
             </>
           )

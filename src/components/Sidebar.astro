@@ -1,0 +1,81 @@
+---
+// Sol lacivert menü. Masaüstünde sabit, dar ekranda ☰ düğmesiyle soldan açılır.
+import Logo from './Logo.astro';
+import NavIcon from './NavIcon.astro';
+import { CATEGORIES } from '../tools/categories';
+import { toolsInCategory, TOOLS } from '../tools/registry';
+
+interface Props {
+  activeCategory?: string;
+  activeSlug?: string;
+}
+const { activeCategory, activeSlug } = Astro.props;
+const path = Astro.url.pathname;
+const isHome = path === '/';
+---
+
+<aside class="sidebar" id="sidebar" aria-label="Ana menü">
+  <div class="sidebar__brand">
+    <a class="sidebar__logo" href="/" aria-label="Hesap Robotu – ana sayfa">
+      <Logo class="sidebar__mark" />
+      <span class="sidebar__name">Hesap<span>Robotu</span></span>
+    </a>
+    <button type="button" class="sidebar__close" data-sidebar-close aria-label="Menüyü kapat">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <path d="M6 6l12 12M18 6 6 18"></path>
+      </svg>
+    </button>
+  </div>
+  <nav class="side-nav">
+    <ul>
+      <li>
+        <a class="side-nav__link" href="/" aria-current={isHome ? 'page' : undefined}>
+          <NavIcon name="home" />
+          <span class="side-nav__label">Ana sayfa</span>
+        </a>
+      </li>
+      {
+        CATEGORIES.map((c) => {
+          // Solda yalnızca başlıklar; robotlar sağdaki panelde listelenir (site sahibinin isteği).
+          const tools = toolsInCategory(c.id);
+          const current = activeCategory === c.id && !activeSlug;
+          return (
+            <li>
+              <a class="side-nav__link" href={`/kategori/${c.id}/`} aria-current={current ? 'page' : activeCategory === c.id ? 'true' : undefined}>
+                <NavIcon name={c.id} />
+                <span class="side-nav__label">{c.name}</span>
+                <span class="side-nav__count">{tools.length}</span>
+              </a>
+            </li>
+          );
+        })
+      }
+      <li>
+        <a class="side-nav__link" href="/tum-araclar/" aria-current={path === '/tum-araclar/' ? 'page' : undefined}>
+          <NavIcon name="all" />
+          <span class="side-nav__label">Tüm robotlar</span>
+          <span class="side-nav__count">{TOOLS.length}</span>
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <p class="sidebar__note">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+    Hesaplar cihazınızda yapılır, bilgileriniz hiçbir yere gönderilmez.
+  </p>
+</aside>
+<div class="sidebar-backdrop" data-sidebar-close></div>
+
+<script>
+  const root = document.documentElement;
+  const open = () => {
+    root.classList.add('sidebar-open');
+    document.querySelector<HTMLElement>('#sidebar .side-nav__link')?.focus();
+  };
+  const close = () => root.classList.remove('sidebar-open');
+  document.querySelectorAll('[data-sidebar-open]').forEach((b) => b.addEventListener('click', open));
+  document.querySelectorAll('[data-sidebar-close]').forEach((b) => b.addEventListener('click', close));
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && root.classList.contains('sidebar-open')) close();
+  });
+</script>

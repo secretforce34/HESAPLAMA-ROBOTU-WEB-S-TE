@@ -1,39 +1,44 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import Breadcrumbs from '../components/Breadcrumbs.astro';
+import NavIcon from '../components/NavIcon.astro';
 import ToolCard from '../components/ToolCard.astro';
-import ToolSearch from '../ui/ToolSearch';
 import { categoriesWithTools, TOOLS } from '../tools/registry';
-import { searchItems } from '../lib/search-items';
 
 const cats = categoriesWithTools();
 ---
 
-<BaseLayout title="Tüm Hesaplama Robotları" description={`Maaş, kredi, vergi, kira, altın ve borsa için ${TOOLS.length} ücretsiz hesaplama robotunun tam listesi.`}>
+<BaseLayout title="Tüm Hesaplama Robotları" description={`Kredi, araç, kira, maaş, borsa, vergi, altın ve daha fazlası için ${TOOLS.length} ücretsiz hesaplama robotunun tam listesi.`}>
   <div class="container">
-    <Breadcrumbs items={[{ name: 'Ana sayfa', href: '/' }, { name: 'Tüm araçlar' }]} />
-    <header class="page-head" style="padding-top:0">
-      <h1>Tüm hesaplama robotları</h1>
-      <p>{TOOLS.length} hesaplama robotu, kategorilere göre. Aradığınızı hızlıca bulmak için yazmaya başlayın.</p>
-    </header>
-    <ToolSearch items={searchItems()} client:load />
-    {
-      cats.map((c) => (
-        <section class="section" aria-labelledby={`kat-${c.id}`}>
-          <div class="section__head">
-            <h2 id={`kat-${c.id}`}>
-              <span aria-hidden="true">{c.icon}</span> {c.name}
-            </h2>
-          </div>
-          <ul class="tool-grid">
-            {c.tools.map((t) => (
-              <li>
-                <ToolCard tool={t} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ))
-    }
+    <Breadcrumbs items={[{ name: 'Ana sayfa', href: '/' }, { name: 'Tüm robotlar' }]} />
+    <div class="panel">
+      <div class="panel__head">
+        <div>
+          <h1 class="panel__title">Tüm hesaplama robotları</h1>
+          <p class="panel__sub">{TOOLS.length} robot, sol menüdeki başlıklara göre. Aradığınızı yukarıdaki arama kutusuna yazabilirsiniz.</p>
+        </div>
+      </div>
+      {
+        cats.map((c) => (
+          <section class="rsection" aria-labelledby={`kat-${c.id}`}>
+            <div class="rsection__head">
+              <h2 id={`kat-${c.id}`} class="section-title">
+                <span class="section-title__icon" style={`--tint:${c.color}`}>
+                  <NavIcon name={c.id} />
+                </span>
+                {c.name}
+              </h2>
+            </div>
+            <ul class="rgrid">
+              {c.tools.map((t) => (
+                <li>
+                  <ToolCard tool={t} />
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      }
+    </div>
   </div>
 </BaseLayout>

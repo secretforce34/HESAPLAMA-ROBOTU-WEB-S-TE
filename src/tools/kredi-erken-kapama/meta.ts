@@ -3,7 +3,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'kredi-erken-kapama',
-  title: 'Kredi Erken Kapama Hesaplama',
+  title: 'Kredi Erken Kapatma Tutarı',
   question: 'Kredimi şimdi kapatırsam ne kadar öderim, ne kadar faiz kurtarırım? Ara ödeme yapsam taksitim ne olur?',
   seoTitle: 'Kredi Erken Kapama Hesaplama – Tazminat ve Faiz Tasarrufu',
   description:

@@ -3,7 +3,7 @@ import type { ToolMeta } from '../types';
 
 export const meta: ToolMeta = {
   slug: 'borc-kapatma-plani',
-  title: 'Kredi Kartı ve KMH Borç Kapatma Planı',
+  title: 'Kredi Kartı ve KMH Birlikte Borç Kapatma Planı',
   question: 'Birden çok kart ve eksi hesap borcumu en kısa sürede, en az faizle nasıl kapatırım?',
   seoTitle: 'Kredi Kartı Borcu Kapatma Planı – Çığ ve Kartopu Yöntemi',
   description:

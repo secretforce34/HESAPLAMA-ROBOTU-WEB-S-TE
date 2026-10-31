@@ -1,16 +1,44 @@
 ---
+// Petshree tarzı robot kartı: yuvarlak resim, ad, başlık, son kontrol tarihi, iki küçük düğme.
+import RobotAvatar from './RobotAvatar.astro';
+import { getCategory } from '../tools/categories';
 import type { ToolMeta } from '../tools/types';
 
 interface Props {
   tool: ToolMeta;
 }
 const { tool } = Astro.props;
+const cat = getCategory(tool.category);
+const [y, m, d] = tool.lastReviewed.split('-');
+const AYLAR = ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+const kontrol = `${Number(d)} ${AYLAR[Number(m) - 1]} ${y}`;
+const guncelleme = { monthly: 'Her ay', yearly: 'Her yıl', none: 'Gerekmez' }[tool.maintenance];
+const dot = { monthly: 'month', yearly: 'year', none: 'none' }[tool.maintenance];
+const tag = tool.yeni ? { text: 'Yeni', kind: 'new' } : tool.featured ? { text: 'Popüler', kind: 'popular' } : null;
+const href = `/${tool.slug}/`;
 ---
 
-<a class="tool-card" href={`/${tool.slug}/`}>
-  <span class="tool-card__icon" aria-hidden="true">{tool.icon}</span>
-  <span>
-    <span class="tool-card__title">{tool.title}</span>
-    <span class="tool-card__desc">{tool.cardText}</span>
-  </span>
-</a>
+<article class="rcard">
+  {tag && <span class={`rcard__tag rcard__tag--${tag.kind}`}>{tag.text}</span>}
+  <a class="rcard__head" href={href}>
+    <RobotAvatar tool={tool} size="md" />
+    <span class="rcard__names">
+      <span class="rcard__title">{tool.title}</span>
+      <span class="rcard__sub">{cat.name}</span>
+    </span>
+  </a>
+  <dl class="rcard__meta">
+    <div>
+      <dt>Son kontrol</dt>
+      <dd>{kontrol}</dd>
+    </div>
+    <div>
+      <dt>Güncelleme</dt>
+      <dd><i class={`dot dot--${dot}`}></i>{guncelleme}</dd>
+    </div>
+  </dl>
+  <div class="rcard__actions">
+    <a class="btn-mini btn-mini--primary" href={href} aria-label={`${tool.title}: hesapla`}>Hesapla</a>
+    <a class="btn-mini" href={`${href}#aciklama`} aria-label={`${tool.title}: nasıl hesaplanır`}>Nasıl?</a>
+  </div>
+</article>
