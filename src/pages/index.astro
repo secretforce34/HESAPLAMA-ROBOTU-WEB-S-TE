@@ -1,14 +1,13 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import KpiStrip from '../components/KpiStrip.astro';
-import RobotRow from '../components/RobotRow.astro';
-import { categoriesWithTools, TOOLS } from '../tools/registry';
+import PratikKutular from '../components/PratikKutular.astro';
+import { TOOLS } from '../tools/registry';
 import { formatDateTR } from '../lib/format';
 import { todayIsoTR } from '../lib/finance';
 import { SITE } from '../site.config';
 
-// Başlıklar sol menüdeki sırayla; ilk sırada Kredi & Borç (site sahibinin isteği).
-const cats = categoriesWithTools();
+// Robot başlıkları sol menüde; ana sayfada yalnızca "Bu ayın rakamları" ve pratik araçlar (site sahibinin isteği).
 const today = todayIsoTR();
 
 const jsonLd = [
@@ -25,7 +24,7 @@ const jsonLd = [
 
 <BaseLayout title={`${SITE.name} – Türkiye’nin açıklamalı hesaplama robotları`} description={SITE.description} jsonLd={jsonLd}>
   <div class="container">
-    <div class="panel">
+    <div class="panel panel--home">
       <div class="panel__head">
         <div>
           <h1 class="panel__title">Hesaplama robotları</h1>
@@ -39,14 +38,7 @@ const jsonLd = [
 
       <KpiStrip />
 
-      {cats.map((c) => <RobotRow cat={c} tools={c.tools} />)}
-
-      <ul class="legend-row" aria-label="Etiketler">
-        <li><i class="dot dot--popular"></i> Popüler</li>
-        <li><i class="dot dot--new"></i> Yeni</li>
-        <li><i class="dot dot--month"></i> Her ay güncellenir</li>
-        <li><i class="dot dot--year"></i> Her yıl güncellenir</li>
-      </ul>
+      <PratikKutular />
     </div>
   </div>
 </BaseLayout>

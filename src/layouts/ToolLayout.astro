@@ -73,8 +73,8 @@ if (faq.length > 0) {
         <h1>{meta.title}</h1>
         <p class="tool-head__question">{meta.question}</p>
         <div class="badges">
-          <span class="badge badge--ok">🔒 Bilgileriniz cihazınızda kalır</span>
-          <span class="badge">✓ Kurallar kontrol edildi: {formatDateTR(meta.lastReviewed)}</span>
+          <span class="badge badge--ok">🔒 {meta.category === 'pratik' ? 'Dosyalarınız cihazınızdan çıkmaz' : 'Bilgileriniz cihazınızda kalır'}</span>
+          {meta.category !== 'pratik' && <span class="badge">✓ Kurallar kontrol edildi: {formatDateTR(meta.lastReviewed)}</span>}
           <span class="badge">Ücretsiz · üyelik yok</span>
         </div>
       </div>
@@ -110,6 +110,50 @@ if (faq.length > 0) {
           )
         }
       </article>
+      <script is:inline>
+        // Açıklama bölümleri ince açılır başlıklara dönüşür (sayfa aşağı uzamasın diye). İçerik sayfada kalır;
+        // betik çalışmazsa bölümler normal biçimde görünür. Sekmeler ve # bağlantıları ilgili bölümü açar.
+        (function () {
+          var art = document.getElementById('aciklama');
+          if (!art) return;
+          var govde = null;
+          Array.prototype.slice.call(art.children).forEach(function (el) {
+            if (el.tagName === 'H2') {
+              var d = document.createElement('details');
+              d.className = 'bolum';
+              var s = document.createElement('summary');
+              s.className = 'bolum__baslik';
+              art.insertBefore(d, el);
+              s.appendChild(el);
+              d.appendChild(s);
+              govde = document.createElement('div');
+              govde.className = 'bolum__icerik';
+              d.appendChild(govde);
+            } else if (govde) {
+              govde.appendChild(el);
+            }
+          });
+          function ac(hash) {
+            if (!hash || hash.length < 2) return;
+            if (hash === '#aciklama') {
+              var ilk = art.querySelector('details.bolum');
+              if (ilk) ilk.open = true;
+              return;
+            }
+            var t = document.getElementById(decodeURIComponent(hash.slice(1)));
+            var d = t && t.closest('details.bolum');
+            if (d) d.open = true;
+          }
+          ac(location.hash);
+          window.addEventListener('hashchange', function () {
+            ac(location.hash);
+          });
+          document.addEventListener('click', function (e) {
+            var a = e.target.closest && e.target.closest('a[href^="#"]');
+            if (a) ac(a.getAttribute('href'));
+          });
+        })();
+      </script>
       <ToolAside meta={meta} />
     </div>
   </div>

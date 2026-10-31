@@ -1,6 +1,9 @@
 // QR kod çizimi. Kodlama qrcode-generator (MIT) kütüphanesiyle tarayıcıda yapılır; dış servis yok.
 // Kütüphane yalnızca QR istendiğinde yüklenir (sayfa açılışını yavaşlatmaz).
 import type qrcodeFactory from 'qrcode-generator';
+import { downloadBlob } from './indir';
+
+export { downloadBlob };
 
 export type Ecc = 'L' | 'M' | 'Q' | 'H';
 type Factory = typeof qrcodeFactory;
@@ -69,17 +72,6 @@ export function matrixToCanvas(m: QrMatrix, canvas: HTMLCanvasElement, px: numbe
       if (m.dark[r][c]) ctx.fillRect((c + margin) * cell, (r + margin) * cell, cell, cell);
     }
   }
-}
-
-export function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function downloadPng(m: QrMatrix, filename: string, px = 1024, opts: DrawOptions = {}): void {

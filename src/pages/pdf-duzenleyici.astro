@@ -1,0 +1,65 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/pdf-duzenleyici/Calculator';
+import { meta } from '../tools/pdf-duzenleyici/meta';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'PDF dosyalarım bir sunucuya yükleniyor mu?',
+    a: 'Hayır. Dosyalar tarayıcınızda, bilgisayarınızın kendisinde işlenir; hiçbir sunucuya gönderilmez. Bu yüzden sözleşme, bordro, fatura gibi gizli belgeleri de gönül rahatlığıyla düzenleyebilirsiniz. Sayfayı kapattığınızda dosyalar tarayıcıdan da silinir.',
+  },
+  {
+    q: 'Birden fazla PDF nasıl birleştirilir?',
+    a: 'Dosyaları birlikte seçin ya da sürükleyip bırakın; tüm sayfalar tek listede sırayla görünür. Gerekirse sayfaları sürükleyerek ya da oklarla sıralayın, sonra “PDF’i indir” düğmesine basın. Her dosyanın sayfaları farklı renkle işaretlenir.',
+  },
+  {
+    q: 'PDF nasıl bölünür ya da sayfa ayrılır?',
+    a: 'İstediğiniz sayfaları tıklayarak ya da “1-3, 5” gibi bir aralık yazıp seçin ve “Seçilenleri ayrı PDF indir” düğmesine basın. Her sayfayı ayrı bir PDF yapmak için “Her sayfayı ayrı PDF yap (ZIP)” düğmesini kullanın.',
+  },
+  {
+    q: 'Şifreli PDF düzenlenebilir mi?',
+    a: 'Açılış şifresi olan PDF’ler düzenlenemez. Önce belgeyi kendi programınızda şifresini girerek açıp şifresiz kaydedin, sonra buraya ekleyin.',
+  },
+  {
+    q: 'Dosya boyutu ya da sayfa sınırı var mı?',
+    a: 'Belirli bir sınır yoktur; işlem bilgisayarınızın belleğiyle yapılır. Yüzlerce sayfalık dosyalarda önizlemelerin hazırlanması biraz zaman alabilir; telefonda çok büyük dosyalar yavaş çalışabilir.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>PDF nasıl düzenlenir?</h2>
+  <ol>
+    <li>PDF dosyalarını yukarıdaki alana bırakın ya da tıklayıp seçin. Birden çok dosya eklerseniz sayfaları tek listede birleşir.</li>
+    <li>Sayfaları döndürün, silin, sürükleyerek ya da oklarla sıralayın. Toplu işlem için sayfaları seçip “Seçilenleri döndür” ya da “Seçilenleri sil” düğmelerini kullanın.</li>
+    <li>İsterseniz dosya adını değiştirin ve sayfa numarası ekleyin.</li>
+    <li>“PDF’i indir” ile yeni belgeyi kaydedin.</li>
+  </ol>
+
+  <h2>Neler yapılabilir?</h2>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>İşlem</th><th>Nasıl</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Birleştirme</td><td>Birden çok PDF ekleyip tek dosya indirin</td></tr>
+        <tr><td>Bölme / ayırma</td><td>Sayfa seçip “Seçilenleri ayrı PDF indir” ya da ZIP</td></tr>
+        <tr><td>Sayfa silme</td><td>Sayfanın çöp kutusu düğmesi ya da toplu silme</td></tr>
+        <tr><td>Döndürme</td><td>90° sağa / sola; yatay taranmış sayfalar düzelir</td></tr>
+        <tr><td>Sıralama</td><td>Sürükle-bırak ya da ok düğmeleri</td></tr>
+        <tr><td>Sayfa numarası</td><td>Her sayfanın altına “3 / 12”</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>Belgenin metinleri, bağlantıları ve kalitesi korunur; sayfalar yeniden taranmaz.</li>
+    <li>Resimleri PDF yapmak, PDF’i resme ya da metne çevirmek için <a href="/pdf-donusturucu/">PDF Dönüştürücü</a>’yü kullanın.</li>
+    <li>Sitedeki her hesaplama robotunun sonucunu da “PDF’ye kaydet” düğmesiyle belge olarak saklayabilirsiniz.</li>
+  </ul>
+</ToolLayout>

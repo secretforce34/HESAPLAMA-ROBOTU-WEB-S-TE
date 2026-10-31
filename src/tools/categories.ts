@@ -103,8 +103,8 @@ export const CATEGORIES = [
     name: 'Pratik Araçlar',
     icon: '🛠️',
     color: '#64748b',
-    description: 'Bağlantı, Wi-Fi, kartvizit ve IBAN için QR kod oluşturucu gibi günlük işe yarayan araçlar.',
-    order: ['qr-kod-olusturucu'],
+    description: 'QR kod oluşturucu, PDF düzenleyici (birleştirme, bölme, döndürme) ve PDF dönüştürücü (resimden PDF, PDF’ten resim ve metin).',
+    order: ['qr-kod-olusturucu', 'pdf-duzenleyici', 'pdf-donusturucu'],
   },
 ] as const;
 

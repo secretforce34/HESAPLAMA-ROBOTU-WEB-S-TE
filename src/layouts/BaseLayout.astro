@@ -51,6 +51,7 @@ const canonical = new URL(Astro.url.pathname, Astro.site ?? SITE.url).href;
       try {
         var t = localStorage.getItem('theme');
         if (t === 'light' || t === 'dark') document.documentElement.dataset.theme = t;
+        if (localStorage.getItem('menu') === 'kapali') document.documentElement.classList.add('menu-kapali');
       } catch (e) {}
       // Başka bir siteye gömülü (iframe) açıldıysa yalnızca hesaplayıcı gösterilir.
       if (/[?&]gomulu=1(&|$)/.test(location.search)) document.documentElement.classList.add('is-embed');

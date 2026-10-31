@@ -1,0 +1,62 @@
+---
+import ToolLayout from '../layouts/ToolLayout.astro';
+import Calculator from '../tools/pdf-donusturucu/Calculator';
+import { meta } from '../tools/pdf-donusturucu/meta';
+import type { FaqItem } from '../tools/types';
+
+const faq: FaqItem[] = [
+  {
+    q: 'Fotoğrafları ya da fişleri tek PDF nasıl yaparım?',
+    a: '“Resim → PDF” seçiliyken resimleri ekleyin, sırasını düzenleyin ve “PDF oluştur ve indir” düğmesine basın. Her resim bir sayfa olur. Telefonla çekilmiş fotoğrafların yönü kendiliğinden düzeltilir; e-postayla göndermek için “Dosya boyutunu küçült” seçeneğini işaretleyebilirsiniz.',
+  },
+  {
+    q: 'PDF’i JPG’ye nasıl çeviririm?',
+    a: '“PDF → Resim” seçeneğinde PDF’i ekleyin, JPG ya da PNG ve çözünürlüğü seçin, “Resimlere çevir” düğmesine basın. Her sayfa ayrı bir resim olur; tek tek ya da hepsini ZIP olarak indirebilirsiniz. Baskı için 300 dpi önerilir.',
+  },
+  {
+    q: 'PDF’teki yazıyı nasıl kopyalarım?',
+    a: '“PDF → Metin” seçeneğinde PDF’i ekleyin; yazılar sayfa sayfa düz metin olarak çıkarılır, kopyalayabilir ya da .txt olarak indirebilirsiniz. Taranmış (resim olarak kaydedilmiş) belgelerde metin bulunmaz; resimdeki yazıyı okuma (OCR) bu araçta yoktur.',
+  },
+  {
+    q: 'Word ve Excel dosyası PDF’e nasıl çevrilir?',
+    a: '“Word → PDF” ya da “Excel → PDF” seçeneğinde dosyayı ekleyin; belge önizlenir. “PDF olarak kaydet” düğmesine basınca açılan pencerede yazıcı olarak “PDF olarak kaydet”i seçin. Yazılar seçilebilir, keskin bir PDF oluşur. Yeni biçimler (.docx, .xlsx, .csv) desteklenir; eski .doc ve .xls dosyalarını önce yeni biçimde kaydedin.',
+  },
+  {
+    q: 'PDF’i Word’e ya da Excel’e çevirince düzen aynı kalır mı?',
+    a: 'PDF’te paragraf ve tablo bilgisi tutulmaz; araç yazıların sayfadaki konumundan düzeni tahmin eder. Word’e çevirmede yazılar paragraf ve başlık olarak, Excel’e çevirmede banka ekstresi ya da fiyat listesi gibi tablolar sütunlara ayrılarak aktarılır. Karmaşık düzenlerde küçük kaymalar olabilir; Word’de görünümün aynen kalmasını istiyorsanız “Görünümü koru” seçeneğini kullanın.',
+  },
+  {
+    q: 'Dosyalarım bir yere yükleniyor mu?',
+    a: 'Hayır. Bütün dönüştürme işlemleri tarayıcınızda, bilgisayarınızda yapılır; dosyalar hiçbir sunucuya gönderilmez. İnternetiniz yavaş olsa bile dosya boyutundan bağımsız olarak hızlı çalışır.',
+  },
+];
+---
+
+<ToolLayout meta={meta} faq={faq}>
+  <Fragment slot="calculator"><Calculator client:load /></Fragment>
+
+  <h2>Hangi dönüştürmeler yapılabilir?</h2>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Dönüştürme</th><th>Sonuç</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Word → PDF</td><td>.docx belgesi önizlenir, yazıları seçilebilir PDF olarak kaydedilir</td></tr>
+        <tr><td>Excel → PDF</td><td>.xlsx ya da CSV tablolar, istenen çalışma sayfası, yatay ya da dikey</td></tr>
+        <tr><td>PDF → Word</td><td>Düzenlenebilir metin (paragraf ve başlıklar) ya da sayfa görünümü korunarak .docx</td></tr>
+        <tr><td>PDF → Excel</td><td>Tablolar sütunlara ayrılır, tutarlar hesaplanabilir sayı olur (.xlsx)</td></tr>
+        <tr><td>Resim → PDF</td><td>JPG, PNG, WebP resimlerden tek PDF (A4, A5, Letter ya da resim boyutunda)</td></tr>
+        <tr><td>PDF → Resim</td><td>Her sayfa ayrı JPG ya da PNG (72, 150 ya da 300 dpi), toplu ZIP</td></tr>
+        <tr><td>PDF → Metin</td><td>Sayfaların yazıları düz metin; kopyalama ya da .txt</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2>Bilmeniz gerekenler</h2>
+  <ul>
+    <li>PDF’leri birleştirmek, bölmek, sayfa silmek ya da döndürmek için <a href="/pdf-duzenleyici/">PDF Düzenleyici</a>’yi kullanın.</li>
+    <li>Sitedeki her hesaplama robotunun sonucunu “PDF’ye kaydet” düğmesiyle, hesabı yeniden açan QR koduyla birlikte belge olarak saklayabilirsiniz.</li>
+    <li>Çözünürlük yükseldikçe resim kalitesi ve dosya boyutu artar; ekranda paylaşmak için “Normal” yeterlidir.</li>
+  </ul>
+</ToolLayout>

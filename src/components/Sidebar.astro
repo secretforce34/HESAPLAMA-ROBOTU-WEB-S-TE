@@ -65,6 +65,11 @@ const isHome = path === '/';
   </p>
 </aside>
 <div class="sidebar-backdrop" data-sidebar-close></div>
+<button type="button" class="menu-toggle" data-menu-toggle aria-controls="sidebar" aria-expanded="true" aria-label="Menüyü gizle" title="Menüyü gizle / göster">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+    <path d="m15 6-6 6 6 6"></path>
+  </svg>
+</button>
 
 <script>
   const root = document.documentElement;
@@ -77,5 +82,23 @@ const isHome = path === '/';
   document.querySelectorAll('[data-sidebar-close]').forEach((b) => b.addEventListener('click', close));
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && root.classList.contains('sidebar-open')) close();
+  });
+
+  // Masaüstünde menüyü sola gizleyip içeriği tam ekran yapma; tercih tarayıcıda hatırlanır.
+  const toggle = document.querySelector<HTMLButtonElement>('[data-menu-toggle]');
+  const syncToggle = () => {
+    const kapali = root.classList.contains('menu-kapali');
+    toggle?.setAttribute('aria-expanded', String(!kapali));
+    toggle?.setAttribute('aria-label', kapali ? 'Menüyü göster' : 'Menüyü gizle');
+  };
+  syncToggle();
+  toggle?.addEventListener('click', () => {
+    const kapali = root.classList.toggle('menu-kapali');
+    try {
+      localStorage.setItem('menu', kapali ? 'kapali' : 'acik');
+    } catch {
+      /* gizli sekme vb. */
+    }
+    syncToggle();
   });
 </script>

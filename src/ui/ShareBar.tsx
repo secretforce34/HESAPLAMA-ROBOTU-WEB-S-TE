@@ -1,6 +1,7 @@
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { buildShareUrl, type ShareValue } from './url';
 import { QrPopover } from './PageQr';
+import { pdfeKaydet } from '../lib/yazdir';
 
 async function copyText(text: string): Promise<boolean> {
   try {
@@ -31,6 +32,7 @@ async function copyText(text: string): Promise<boolean> {
 export function ShareBar({ params, summary }: { params: Record<string, ShareValue>; summary: string }) {
   const [msg, setMsg] = useState<string | null>(null);
   const [qr, setQr] = useState<string | null>(null);
+  const kokRef = useRef<HTMLDivElement>(null);
 
   const flash = (m: string) => {
     setMsg(m);
@@ -55,8 +57,22 @@ export function ShareBar({ params, summary }: { params: Record<string, ShareValu
     flash((await copyText(`${summary}\n\n${credit}`)) ? 'Sonuç kopyalandı' : 'Kopyalanamadı');
   };
 
+  const onPdf = () =>
+    pdfeKaydet({
+      baslik: document.querySelector('h1')?.textContent?.trim() || document.title,
+      ozet: summary,
+      url: buildShareUrl(params),
+      // Sonuç sütunu + hesaplayıcının altındaki geniş tablolar (girdi alanları belgeye girmez)
+      icerik: (() => {
+        const kok = kokRef.current;
+        const calc = kok?.closest('.calc');
+        const sonuc = kok?.closest('.calc-results') ?? calc;
+        return [sonuc, ...(calc ? Array.from(calc.querySelectorAll('.calc-wide')) : [])].filter((x): x is Element => !!x);
+      })(),
+    });
+
   return (
-    <div class="share-bar">
+    <div class="share-bar" ref={kokRef}>
       <button type="button" class="btn btn--small" onClick={onLink}>
         <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
           <path d="M8.5 11.5a3.5 3.5 0 0 0 5 0l2.5-2.5a3.5 3.5 0 0 0-5-5l-1 1M11.5 8.5a3.5 3.5 0 0 0-5 0L4 11a3.5 3.5 0 0 0 5 5l1-1" stroke-linecap="round" />
@@ -82,6 +98,13 @@ export function ShareBar({ params, summary }: { params: Record<string, ShareValu
         </button>
         {qr && <QrPopover text={qr} title="Bu sonucun QR kodu" onClose={() => setQr(null)} />}
       </span>
+      <button type="button" class="btn btn--small" onClick={onPdf} title="Yazdırma penceresinde “PDF olarak kaydet”i seçin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M7 3h7l5 5v13H7z" />
+          <path d="M14 3v5h5M10 13h6M10 17h4" />
+        </svg>
+        PDF'ye kaydet
+      </button>
       <span role="status" aria-live="polite" class="field__hint" style={{ alignSelf: 'center' }}>
         {msg}
       </span>
