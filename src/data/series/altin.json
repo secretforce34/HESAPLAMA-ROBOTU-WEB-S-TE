@@ -4,8 +4,8 @@
  "birim": "Gram has altın, TL (yaklaşık)",
  "yontem": "Gram altın = aylık ortalama ons fiyatı × ay sonu USD/TRY ÷ 31,1034768. Uluslararası fiyattan hesaplanır; kuyumcu/Kapalıçarşı fiyatı değildir.",
  "ilkAy": "2005-01",
- "sonAy": "2026-09",
- "olusturma": "2026-10-29",
+ "sonAy": "2026-10",
+ "olusturma": "2026-11-04",
  "aylar": [
   {
    "ay": "2005-01",
@@ -1311,6 +1311,11 @@
    "ay": "2026-09",
    "onsUsd": 4319,
    "gramTl": 6794.42
+  },
+  {
+   "ay": "2026-10",
+   "onsUsd": 4105,
+   "gramTl": 6569.21
   }
  ]
 }

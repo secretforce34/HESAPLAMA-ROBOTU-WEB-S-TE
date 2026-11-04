@@ -4,8 +4,8 @@
  "birim": "TL / 1 birim döviz",
  "yontem": "Her ayın son iş gününde TCMB’nin ilan ettiği döviz alış kuru (ay sonu değeri).",
  "ilkAy": "2005-01",
- "sonAy": "2026-09",
- "olusturma": "2026-10-29",
+ "sonAy": "2026-10",
+ "olusturma": "2026-11-04",
  "aylar": [
   {
    "ay": "2005-01",
@@ -1572,6 +1572,12 @@
    "tarih": "2026-09-30",
    "usd": 48.9303,
    "eur": 55.5567
+  },
+  {
+   "ay": "2026-10",
+   "tarih": "2026-10-30",
+   "usd": 49.7747,
+   "eur": 55.7149
   }
  ]
 }
